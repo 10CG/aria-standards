@@ -1,0 +1,40 @@
+# 项目AI配置
+
+## 🎯 项目概述
+[项目名称和简要描述]
+
+## 📚 标准规范引用
+
+### 核心规范
+@standards/core/seven-step-cycle/
+@standards/core/dual-standard-system/
+@standards/core/architecture-docs/
+
+### 工作流程
+@standards/workflow/ai-workflow-protocol.md
+@standards/workflow/document-driven-dev.md
+
+### 开发约定
+@standards/conventions/git-commit.md
+@standards/conventions/content-integrity.md
+
+## 🔧 项目特定配置
+
+### 技术栈
+- [列出项目使用的主要技术]
+
+### 项目结构
+- [描述项目目录结构]
+
+### 开发环境
+- [环境特定配置]
+
+### 特殊约定
+- [项目特有的规则]
+
+## 📋 当前状态
+- 阶段：[开发阶段]
+- 重点：[当前工作重点]
+
+## ⚠️ 注意事项
+- [重要提醒事项]
