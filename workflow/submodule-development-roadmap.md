@@ -78,6 +78,138 @@ standards (规则) → shared (契约) → backend & mobile (实现)
 
 ---
 
+## 风险控制与回退机制
+
+### 为什么需要回退机制？
+
+在探索新的开发模式（如 OpenSpec）或架构变更时，我们需要确保：
+- ✅ 实验失败时能快速恢复到稳定状态
+- ✅ 学习成果得以保留，即使不继续使用新方案
+- ✅ 团队心理安全，敢于尝试创新
+
+### 回退方案
+
+#### 方案 A：Git 分支试验（推荐）⭐
+
+**适用场景**: 在 standards 子模块试点新的组织方式（如 OpenSpec）
+
+**操作步骤**:
+```bash
+# 1. 进入 standards 子模块
+cd standards
+
+# 2. 创建实验分支
+git checkout -b experiment/openspec
+
+# 3. 在实验分支上进行所有试点工作
+# - 初始化 OpenSpec
+# - 创建第一个变更提案
+# - 评估效果
+
+# 4. 评估结果
+# 如果成功 → 合并到 master
+git checkout master
+git merge experiment/openspec
+git tag v2.0.0-openspec
+git push origin master --tags
+
+# 如果失败 → 切回 master，删除实验分支
+git checkout master
+git branch -D experiment/openspec
+# 零损失，继续使用传统方式
+```
+
+**优势**:
+- ✅ **零风险**: master 分支保持稳定，随时可切回
+- ✅ **保留历史**: 实验分支记录完整的探索过程
+- ✅ **灵活决策**: 可以随时终止或继续实验
+
+#### 方案 B：完全回退（如果已经在 master 分支试验）
+
+**适用场景**: 已在 master 分支进行试点，需要撤销
+
+**操作步骤**:
+```bash
+cd standards
+
+# 查看提交历史，找到需要回退到的提交
+git log --oneline -10
+
+# 选项1: 硬回退（完全删除试验提交）
+git reset --hard <commit-hash>
+git push --force origin master
+# ⚠️ 警告：这会丢失试验期间的所有提交
+
+# 选项2: 软回退（保留代码改动，撤销提交）
+git reset --soft <commit-hash>
+git status  # 可以看到改动还在
+# 可以选择性地保留有用的内容
+
+# 选项3: Revert（创建新提交撤销）
+git revert <commit-hash>
+git push origin master
+# ✅ 推荐：保留完整历史，包括回退记录
+```
+
+**选择建议**:
+- 如果是个人仓库且确定不需要保留 → 使用选项1
+- 如果想保留部分有用内容 → 使用选项2
+- 如果是团队仓库或需要审计追踪 → 使用选项3
+
+#### 方案 C：保留学习成果（部分采纳）
+
+**适用场景**: OpenSpec 试点中发现部分有价值的思路，但不完全采用
+
+**操作步骤**:
+```bash
+# 不完全回退，而是选择性保留
+
+# 1. 保留有价值的文档
+mkdir -p docs/references/
+cp openspec/AGENTS.md docs/references/openspec-learnings.md
+cp openspec/project.md docs/references/project-context.md
+
+# 2. 删除 OpenSpec 结构
+rm -rf openspec/
+
+# 3. 按传统方式重组
+# 但融入从 OpenSpec 学到的理念（如 Delta 机制、变更隔离等）
+
+# 4. 提交保留的成果
+git add docs/references/
+git commit -m "docs: 保留 OpenSpec 试点中的学习成果作为参考"
+```
+
+### 回退时机判断
+
+**何时应该考虑回退？**
+
+| 信号 | 说明 | 建议 |
+|------|------|------|
+| AI 生成 Delta 错误率 > 30% | OpenSpec 的核心机制不适配当前 AI | 🔴 考虑回退 |
+| 团队理解成本 > 2 天 | 新方式学习曲线太陡 | 🟡 简化或回退 |
+| 工具链频繁出错 | OpenSpec CLI 或验证工具不稳定 | 🟡 暂缓，等工具成熟 |
+| 发现更优方案 | 在试验中发现了更好的组织方式 | 🟢 调整方向，不一定回退 |
+| 试点成功但不适合全面推广 | 小范围有效，但不适合整个项目 | 🟢 局部保留，其他区域使用传统方式 |
+
+### 回退后的行动
+
+**即使回退，也要总结经验**:
+
+1. **记录试点报告**: 创建 `docs/experiment-reports/openspec-pilot-YYYY-MM-DD.md`
+   - 试点目标
+   - 实际效果
+   - 失败/成功原因
+   - 可保留的思路
+
+2. **提取有价值的概念**:
+   - 即使不用 OpenSpec，Delta 思维可能仍有价值
+   - 变更隔离的理念可以用其他方式实现
+
+3. **更新决策记录**: 在 `docs/architecture-decisions/` 记录为什么选择回退
+
+---
+
 ## Phase 1: 巩固基石 (standards)
 
 ### 为什么优先做这个？
