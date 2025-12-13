@@ -122,6 +122,13 @@ Phase D - Closure & Archive:
   Step 10: Archive Spec → standards/openspec/archive/{feature}/spec.md
 ```
 
+## Phase Detail Documents
+
+- [Phase A: Specification & Planning](./phase-a-spec-planning.md) (Steps 0-3)
+- [Phase B: Development Execution](./phase-b-development.md) (Steps 4-6)
+- [Phase C: Commit & Integration](./phase-c-integration.md) (Steps 7-8)
+- [Phase D: Closure & Archive](./phase-d-closure.md) (Steps 9-10)
+
 ## Related Documents
 
 ### Core Standards (in this submodule)
@@ -130,6 +137,7 @@ Phase D - Closure & Archive:
 - [UPM Specification](../upm/unified-progress-management-spec.md)
 - [Workflow Standards](../workflow/ai-ddd-workflow-standards.md)
 - [Seven-Step Cycle](../seven-step-cycle/README.md) (original)
+- [Branch Management Guide](../../workflow/branch-management-guide.md)
 
 ### OpenSpec
 - [OpenSpec Project](../../openspec/project.md)
