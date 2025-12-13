@@ -1,35 +1,372 @@
-# Git提交消息规范
+# Git Commit 规范
 
-## 提交前缀
+> **Version**: 2.0.0
+> **Status**: Active
+> **Based on**: Conventional Commits + AI-DDD Enhanced Markers
 
-- `feat`: 新功能
-- `fix`: 错误修复
-- `docs`: 文档更新
-- `test`: 测试相关
-- `perf`: 性能优化
-- `style`: 代码格式
-- `refactor`: 重构
-- `chore`: 构建/工具
-- `ci`: 持续集成
+---
 
-## 格式结构
+## 1. 提交消息格式
+
+### 1.1 基本结构
 
 ```
-<type>(<scope>): <subject>
+<type>(<scope>): <中文描述> / <English description>
 
 <body>
+
+[Enhanced Markers - 可选]
 
 <footer>
 ```
 
-## 示例
+### 1.2 Subject 行规范
+
+| 组件 | 必需 | 说明 |
+|------|------|------|
+| `type` | ✅ | 变更类型 |
+| `scope` | ⚠️ 推荐 | 影响范围 |
+| `中文描述` | ✅ | 简洁中文说明 |
+| `English description` | ✅ | 简洁英文说明 |
+
+**格式要求**:
+- 使用祈使语气 (动词原形)
+- 不超过 72 字符
+- 结尾不加句号
+- 首字母小写 (英文部分)
+
+---
+
+## 2. Type 类型定义
+
+| Type | 说明 | 示例 |
+|------|------|------|
+| `feat` | 新功能 | `feat(auth): 添加JWT认证 / Add JWT authentication` |
+| `fix` | Bug修复 | `fix(api): 修复token过期问题 / Fix token expiration issue` |
+| `docs` | 文档变更 | `docs(readme): 更新安装说明 / Update installation guide` |
+| `style` | 代码格式 | `style: 统一代码缩进 / Unify code indentation` |
+| `refactor` | 重构 | `refactor(service): 优化API结构 / Optimize API structure` |
+| `perf` | 性能优化 | `perf(db): 添加查询索引 / Add query indexes` |
+| `test` | 测试相关 | `test(auth): 添加登录测试 / Add login tests` |
+| `build` | 构建/依赖 | `build: 升级Flutter到3.x / Upgrade Flutter to 3.x` |
+| `ci` | CI配置 | `ci: 更新GitHub Actions / Update GitHub Actions` |
+| `chore` | 其他杂项 | `chore: 更新.gitignore / Update .gitignore` |
+
+---
+
+## 3. Scope 范围定义
+
+### 3.1 模块级 Scope
+
+| Scope | 说明 |
+|-------|------|
+| `backend` | 后端服务 |
+| `mobile` | 移动应用 |
+| `shared` | 共享契约 |
+| `standards` | 开发规范 |
+| `docs` | 文档系统 |
+
+### 3.2 功能级 Scope
+
+| Scope | 说明 |
+|-------|------|
+| `auth` | 认证相关 |
+| `api` | API接口 |
+| `db` | 数据库 |
+| `ui` | 用户界面 |
+| `test` | 测试 |
+| `config` | 配置 |
+
+### 3.3 特殊 Scope
+
+| Scope | 说明 |
+|-------|------|
+| `submodule` | 子模块更新 |
+| `deps` | 依赖更新 |
+| `openspec` | OpenSpec相关 |
+| `architecture` | 架构文档 |
+
+---
+
+## 4. Body 正文规范
+
+### 4.1 格式要求
+
+- 与 Subject 之间空一行
+- 每行不超过 72 字符
+- 使用列表说明具体变更
+- 解释 "为什么" 而非 "是什么"
+
+### 4.2 示例
 
 ```
-feat(auth): 添加OAuth登录支持
+feat(backend): 实现用户认证服务 / Implement user authentication service
 
-- 集成GitHub OAuth
-- 添加用户认证流程
-- 实现token管理
+实现基于JWT的用户认证系统：
+
+- 创建AuthService处理认证逻辑
+- 实现token生成和验证
+- 添加refresh token机制
+- 配置token过期策略
+
+选择JWT而非Session的原因：
+- 支持无状态服务扩展
+- 移动端友好
+- 跨域支持更好
+```
+
+---
+
+## 5. Enhanced Markers (增强标记)
+
+### 5.1 何时使用
+
+| 场景 | 使用增强标记 | 说明 |
+|------|-------------|------|
+| 跨模块提交 | ✅ 必须 | strategic-commit-orchestrator |
+| 批量文档提交 | ✅ 必须 | strategic-commit-orchestrator |
+| Phase/Cycle里程碑 | ✅ 必须 | strategic-commit-orchestrator |
+| 单模块简单变更 | ❌ 不需要 | commit-msg-generator |
+| 单文件Bug修复 | ❌ 不需要 | commit-msg-generator |
+
+### 5.2 标记格式
+
+```
+🤖 Executed-By: {subagent_type} subagent
+
+📋 Context: {Phase}-{Cycle} {context}
+
+🔗 Module: {module_name}
+```
+
+**格式要求**:
+- 每个标记单独一行
+- 标记之间空一行
+- `Executed-By` 必须以 "subagent" 结尾
+- `Context` 使用单空格分隔 (非 " - ")
+- `Module` 使用小写
+
+### 5.3 可用 Subagent 类型
+
+| Subagent | 使用场景 |
+|----------|---------|
+| `knowledge-manager` | 文档、架构文档 |
+| `backend-architect` | 后端代码、API |
+| `mobile-developer` | Flutter/Dart代码 |
+| `api-documenter` | API文档、OpenAPI |
+| `qa-engineer` | 测试代码 |
+| `tech-lead` | 技术决策、重构 |
+| `general-purpose` | 通用任务 |
+
+### 5.4 完整示例
+
+```
+feat(backend): 实现聊天API端点 / Implement chat API endpoint
+
+实现WebSocket聊天功能的后端API：
+
+- 创建ChatService处理聊天逻辑
+- 实现消息持久化
+- 添加单元测试
+
+🤖 Executed-By: backend-architect subagent
+
+📋 Context: Phase3-Cycle5 backend-api-development
+
+🔗 Module: backend
+
+Closes #456
+```
+
+---
+
+## 6. Footer 页脚规范
+
+### 6.1 Issue 关联
+
+```
+Closes #123          # 关闭Issue
+Fixes #456           # 修复Issue
+Refs #789            # 引用Issue
+```
+
+### 6.2 Spec 关联
+
+```
+Spec: standards/openspec/changes/{feature}/spec.md
+```
+
+### 6.3 Breaking Changes
+
+```
+BREAKING CHANGE: API响应格式变更
+
+原格式: { data: {...} }
+新格式: { success: true, data: {...} }
+```
+
+---
+
+## 7. Skill 选择指南
+
+### 7.1 决策树
+
+```
+需要分组提交？
+  ├─ 是 (跨模块/批量文档/里程碑)
+  │   └─ 使用 strategic-commit-orchestrator
+  │       - 智能分组变更
+  │       - 添加增强标记
+  │       - 并行/串行执行
+  │
+  └─ 否 (单模块/简单变更)
+      └─ 使用 commit-msg-generator
+          - 标准格式
+          - 简洁高效
+```
+
+### 7.2 场景对照
+
+| 场景 | 推荐 Skill |
+|------|-----------|
+| 单文件Bug修复 | commit-msg-generator |
+| 单模块功能开发 | commit-msg-generator |
+| Backend + Shared API变更 | strategic-commit-orchestrator |
+| 批量架构文档创建 | strategic-commit-orchestrator |
+| Phase/Cycle里程碑 | strategic-commit-orchestrator |
+
+---
+
+## 8. 禁止规则
+
+### 8.1 绝对禁止
+
+```yaml
+❌ 禁止添加 AI 生成签名:
+   - "🤖 Generated with [Claude Code]..."
+   - "Co-Authored-By: Claude..."
+
+❌ 禁止使用模糊消息:
+   - "update"
+   - "fix bug"
+   - "WIP"
+   - "misc changes"
+
+❌ 禁止违反格式:
+   - "Added new feature"     # 错误: 过去式+大写
+   - "feat: add feature."    # 错误: 结尾句号
+   - "FEAT(auth): Add..."    # 错误: type大写
+```
+
+### 8.2 应该避免
+
+```yaml
+⚠️ 避免过大的单次提交:
+   - 50+ 文件变更应考虑拆分
+
+⚠️ 避免混合不同类型的变更:
+   - feat + fix 应分开提交
+
+⚠️ 避免无意义的 scope:
+   - "feat(stuff): ..."
+   - "fix(misc): ..."
+```
+
+---
+
+## 9. 示例库
+
+### 9.1 简单模式 (commit-msg-generator)
+
+```
+# 功能开发
+feat(auth): 添加OAuth登录支持 / Add OAuth login support
+
+集成GitHub OAuth认证：
+- 添加OAuth配置
+- 实现回调处理
+- 存储用户token
 
 Closes #123
 ```
+
+```
+# Bug修复
+fix(mobile): 修复列表滚动卡顿 / Fix list scroll lag
+
+优化ListView渲染性能：
+- 添加itemExtent固定高度
+- 使用const构造器
+- 移除不必要的rebuild
+
+Fixes #456
+```
+
+### 9.2 增强模式 (strategic-commit-orchestrator)
+
+```
+docs(architecture): 创建后端架构文档 / Create backend architecture docs
+
+创建后端L0和L1架构文档：
+- L0: be-ref-architecture-overview.md
+- L1: be-arch-api-layer.md
+- L1: be-arch-service-layer.md
+- L1: be-arch-data-layer.md
+
+🤖 Executed-By: knowledge-manager subagent
+
+📋 Context: Phase2-Cycle3 architecture-documentation
+
+🔗 Module: backend
+
+Refs: standards/openspec/changes/backend-arch/spec.md
+```
+
+---
+
+## 10. 快速参考
+
+### 10.1 检查清单
+
+提交前确认:
+- [ ] Type 正确
+- [ ] Scope 合适
+- [ ] Subject 双语
+- [ ] Body 解释原因
+- [ ] 无 AI 签名
+- [ ] 关联 Issue/Spec
+
+### 10.2 常用命令
+
+```bash
+# 标准提交
+git commit -m "feat(scope): 中文 / English"
+
+# 带 Body 的提交 (使用 HEREDOC)
+git commit -m "$(cat <<'EOF'
+feat(scope): 中文描述 / English description
+
+详细说明...
+
+Closes #123
+EOF
+)"
+
+# 修改上次提交
+git commit --amend
+```
+
+---
+
+## 相关文档
+
+- [Ten-Step Cycle - Phase C](../core/ten-step-cycle/phase-c-integration.md)
+- [Branch Management Guide](../workflow/branch-management-guide.md)
+- [commit-msg-generator Skill](../../.claude/skills/commit-msg-generator/)
+- [strategic-commit-orchestrator Skill](../../.claude/skills/strategic-commit-orchestrator/)
+
+---
+
+**Version**: 2.0.0
+**Created**: 2025-12-13
+**Maintainer**: AI-DDD Development Team
