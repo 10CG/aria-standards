@@ -6,7 +6,7 @@
 set -e
 
 PROJECT_PATH="${1:-.}"
-STANDARDS_REPO="https://github.com/yourname/ai-dev-standards.git"
+STANDARDS_REPO="ssh://forgejo@forgejo.10cg.pub/10CG/ai-dev-standards.git"
 
 echo "🔗 集成标准规范到项目..."
 
