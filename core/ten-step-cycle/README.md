@@ -91,11 +91,11 @@ The Ten-Step Cycle is an enhanced development methodology that integrates:
 | Step 1 | (planned) progress-query-assistant | 0% |
 | Step 2 | (planned) task-planner | 0% |
 | Step 3 | (built-in) | 100% |
-| Step 4 | (planned) branch-manager | 0% |
+| Step 4 | branch-manager | 90% |
 | Step 5 | flutter-test-generator | 30% |
 | Step 6 | architecture-doc-updater, api-doc-generator | 80% |
 | Step 7 | commit-msg-generator, strategic-commit-orchestrator | 95% |
-| Step 8 | (planned) pr-manager | 0% |
+| Step 8 | branch-manager | 90% |
 | Step 9 | (planned) progress-updater | 0% |
 | Step 10 | (planned) spec-archiver | 0% |
 
@@ -109,13 +109,13 @@ Phase A - Specification & Planning:
   Step 3: Assign agents → backend-architect, mobile-developer, etc.
 
 Phase B - Development Execution:
-  Step 4: Create branch → feature/{module}/{task-id}-{short-desc}
+  Step 4: Create branch → branch-manager → feature/{module}/{task-id}-{short-desc}
   Step 5: Implement → Code + tests + quality checks
   Step 6: Sync docs → ARCHITECTURE.md + API docs
 
 Phase C - Commit & Integration:
   Step 7: Commit → commit-msg-generator (simple) / strategic-commit-orchestrator (complex)
-  Step 8: Merge → PR → review → merge to develop → delete branch
+  Step 8: Merge → branch-manager → PR → review → merge to develop → delete branch
 
 Phase D - Closure & Archive:
   Step 9: Update UPM → stateToken, kpiSnapshot, progress history

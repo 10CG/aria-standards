@@ -39,6 +39,29 @@ Phase A establishes the foundation for development by:
 ### Purpose
 Define "what to build" before any coding begins.
 
+### Three-Level Spec Strategy
+
+Not all changes require the same level of specification. Use this decision guide:
+
+| Level | Name | Trigger | Action |
+|-------|------|---------|--------|
+| **1** | Skip | Simple fixes, config tweaks, doc formatting | Proceed directly to Step 4 |
+| **2** | Minimal | New Skill, medium features (1-3 days) | Create `proposal.md` only |
+| **3** | Full | Architecture changes, cross-module, breaking changes | Full OpenSpec (proposal + tasks + specs) |
+
+**Decision Flowchart**:
+```
+Is it a simple fix/config/formatting?
+  ├─ Yes → Level 1 (Skip Step 0)
+  └─ No → Is it architecture/cross-module/breaking?
+            ├─ Yes → Level 3 (Full Spec)
+            └─ No → Level 2 (Minimal Spec)
+```
+
+**Templates**: `standards/openspec/templates/`
+- `proposal-minimal.md` - Level 2 template
+- See existing `changes/` for Level 3 examples
+
 ### Trigger Conditions
 - New feature request
 - Major change request
