@@ -114,7 +114,7 @@ sha256("backend-Phase 2 - Development-3-2025-12-13T16:00:00+08:00")
 ```
 
 ### Suggested Skill
-`progress-updater` (planned)
+`progress-updater`
 
 ---
 
@@ -129,6 +129,25 @@ Complete the Spec lifecycle by archiving implemented Specs.
 ### Input
 - Implemented Spec file
 - Implementation verification result
+
+### Prerequisites (Project Setup)
+
+> **Note**: OpenSpec CLI requires `openspec/` directory at project root.
+> Our project uses `standards/openspec/`, so a junction/symlink is required.
+
+**Windows Setup (Junction)**:
+```powershell
+# Run once from project root (requires no admin rights)
+New-Item -ItemType Junction -Path 'openspec' -Target 'standards\openspec'
+```
+
+**Linux/macOS Setup (Symlink)**:
+```bash
+# Run once from project root
+ln -s standards/openspec openspec
+```
+
+The junction/symlink is already in `.gitignore`.
 
 ### Execution
 
@@ -149,16 +168,38 @@ Complete the Spec lifecycle by archiving implemented Specs.
    - [x] Archived
    ```
 
-3. **Move Spec to Archive**
+3. **Archive Using OpenSpec CLI**
    ```bash
-   mv standards/openspec/changes/{feature}/spec.md \
-      standards/openspec/archive/{feature}/spec.md
+   # Archive a completed change (interactive)
+   openspec archive {change-name}
+
+   # Archive without confirmation prompt
+   openspec archive {change-name} --yes
+
+   # Archive without validation
+   openspec archive {change-name} --no-validate
    ```
 
-4. **Update Archive Index**
-   - Add entry to `archive/INDEX.md`
+4. **Move to Project Archive Location**
 
-5. **(Optional) Merge to Stable Specs**
+   > **Note**: CLI places archives in `changes/archive/{date}-{name}/`.
+   > Move to our standard location for consistency.
+
+   ```bash
+   # Move from CLI location to project archive
+   mkdir -p standards/openspec/archive/{feature}/
+   mv standards/openspec/changes/archive/{date}-{change-name}/* \
+      standards/openspec/archive/{feature}/
+
+   # Clean up CLI's archive directory
+   rmdir standards/openspec/changes/archive/{date}-{change-name}
+   ```
+
+5. **Verify Archive Result**
+   - Spec moved to `standards/openspec/archive/{feature}/`
+   - Archive index updated (see below)
+
+6. **(Optional) Merge to Stable Specs**
    - If spec defines lasting conventions, merge relevant content to `specs/`
 
 ### Output
@@ -171,7 +212,10 @@ Complete the Spec lifecycle by archiving implemented Specs.
 Before:
   standards/openspec/changes/{feature}/spec.md
 
-After:
+CLI Output (temporary):
+  standards/openspec/changes/archive/{date}-{feature}/...
+
+After (final location):
   standards/openspec/archive/{feature}/spec.md
 ```
 
@@ -188,8 +232,10 @@ After:
 | task-priority | 2025-12-15 | #45 | Priority field for tasks |
 ```
 
-### Suggested Skill
-`spec-archiver` (planned)
+### Suggested Tool
+`openspec archive` (CLI built-in)
+
+See: [OpenSpec AGENTS.md](../../openspec/AGENTS.md) for workflow details
 
 ---
 

@@ -88,7 +88,7 @@ The Ten-Step Cycle is an enhanced development methodology that integrates:
 | Step | Skill | Coverage |
 |------|-------|----------|
 | Step 0 | (planned) spec-drafter | 0% |
-| Step 1 | (planned) progress-query-assistant | 0% |
+| Step 1 | progress-query-assistant | 90% |
 | Step 2 | (planned) task-planner | 0% |
 | Step 3 | (built-in) | 100% |
 | Step 4 | branch-manager | 90% |
@@ -96,8 +96,8 @@ The Ten-Step Cycle is an enhanced development methodology that integrates:
 | Step 6 | architecture-doc-updater, api-doc-generator | 80% |
 | Step 7 | commit-msg-generator, strategic-commit-orchestrator | 95% |
 | Step 8 | branch-manager | 90% |
-| Step 9 | (planned) progress-updater | 0% |
-| Step 10 | (planned) spec-archiver | 0% |
+| Step 9 | progress-updater | 90% |
+| Step 10 | `openspec archive` (CLI built-in) | 100% |
 
 ## Quick Reference
 
@@ -118,8 +118,8 @@ Phase C - Commit & Integration:
   Step 8: Merge → branch-manager → PR → review → merge to develop → delete branch
 
 Phase D - Closure & Archive:
-  Step 9: Update UPM → stateToken, kpiSnapshot, progress history
-  Step 10: Archive Spec → standards/openspec/archive/{feature}/spec.md
+  Step 9: Update UPM → progress-updater → stateToken, kpiSnapshot, progress history
+  Step 10: Archive Spec → openspec archive {change} → standards/openspec/archive/{feature}/
 ```
 
 ## Phase Detail Documents
