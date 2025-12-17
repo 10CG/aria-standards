@@ -87,10 +87,10 @@ The Ten-Step Cycle is an enhanced development methodology that integrates:
 
 | Step | Skill | Coverage |
 |------|-------|----------|
-| Step 0 | (planned) spec-drafter | 0% |
+| Step 0 | spec-drafter | 90% |
 | Step 1 | progress-query-assistant | 90% |
-| Step 2 | (planned) task-planner | 0% |
-| Step 3 | (built-in) | 100% |
+| Step 2 | task-planner | 90% |
+| Step 3 | task-planner (Agent 预分配) | 90% |
 | Step 4 | branch-manager | 90% |
 | Step 5 | flutter-test-generator | 30% |
 | Step 6 | architecture-doc-updater, api-doc-generator | 80% |
@@ -152,6 +152,7 @@ Phase D - Closure & Archive:
 
 ---
 
-**Version**: 1.0.0
+**Version**: 1.0.1
 **Created**: 2025-12-13
+**Updated**: 2025-12-18
 **Maintainer**: AI-DDD Development Team
