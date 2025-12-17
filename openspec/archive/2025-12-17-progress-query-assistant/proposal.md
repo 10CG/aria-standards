@@ -1,8 +1,9 @@
 # Progress Query Assistant Skill
 
 > **Level**: Minimal (Level 2 Spec)
-> **Status**: Draft
+> **Status**: Implemented
 > **Created**: 2025-12-16
+> **Implemented**: 2025-12-16
 
 ## Why
 
@@ -51,21 +52,21 @@
 
 ## Tasks
 
-- [ ] 设计 UPM 路径解析逻辑 (处理 mobile 和其他模块的路径差异)
-- [ ] 创建 SKILL.md 定义 Step 1 操作流程
-- [ ] 创建 EXAMPLES.md 提供各模块查询示例
-- [ ] 测试对现有 mobile/backend UPM 的解析
-- [ ] 更新 skills README.md 注册新 skill
-- [ ] 更新 CLAUDE.md Skills Usage 章节
-- [ ] 更新 ten-step-cycle README 反映 skill 覆盖率
+- [x] 设计 UPM 路径解析逻辑 (处理 mobile 和其他模块的路径差异)
+- [x] 创建 SKILL.md 定义 Step 1 操作流程
+- [x] 创建 EXAMPLES.md 提供各模块查询示例
+- [x] 测试对现有 mobile/backend UPM 的解析
+- [x] 更新 skills README.md 注册新 skill
+- [x] 更新 CLAUDE.md Skills Usage 章节
+- [x] 更新 ten-step-cycle README 反映 skill 覆盖率
 
 ## Success Criteria
 
-- [ ] 能正确解析 mobile UPM 的 UPMv2-STATE
-- [ ] 能正确解析 backend UPM 的 UPMv2-STATE
-- [ ] 输出格式清晰、包含所有关键信息
-- [ ] Skill 已注册到 CLAUDE.md
-- [ ] Step 1 覆盖率更新为 90%
+- [x] 能正确解析 mobile UPM 的 UPMv2-STATE
+- [x] 能正确解析 backend UPM 的 UPMv2-STATE
+- [x] 输出格式清晰、包含所有关键信息
+- [x] Skill 已注册到 CLAUDE.md
+- [x] Step 1 覆盖率更新为 90%
 
 ## Technical Design
 
