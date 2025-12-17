@@ -124,7 +124,7 @@ Is it a simple fix/config/formatting?
 ```
 
 ### Suggested Skill
-`spec-drafter` (planned)
+`spec-drafter`
 
 ---
 
@@ -181,7 +181,7 @@ KPI Snapshot:
 ```
 
 ### Suggested Skill
-`progress-query-assistant` (planned)
+`progress-query-assistant`
 
 ---
 
@@ -235,7 +235,7 @@ Execution Order: TASK-001 → TASK-002 → TASK-003 → TASK-004
 ```
 
 ### Suggested Skill
-`task-planner` (planned)
+`task-planner`
 
 ---
 

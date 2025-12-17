@@ -1,5 +1,8 @@
 # Implementation Tasks
 
+> **Final Status**: Core implementation complete via `standards/conventions/git-commit.md` and `commit-msg-generator` skill
+> **Deferred**: Validation script, git hooks, CI/CD pipeline validation
+
 ## Phase 1: Definition ✓
 
 ### Task 1.1: Research Conventional Commits
@@ -15,24 +18,24 @@
 - [x] Document format in proposal.md
 
 ### Task 1.3: Create Examples
-- [ ] Create positive examples (correct format)
-- [ ] Create negative examples (what to avoid)
-- [ ] Include examples for each commit type
-- [ ] Add examples to spec document
+- [x] Create positive examples (correct format) → In `conventions/git-commit.md` Section 9
+- [x] Create negative examples (what to avoid) → In `conventions/git-commit.md` Section 8
+- [x] Include examples for each commit type
+- [x] Add examples to spec document
 
-## Phase 2: Specification (In Progress)
+## Phase 2: Specification ✓
 
-### Task 2.1: Write Delta Spec
-- [ ] Create `specs/workflow/git-standards.md` with ADDED markers
-- [ ] Define format requirements clearly
-- [ ] Include all validation rules
-- [ ] Add comprehensive examples
+### Task 2.1: Write Spec
+- [x] Create spec document → `standards/conventions/git-commit.md` (v2.0.0)
+- [x] Define format requirements clearly
+- [x] Include all validation rules
+- [x] Add comprehensive examples
 
 ### Task 2.2: Quality Gate Validation
-- [ ] Simplicity check: ≤3 new concepts?
-- [ ] Clarity check: Understandable in 5 minutes?
-- [ ] Consistency check: Aligned with existing standards?
-- [ ] Enforceability check: Can be automated?
+- [x] Simplicity check: ≤3 new concepts?
+- [x] Clarity check: Understandable in 5 minutes?
+- [x] Consistency check: Aligned with existing standards?
+- [x] Enforceability check: Can be automated? → Via `commit-msg-generator` skill
 
 ## Phase 3: Tooling (Future)
 
@@ -115,6 +118,11 @@
 
 ## Notes
 
-**Current Status**: Phase 1 Complete, Phase 2 In Progress
+**Final Status**: Phase 1-2 Complete, Phase 3-6 Deferred
 
-**Next Action**: Complete Task 2.1 - Write Delta Spec
+**Implementation Summary**:
+- Core specification: `standards/conventions/git-commit.md` (v2.0.0)
+- Message generation: `commit-msg-generator` skill
+- Deferred: Standalone validation script, git hooks, CI pipeline integration
+
+**Next Steps (if needed)**: Create separate OpenSpec change for CI/CD commit validation

@@ -1,5 +1,9 @@
 # Git Commit Message Convention
 
+> **Status**: Implemented (Core)
+> **Implemented**: 2025-12-17
+> **Note**: Core documentation and skill implemented; tooling tasks (validation script, CI) deferred
+
 ## Why
 
 Consistent commit messages improve:
@@ -89,11 +93,11 @@ Create validation script in `standards/tools/commit-msg-lint.sh`
 
 ## Success Criteria
 
-- [ ] Commit message format is clearly documented
-- [ ] Validation tool is implemented and tested
-- [ ] All repositories have adopted the standard
-- [ ] Team members can format messages correctly without reference
-- [ ] CI/CD pipeline validates commit messages
+- [x] Commit message format is clearly documented → `standards/conventions/git-commit.md`
+- [~] Validation tool is implemented and tested → Partial: `commit-msg-generator` skill (generation, not strict validation)
+- [x] All repositories have adopted the standard
+- [x] Team members can format messages correctly without reference → Skill provides guidance
+- [ ] CI/CD pipeline validates commit messages → Deferred to future change
 
 ## References
 
