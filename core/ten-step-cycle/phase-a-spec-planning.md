@@ -486,6 +486,270 @@ TASK-004:
 
 ---
 
+## Dual-Layer Task Architecture
+
+### Overview
+
+Phase A uses a **dual-layer task architecture** to balance human readability with AI executability:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Dual-Layer Task Architecture                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Layer 1: tasks.md (Coarse-grained, Human-readable)                 │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │ ## 1. Architecture Documentation Update                     │    │
+│  │ - [ ] 1.1 Update phase-a-spec-planning.md                   │    │
+│  │ - [ ] 1.2 Define A.1/A.2/A.3 responsibilities               │    │
+│  │ - [x] 1.3 Add examples (completed)                          │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│           │                                    ▲                    │
+│           │ Forward Sync (A.2)                 │ Backward Sync      │
+│           │ task-planner                       │ progress-updater   │
+│           ▼                                    │                    │
+│  Layer 2: detailed-tasks.yaml (Fine-grained, AI-executable)        │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │ - id: TASK-001                                              │    │
+│  │   parent: "1.1"                                             │    │
+│  │   title: Update phase-a-spec-planning.md                    │    │
+│  │   status: pending                                           │    │
+│  │   complexity: M                                             │    │
+│  │   agent: knowledge-manager                                  │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Layer 1: tasks.md (OpenSpec Standard)
+
+**Purpose**: Human-readable progress tracking, OpenSpec compliance
+
+**Location**: `standards/openspec/changes/{feature}/tasks.md`
+
+**Format**:
+```markdown
+# Tasks: {Feature Name}
+
+> **Spec**: {feature-name}
+> **Level**: Full (Level 3)
+> **Status**: Approved
+> **Created**: {YYYY-MM-DD}
+
+---
+
+## 1. {Phase Name}
+
+- [ ] 1.1 {Task description}
+- [ ] 1.2 {Task description}
+- [x] 1.3 {Task description} (completed)
+
+## 2. {Phase Name}
+
+- [ ] 2.1 {Task description}
+- [ ] 2.2 {Task description}
+```
+
+**Characteristics**:
+- Markdown checkbox format
+- Hierarchical numbering: `{phase}.{task}`
+- Phase grouping for organization
+- Human-editable for progress tracking
+- **Numbering is immutable once created**
+
+### Layer 2: detailed-tasks.yaml (AI Execution)
+
+**Purpose**: AI-executable task specifications with full metadata
+
+**Location**: `standards/openspec/changes/{feature}/detailed-tasks.yaml`
+
+**Format**:
+```yaml
+spec: {feature-name}
+generated_at: "2025-12-20T10:00:00+08:00"
+generated_by: task-planner
+
+tasks:
+  - id: TASK-001
+    parent: "1.1"                    # Links to tasks.md numbering
+    title: Update phase-a-spec-planning.md
+    status: pending                  # pending | in_progress | completed | blocked
+    complexity: M                    # S | M | L | XL
+    estimated_hours: 2-4
+    dependencies: []
+    agent: knowledge-manager
+    deliverables:
+      - standards/core/ten-step-cycle/phase-a-spec-planning.md
+    verification:
+      - Dual-layer architecture section exists
+      - Synchronization mechanisms documented
+    notes: ""
+
+  - id: TASK-002
+    parent: "1.2"
+    title: Define A.1/A.2/A.3 responsibility boundaries
+    status: pending
+    complexity: M
+    estimated_hours: 2-4
+    dependencies: [TASK-001]
+    agent: knowledge-manager
+    deliverables:
+      - standards/core/ten-step-cycle/phase-a-spec-planning.md
+    verification:
+      - Clear boundaries defined for each step
+```
+
+**Required Fields**:
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier: TASK-{NNN} |
+| `parent` | string | Reference to tasks.md numbering (e.g., "1.1") |
+| `title` | string | Task description |
+| `status` | enum | pending, in_progress, completed, blocked |
+| `complexity` | enum | S (1-2h), M (2-4h), L (4-8h), XL (8h+) |
+| `dependencies` | array | List of TASK-{NNN} IDs this task depends on |
+| `agent` | string | Assigned agent type |
+| `deliverables` | array | File paths to be created/modified |
+| `verification` | array | Criteria to verify task completion |
+
+### Synchronization Mechanisms
+
+#### Forward Sync (A.1 → A.2 → A.3)
+
+**Trigger**: `task-planner` skill execution during A.2
+
+**Process**:
+1. Parse tasks.md to extract all checkbox items with numbering
+2. Generate detailed-tasks.yaml with `parent` field linking to tasks.md
+3. Assign TASK-{NNN} IDs sequentially
+4. Add complexity, dependencies, and agent assignments
+
+```
+tasks.md                      detailed-tasks.yaml
+─────────────────────────────────────────────────
+- [ ] 1.1 Task A      →      - id: TASK-001
+                               parent: "1.1"
+                               title: Task A
+
+- [ ] 1.2 Task B      →      - id: TASK-002
+                               parent: "1.2"
+                               title: Task B
+```
+
+#### Backward Sync (B.2 → tasks.md)
+
+**Trigger**: `progress-updater` skill execution after task completion
+
+**Process**:
+1. When TASK-{NNN} status changes to `completed` in detailed-tasks.yaml
+2. Locate corresponding parent numbering (e.g., "1.1")
+3. Update tasks.md checkbox: `- [ ]` → `- [x]`
+4. Preserve all other content
+
+```yaml
+# detailed-tasks.yaml
+- id: TASK-001
+  parent: "1.1"
+  status: completed        # Changed from pending
+
+# tasks.md (before)
+- [ ] 1.1 Update phase-a-spec-planning.md
+
+# tasks.md (after)
+- [x] 1.1 Update phase-a-spec-planning.md
+```
+
+### Numbering Immutability Constraint
+
+**Rule**: Once tasks.md numbering is established, it MUST NOT be changed.
+
+**Rationale**:
+- The `parent` field in detailed-tasks.yaml references tasks.md numbering
+- Changing numbering breaks parent references
+- Progress sync would fail or produce incorrect results
+
+**Constraint Enforcement**:
+
+1. **At Spec Approval**: Numbering is locked when status changes to "Reviewed"
+2. **Validation**: `task-planner` validates numbering hasn't changed on re-execution
+3. **Error Handling**: If numbering change detected, emit error and abort
+
+**Adding New Tasks**:
+```markdown
+# Correct: Add new tasks with new numbers
+## 1. Architecture Documentation Update
+- [x] 1.1 Update phase-a-spec-planning.md
+- [x] 1.2 Define responsibilities
+- [ ] 1.3 Add examples (NEW)           # New task added at end
+
+# Incorrect: Do NOT renumber existing tasks
+## 1. Architecture Documentation Update
+- [x] 1.1 Add examples                   # WRONG: renumbered from 1.3
+- [x] 1.2 Update phase-a-spec-planning   # WRONG: was 1.1
+```
+
+**Removing Tasks**:
+```markdown
+# Correct: Mark as cancelled, keep numbering
+## 1. Architecture Documentation Update
+- [x] 1.1 Update phase-a-spec-planning.md
+- [ ] 1.2 Define responsibilities (CANCELLED)   # Keep number, mark cancelled
+- [ ] 1.3 Add examples
+
+# Incorrect: Do NOT remove and renumber
+## 1. Architecture Documentation Update
+- [x] 1.1 Update phase-a-spec-planning.md
+- [ ] 1.2 Add examples                          # WRONG: was 1.3
+```
+
+### Conflict Detection and Resolution
+
+**Scenario**: tasks.md manually edited, causing mismatch with detailed-tasks.yaml
+
+**Detection**:
+```yaml
+# progress-updater detects:
+warning: Parent reference mismatch
+  - TASK-001.parent: "1.1"
+  - tasks.md "1.1": "Different task title"
+  - Expected: "Update phase-a-spec-planning.md"
+```
+
+**Resolution Options**:
+
+1. **Auto-heal** (if title similarity > 80%):
+   - Assume minor edit, proceed with sync
+   - Log warning for review
+
+2. **Manual resolution required** (if title similarity < 80%):
+   - Abort sync operation
+   - Report conflict details
+   - User must manually reconcile
+
+3. **Force sync** (with `--force` flag):
+   - Override detailed-tasks.yaml parent references
+   - Re-generate from current tasks.md
+   - WARNING: May lose task metadata
+
+### Step Responsibility Summary
+
+| Step | Layer 1 (tasks.md) | Layer 2 (detailed-tasks.yaml) |
+|------|-------------------|-------------------------------|
+| A.1 | **CREATE**: Coarse-grained checklist | Not created yet |
+| A.2 | READ: Parse numbering and titles | **CREATE**: Generate with parent links |
+| A.3 | No change | **UPDATE**: Add agent and verification |
+| B.2 | **UPDATE**: Checkbox sync | **UPDATE**: Status changes |
+
+### Skill Integration
+
+| Skill | Role in Dual-Layer |
+|-------|-------------------|
+| `spec-drafter` | Creates tasks.md during A.1 |
+| `task-planner` | Creates detailed-tasks.yaml during A.2, links parent |
+| `progress-updater` | Syncs completion status back to tasks.md |
+
+---
+
 ## Phase A Checklist
 
 Before proceeding to Phase B, ensure:
@@ -537,7 +801,7 @@ A.3: Assign agents → User confirms → Proceed to Phase B
 
 ---
 
-**Version**: 2.0.0
+**Version**: 2.1.0
 **Created**: 2025-12-13
-**Updated**: 2025-12-19
+**Updated**: 2025-12-20
 **Maintainer**: AI-DDD Development Team

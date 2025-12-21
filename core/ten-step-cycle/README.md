@@ -67,6 +67,42 @@ The Ten-Step Cycle is an enhanced development methodology that integrates:
 | **D.1** | 进度更新 | Update project progress state | Updated UPM + stateToken |
 | **D.2** | Spec归档 | Complete Spec lifecycle | `archive/{feature}/spec.md` |
 
+## Dual-Layer Task Architecture
+
+Phase A implements a **dual-layer task architecture** to balance human readability with AI executability:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Dual-Layer Task Architecture                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  Layer 1: tasks.md (Human-readable)     Layer 2: detailed-tasks.yaml│
+│  ┌────────────────────────────────┐     ┌──────────────────────────┐│
+│  │ - [ ] 1.1 Update docs          │ ──▶ │ - id: TASK-001           ││
+│  │ - [ ] 1.2 Add examples         │     │   parent: "1.1"          ││
+│  │ - [x] 1.3 Review (completed)   │ ◀── │   status: completed      ││
+│  └────────────────────────────────┘     └──────────────────────────┘│
+│         ▲                                         │                 │
+│         │ Backward Sync (B.2)       Forward Sync (A.2) │            │
+│         └─────────────────────────────────────────────┘             │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+| Layer | Format | Purpose | Created By |
+|-------|--------|---------|------------|
+| **Layer 1** | `tasks.md` | Human-readable checklist, OpenSpec standard | `spec-drafter` (A.1) |
+| **Layer 2** | `detailed-tasks.yaml` | AI-executable specs with TASK-{NNN} IDs | `task-planner` (A.2) |
+
+### Key Concepts
+
+- **parent field**: Links TASK-{NNN} to tasks.md numbering (e.g., "1.1")
+- **Forward Sync**: A.1 → A.2 (task-planner generates detailed-tasks.yaml)
+- **Backward Sync**: B.2 → tasks.md (progress-updater updates checkboxes)
+- **Numbering Immutability**: tasks.md numbering cannot change once established
+
+For detailed documentation, see [Phase A: Planning](./phase-a-spec-planning.md#dual-layer-task-architecture).
+
+---
+
 ## Mapping to Original Systems
 
 | New Step | Old Step | AI-DDD 7-Step | OpenSpec | Branch Mgmt |
@@ -177,7 +213,7 @@ Execute each step individually with full control.
 
 ---
 
-**Version**: 2.0.0
+**Version**: 2.1.0
 **Created**: 2025-12-13
-**Updated**: 2025-12-18
+**Updated**: 2025-12-20
 **Maintainer**: AI-DDD Development Team
