@@ -1,131 +1,142 @@
-# Implementation Tasks: {Feature Name}
+# Tasks: {Feature Name}
 
 > **Spec**: changes/{feature}/proposal.md
-> **Generated**: {YYYY-MM-DD}
-> **Total Tasks**: {N}
+> **Level**: Full (Level 3)
+> **Status**: Approved
+> **Created**: {YYYY-MM-DD}
 > **Estimated**: {X-Y}h
 
 ---
 
-## Phase 1: {Phase Name}
+## 1. {Phase Name}
 
-### TASK-001: {Task Title}
-- **Description**: {What needs to be done}
-- **Complexity**: S (Small) | M (Medium) | L (Large) | XL (Extra Large)
-- **Estimated**: {N}h
-- **Dependencies**: None | TASK-{ID}
-- **Agent**: {agent-type}
-- **Deliverables**:
-  - {File path or artifact 1}
-  - {File path or artifact 2}
-- **Acceptance Criteria**:
-  - [ ] {Criterion 1}
-  - [ ] {Criterion 2}
+- [ ] 1.1 {Task Description}
+- [ ] 1.2 {Task Description}
+- [x] 1.3 {Task Description} (example: already completed)
 
-### TASK-002: {Task Title}
-- **Description**: {What needs to be done}
-- **Complexity**: {S/M/L/XL}
-- **Estimated**: {N}h
-- **Dependencies**: TASK-001
-- **Agent**: {agent-type}
-- **Deliverables**:
-  - {File path or artifact}
-- **Acceptance Criteria**:
-  - [ ] {Criterion 1}
+## 2. {Phase Name}
 
----
+- [ ] 2.1 {Task Description}
+- [ ] 2.2 {Task Description}
 
-## Phase 2: {Phase Name}
+## 3. {Phase Name}
 
-### TASK-003: {Task Title}
-- **Description**: {What needs to be done}
-- **Complexity**: {S/M/L/XL}
-- **Estimated**: {N}h
-- **Dependencies**: None | TASK-{ID}
-- **Agent**: {agent-type}
-- **Deliverables**:
-  - {File path or artifact}
-- **Acceptance Criteria**:
-  - [ ] {Criterion 1}
-
----
-
-## Execution Order
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    PHASE 1                                  │
-│  TASK-001 ──▶ TASK-002                                     │
-│                                                             │
-│                    PHASE 2 (依赖 Phase 1)                   │
-│  TASK-003 ──▶ TASK-004                                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**并行分组**:
-
-| Group | Tasks | Can Start After |
-|-------|-------|-----------------|
-| 1 | TASK-001, TASK-003 | - |
-| 2 | TASK-002 | Group 1 |
-| 3 | TASK-004 | TASK-002 |
+- [ ] 3.1 {Task Description}
+- [ ] 3.2 {Task Description}
 
 ---
 
 ## Summary
 
-| Complexity | Count | Hours |
-|------------|-------|-------|
-| S (Small) | {N} | {X}h |
-| M (Medium) | {N} | {X}h |
-| L (Large) | {N} | {X}h |
-| XL (Extra Large) | {N} | {X}h |
-| **Total** | **{N}** | **{X}h** |
+| Phase | Tasks | Estimated Hours |
+|-------|-------|-----------------|
+| 1. {Phase Name} | {N} | {X}h |
+| 2. {Phase Name} | {N} | {X}h |
+| 3. {Phase Name} | {N} | {X}h |
+| **Total** | **{N}** | **{X-Y}h** |
+
+---
+
+## Dependencies
+
+```
+Phase 1 ──┬──> Phase 2 ──┬──> Phase 3
+          │              │
+          └──> [其他依赖]   └──> [其他依赖]
+```
 
 ---
 
 ## Notes
 
-- {Any important notes about implementation}
-- {Risk factors or considerations}
-- {Dependencies on external factors}
+1. **Numbering Immutability**: Once numbering (1.1, 1.2, etc.) is established, it MUST NOT be changed
+   - Adding new tasks: Use new numbers (1.4, 1.5, etc.)
+   - Removing tasks: Mark as ~~cancelled~~ instead of deleting
+   - Renumbering: Forbidden - breaks parent references in detailed-tasks.yaml
+
+2. **Task Granularity**: Each item should represent a coarse-grained functional deliverable
+   - Focus on "what" not "how"
+   - Keep descriptions brief and clear
+   - One deliverable per checkbox preferred
+
+3. **Phase Organization**:
+   - Group related tasks under logical phases
+   - Maintain sequential numbering within each phase
+   - Phase names should reflect major work areas
 
 ---
 
-## Template Usage
+## Dual-Layer Architecture
 
-### Complexity Guidelines
+This tasks.md file serves as Layer 1 (coarse-grained) in the dual-layer architecture:
 
-| Complexity | Hours | Typical Scope |
-|------------|-------|---------------|
-| **S (Small)** | 0.5-2h | Single file change, simple logic |
-| **M (Medium)** | 2-4h | Multi-file, moderate logic |
-| **L (Large)** | 4-8h | Complex feature, testing |
-| **XL (Extra Large)** | 8-16h | Major feature, needs splitting |
+- **Layer 1** (this file): Human-readable progress tracking, OpenSpec CLI compatible
+- **Layer 2** (detailed-tasks.yaml): AI-executable task specifications with TASK-{NNN} IDs
 
-### Agent Types
+The `task-planner` skill will:
+1. Parse this tasks.md file
+2. Generate detailed-tasks.yaml with parent field linking (e.g., parent: "1.1")
+3. Create atomic TASK-{NNN} items for each checkbox
+4. Maintain bidirectional synchronization
 
-| Agent | Best For |
-|-------|----------|
-| `knowledge-manager` | Documentation, specs, standards |
-| `backend-architect` | API design, database, services |
-| `mobile-developer` | Flutter/Dart, UI components |
-| `qa-engineer` | Testing, quality validation |
-| `api-documenter` | OpenAPI specs, API docs |
-| `tech-lead` | Architecture decisions, coordination |
+---
 
-### Task ID Format
+## Template Usage Guidelines
 
-- Format: `TASK-{NNN}` (e.g., TASK-001, TASK-002)
-- Sequential within the document
-- Used for dependency references and branch naming
+### When to Use This Template
 
-### When to Create tasks.md
-
-This template is used for **Level 3 (Full) Specs**:
+Use for **Level 3 (Full) Specs**:
 - Architectural changes
 - Cross-module changes
 - Features requiring > 3 days work
 - Changes affecting > 10 files
 
-For simpler changes, use **Level 2 (Minimal) Spec** with only `proposal.md`.
+### Numbering Format
+
+```
+Format: {Phase}.{Task}
+Example: 1.1, 1.2, 2.1, 2.2, 3.1
+
+Rules:
+- Phase: Sequential (1, 2, 3...)
+- Task: Sequential within phase (1, 2, 3...)
+- No gaps in numbering
+- No reuse of numbers after deletion
+```
+
+### Task Description Best Practices
+
+✅ Good:
+- "Add OTP secret column to users table"
+- "Create authentication endpoints"
+- "Implement token validation middleware"
+
+❌ Avoid:
+- Technical implementation details (belongs in detailed-tasks.yaml)
+- Agent assignments (belongs in detailed-tasks.yaml)
+- File-specific paths (belongs in detailed-tasks.yaml)
+- Time estimates (belongs in detailed-tasks.yaml)
+
+### Example Transformation
+
+```yaml
+tasks.md (Layer 1):
+- [ ] 1.1 Database Setup
+- [ ] 1.2 API Implementation
+
+↓ task-planner transforms to ↓
+
+detailed-tasks.yaml (Layer 2):
+- id: TASK-001
+  parent: "1.1"
+  title: Database Setup
+  complexity: M
+  deliverables: [backend/migrations/create_users.sql]
+
+- id: TASK-002
+  parent: "1.2"
+  title: Create User API
+  complexity: L
+  deliverables: [backend/src/routes/users.py]
+  dependencies: [TASK-001]
+```
