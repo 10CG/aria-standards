@@ -1,7 +1,8 @@
 # Git Commit Message Convention
 
-> **Status**: Implemented (Core)
+> **Status**: Archived
 > **Implemented**: 2025-12-17
+> **Archived**: 2025-12-23
 > **Note**: Core documentation and skill implemented; tooling tasks (validation script, CI) deferred
 
 ## Why
