@@ -1,8 +1,18 @@
-# 七步循环执行模型
+# 七步循环执行模型 (Legacy)
+
+> ⚠️ **DEPRECATED**: 此文档已被十步循环取代。请使用新版本：
+> - **推荐**: `standards/core/ten-step-cycle/README.md`
+> - **摘要**: `standards/summaries/ten-step-cycle-summary.md`
 
 ## 🎯 概述
 
 七步循环是AI驱动开发的核心执行框架，通过标准化的工作流程确保项目开发的系统化、自动化和高质量交付。
+
+> 📌 **迁移说明**: 十步循环扩展了七步循环，增加了:
+> - A.0 状态感知 (前置步骤)
+> - A.1 Spec管理 (OpenSpec集成)
+> - 分支管理和PR流程 (B.1, C.2)
+> - Spec归档 (D.2)
 
 ## 📊 核心执行框架
 

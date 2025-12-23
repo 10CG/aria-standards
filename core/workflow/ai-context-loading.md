@@ -1,7 +1,8 @@
 # AI 上下文加载策略
 
-> **文档版本**: 1.0.0
+> **文档版本**: 2.0.0
 > **创建日期**: 2025-12-14
+> **更新日期**: 2025-12-23
 > **适用范围**: 所有 AI 辅助开发场景
 > **责任人**: AI Development Team
 
@@ -11,10 +12,15 @@
 
 **核心原则**: 架构文档优先，按需读取代码，最小化 Token 消耗
 
+**Token 优化成果** (v2.0.0):
+- **优化前**: ~70,000 tokens (@ 引用自动展开)
+- **优化后**: ~3,500 tokens (L0 摘要层)
+- **降低**: ~95%
+
 **相关文档**:
-- **主配置** → `@CLAUDE.md`
-- **工作流标准** → `@standards/core/workflow/ai-ddd-workflow-standards.md`
-- **架构搜索 Skill** → `@.claude/skills/arch-search/SKILL.md`
+- **主配置** → `CLAUDE.md`
+- **摘要层** → `standards/summaries/`
+- **工作流标准** → `standards/core/workflow/ai-ddd-workflow-standards.md`
 
 ---
 
@@ -22,33 +28,52 @@
 
 当 AI 需要理解项目时，**必须按以下优先级加载上下文**：
 
-### 优先级 1 - 架构文档 (必读)
+### 优先级 1 - L0 摘要层 (必读)
 
-**目的**: 快速获取项目全貌和当前状态
+**目的**: 快速获取项目全貌和开发规范
 
 ```yaml
 文档:
-  - CLAUDE.md                    # AI入口配置
-  - {module}/ARCHITECTURE.md     # 模块架构概览 (L0)
+  - CLAUDE.md                                    # AI入口配置 (~5KB)
+  - standards/summaries/*.md                     # 规范摘要 (~7KB)
+    - ten-step-cycle-summary.md                  # 十步循环
+    - workflow-summary.md                        # 工作流
+    - conventions-summary.md                     # 约定规范
+    - extensions-summary.md                      # 模块扩展
+    - upm-summary.md                            # 进度管理
+
+预估Token: ~3,500 (总计 ~15KB)
+```
+
+### 优先级 2 - L1 模块架构 (按需)
+
+**目的**: 理解特定模块的架构和当前状态
+
+```yaml
+文档:
+  - {module}/CLAUDE.md           # 模块配置
+  - {module}/ARCHITECTURE.md     # 模块架构概览
   - {module}/UPM文档             # 当前进度状态
 
-预估Token: ~1000-2000
+触发条件: 需要在特定模块开发时
+预估Token: ~1,000-2,000
 ```
 
-### 优先级 2 - 契约文档 (按需)
+### 优先级 3 - L2 详细规范 (深入时)
 
-**目的**: 理解接口定义和数据结构
+**目的**: 获取完整规范细节
 
 ```yaml
 文档:
-  - shared/contracts/            # API契约
-  - shared/schemas/              # 数据Schema
+  - standards/core/ten-step-cycle/README.md      # 十步循环完整说明
+  - standards/conventions/git-commit.md          # Git 完整规范
+  - standards/extensions/mobile-ai-ddd-extension.md  # 模块扩展
 
-触发条件: 涉及跨模块接口或数据结构时
-预估Token: ~500-1000
+触发条件: 需要详细规范指导时
+预估Token: 按需加载
 ```
 
-### 优先级 3 - 代码文件 (最后)
+### 优先级 4 - 代码文件 (最后)
 
 **目的**: 实现具体功能时才读取
 
@@ -60,32 +85,42 @@
 
 ---
 
-## 📐 架构文档层级 (L0/L1/L2)
+## 📐 三层加载架构 (L0/L1/L2)
 
-### L0 - 模块概览 (必读)
+### L0 - 摘要层 (Always Load)
 
 ```yaml
-路径: {module}/ARCHITECTURE.md 或 {module}/docs/ARCHITECTURE.md
-内容: 模块定位、技术栈、目录结构、核心组件
-Token: ~500-1000
-使用场景: 任何涉及该模块的任务
+路径:
+  - CLAUDE.md                                    # ~5KB
+  - standards/summaries/*.md                     # ~7KB
+内容: 项目概览、规范摘要、快速参考
+Token: ~3,500
+使用场景: 每次会话开始自动加载
+优势: 相比原 @ 引用展开减少 95% tokens
 ```
 
-### L1 - 子系统详情 (按需)
+### L1 - 模块层 (On-Demand)
 
 ```yaml
-路径: {module}/docs/architecture/*.md
-内容: 具体子系统的设计细节
-Token: ~300-800 each
-使用场景: 需要了解特定子系统时
+路径:
+  - {module}/CLAUDE.md
+  - {module}/ARCHITECTURE.md
+  - {module}/UPM文档
+内容: 模块配置、架构概览、当前进度
+Token: ~1,000-2,000 per module
+使用场景: 特定模块开发任务
 ```
 
-### L2 - 实现细节 (仅需时)
+### L2 - 详细层 (Deep-Dive)
 
 ```yaml
-路径: 源代码文件
-原则: 只在需要修改或理解具体实现时读取
-使用场景: 功能开发、Bug修复
+路径:
+  - standards/core/*/README.md
+  - standards/conventions/*.md
+  - standards/extensions/*.md
+内容: 完整规范定义、详细示例
+Token: 按需加载
+使用场景: 需要完整规范指导时
 ```
 
 ---
@@ -214,5 +249,16 @@ Token: ~300-800 each
 
 ---
 
-**最后更新**: 2025-12-14
-**规范版本**: 1.0.0
+## 📊 版本对比
+
+| 指标 | v1.0.0 (@ 引用) | v2.0.0 (L0 摘要) | 改进 |
+|------|----------------|------------------|------|
+| CLAUDE.md | ~14 KB | ~5 KB | -64% |
+| 自动展开文件 | 18+ 文件 | 0 文件 | -100% |
+| 初始 Token | ~70,000 | ~3,500 | **-95%** |
+| 规范可访问性 | 全部展开 | 按需加载 | 灵活 |
+
+---
+
+**最后更新**: 2025-12-23
+**规范版本**: 2.0.0
