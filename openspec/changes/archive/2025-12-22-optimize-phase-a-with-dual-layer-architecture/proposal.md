@@ -559,29 +559,29 @@ tasks:
 ## Success Criteria
 
 ### 文档完整性
-- [ ] Phase A 文档清晰定义了 A.1/A.2/A.3 边界
-- [ ] 任务转换流水线章节已添加到 phase-a-spec-planning.md
-- [ ] 提供了 tasks.md 和 detailed-tasks.yaml 的完整示例
-- [ ] 同步机制已文档化
-- [ ] 迁移指南已提供
+- [x] Phase A 文档清晰定义了 A.1/A.2/A.3 边界
+- [x] 任务转换流水线章节已添加到 phase-a-spec-planning.md
+- [x] 提供了 tasks.md 和 detailed-tasks.yaml 的完整示例
+- [x] 同步机制已文档化
+- [x] 迁移指南已提供
 
 ### Skills 功能
-- [ ] task-planner 支持读取 tasks.md 并生成 detailed-tasks.yaml
-- [ ] task-planner 生成的 YAML 包含 parent 和 status 字段
-- [ ] progress-updater 支持后向同步（TASK → checkbox）
-- [ ] 冲突检测机制正常工作
+- [x] task-planner 支持读取 tasks.md 并生成 detailed-tasks.yaml
+- [x] task-planner 生成的 YAML 包含 parent 和 status 字段
+- [x] progress-updater 支持后向同步（TASK → checkbox）
+- [x] 冲突检测机制正常工作
 
 ### 验证测试
-- [ ] AI 助手能正确识别每个文档的使用场景
-- [ ] 使用新流水线成功实现示例变更
-- [ ] 后向同步正确更新 tasks.md
-- [ ] 冲突场景正确检测和报告
+- [x] AI 助手能正确识别每个文档的使用场景
+- [x] 使用新流水线成功实现示例变更
+- [x] 后向同步正确更新 tasks.md
+- [x] 冲突场景正确检测和报告
 
 ### 增强功能验证
-- [ ] 编号不可变验证器在检测到编号变更时正确报错
-- [ ] parent 引用失效时给出清晰的警告信息
-- [ ] `openspec validate --numbering` 命令正常工作
-- [ ] 文档中包含编号约束和违规处理说明
+- [x] 编号不可变验证器在检测到编号变更时正确报错
+- [x] parent 引用失效时给出清晰的警告信息
+- [ ] `openspec validate --numbering` 命令正常工作 (deferred - CLI tool)
+- [x] 文档中包含编号约束和违规处理说明
 
 ---
 
