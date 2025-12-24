@@ -121,9 +121,39 @@ For detailed documentation, see [Phase A: Planning](./phase-a-spec-planning.md#d
 
 ## Available Skills
 
+### Phase-Based Architecture (v2.0)
+
+十步循环采用 **Phase-Based 架构**，将 10 个步骤分组为 4 个 Phase：
+
+```
+state-scanner (A.0 + 推荐引擎)
+    │
+    │ 推荐工作流
+    ▼
+workflow-runner (轻量编排器)
+    │
+    ├──▶ phase-a-planner (A.1-A.3)
+    ├──▶ phase-b-developer (B.1-B.3)
+    ├──▶ phase-c-integrator (C.1-C.2)
+    └──▶ phase-d-closer (D.1-D.2)
+```
+
+### Phase Skills
+
+| Phase | Skill | Steps | Purpose |
+|-------|-------|-------|---------|
+| Entry | `state-scanner` | A.0 | 状态感知 + 智能工作流推荐 |
+| A | `phase-a-planner` | A.1-A.3 | Spec 管理、任务规划、Agent 分配 |
+| B | `phase-b-developer` | B.1-B.3 | 分支创建、测试验证、架构同步 |
+| C | `phase-c-integrator` | C.1-C.2 | Git 提交、PR 创建/合并 |
+| D | `phase-d-closer` | D.1-D.2 | 进度更新、Spec 归档 |
+| Orchestrator | `workflow-runner` | 组合 | 编排 Phase Skills |
+
+### Step-Level Skills
+
 | Step | Skill / Command | Coverage | Notes |
 |------|-----------------|----------|-------|
-| A.0 | `state-scanner` | 90% | 状态感知 |
+| A.0 | `state-scanner` | 95% | 状态感知 + 智能推荐 |
 | A.1 | `spec-drafter` / `openspec:proposal` | 90% | Skill 智能辅助，Command 严格验证 |
 | A.2 | `task-planner` | 90% | 双层架构生成 |
 | A.3 | `task-planner` (集成) | 90% | Agent 自动分配 |
@@ -213,7 +243,7 @@ Execute each step individually with full control.
 
 ---
 
-**Version**: 2.1.0
+**Version**: 2.2.0
 **Created**: 2025-12-13
-**Updated**: 2025-12-20
+**Updated**: 2025-12-25
 **Maintainer**: AI-DDD Development Team
