@@ -1,6 +1,6 @@
 # Spec: Intelligent State Scanner
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: State Collection
 
@@ -22,8 +22,6 @@ state-scanner Skill MUST collect comprehensive project state including git statu
 - Then it MUST categorize changes by type (code, test, docs, config) and assess complexity
 
 ---
-
-## ADDED Requirements
 
 ### Requirement: Workflow Recommendation
 
