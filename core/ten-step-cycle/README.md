@@ -121,19 +121,19 @@ For detailed documentation, see [Phase A: Planning](./phase-a-spec-planning.md#d
 
 ## Available Skills
 
-| Step | Skill | Coverage |
-|------|-------|----------|
-| A.0 | state-scanner | 90% |
-| A.1 | spec-drafter | 90% |
-| A.2 | task-planner | 90% |
-| A.3 | task-planner (Agent assignment) | 90% |
-| B.1 | branch-manager | 90% |
-| B.2 | flutter-test-generator, etc. | 30% |
-| B.3 | architecture-doc-updater, api-doc-generator | 80% |
-| C.1 | commit-msg-generator, strategic-commit-orchestrator | 95% |
-| C.2 | branch-manager | 90% |
-| D.1 | progress-updater | 90% |
-| D.2 | `openspec:archive` (slash command) | 100% |
+| Step | Skill / Command | Coverage | Notes |
+|------|-----------------|----------|-------|
+| A.0 | `state-scanner` | 90% | 状态感知 |
+| A.1 | `spec-drafter` / `openspec:proposal` | 90% | Skill 智能辅助，Command 严格验证 |
+| A.2 | `task-planner` | 90% | 双层架构生成 |
+| A.3 | `task-planner` (集成) | 90% | Agent 自动分配 |
+| B.1 | `branch-manager` | 90% | 分支创建 |
+| B.2 | `openspec:apply` + `flutter-test-generator` | 30% | ⚠️ 覆盖薄弱 |
+| B.3 | `arch-update` + `api-doc-generator` | 80% | 架构同步 |
+| C.1 | `commit-msg-generator` / `strategic-commit-orchestrator` | 95% | 简单/复杂提交 |
+| C.2 | `branch-manager` | 90% | PR 创建与合并 |
+| D.1 | `progress-updater` | 90% | UPM 状态更新 |
+| D.2 | `openspec:archive` | 100% | Spec 归档 |
 
 ## Quick Reference
 
