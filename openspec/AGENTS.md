@@ -30,6 +30,42 @@ When executing OpenSpec commands in this repository, you MUST:
 3. `openspec validate [change] --strict` (if CLI available)
 4. `/openspec:apply [change]`
 5. `openspec archive [change]`
+6. **⚠️ 验证归档目录** (见下方 Known Issues)
+
+## ⚠️ Known Issues
+
+### 归档目录位置 Bug
+
+**问题**: `openspec archive` CLI 有 bug，会将归档放入错误位置：
+- ❌ 错误: `openspec/changes/archive/`
+- ✅ 正确: `openspec/archive/`
+
+**必须执行的验证步骤**:
+
+归档后立即检查：
+```bash
+# 检查是否有错误位置
+ls openspec/changes/archive/ 2>/dev/null
+
+# 如果有内容，手动修正：
+mv openspec/changes/archive/<archived-change> openspec/archive/
+rmdir openspec/changes/archive
+```
+
+或使用验证脚本：
+```bash
+bash scripts/verify-openspec-archive.sh
+```
+
+**正确的目录结构**:
+```
+openspec/
+├── archive/           ← 归档变更 (正确位置)
+│   └── 2025-xx-xx-change-name/
+├── changes/           ← 活跃变更
+│   └── active-change/
+└── specs/             ← 规范文档
+```
 
 ### Quality Gates
 
