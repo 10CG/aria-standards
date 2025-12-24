@@ -64,15 +64,17 @@ graph TD
       更新进度文档()
 ```
 
-## 🔍 各步骤详解
+## 🔍 各步骤概述
 
-1. [项目状态感知](state-recognition.md)
-2. [智能任务规划](task-planning.md)
-3. [Subagent任务分配](subagent-allocation.md)
-4. [任务执行与验证](task-execution.md)
-5. [架构文档同步](architecture-sync.md)
-6. [Git分组提交](git-commit-strategy.md)
-7. [进度文档更新](progress-update.md)
+1. **项目状态感知** - 识别当前项目状态和循环位置
+2. **智能任务规划** - 生成原子化任务清单
+3. **Subagent任务分配** - 选择合适的 Subagent 执行任务
+4. **任务执行与验证** - 执行任务并验证结果
+5. **架构文档同步** - 同步代码变更到架构文档
+6. **Git分组提交** - 按逻辑分组提交变更
+7. **进度文档更新** - 更新 UPM 进度状态
+
+> 📌 **详细文档**: 请参考 [十步循环](../ten-step-cycle/README.md) 获取完整的步骤说明
 
 ## 💡 使用指南
 

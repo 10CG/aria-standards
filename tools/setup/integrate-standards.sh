@@ -24,7 +24,7 @@ if [ ! -f "CLAUDE.md" ]; then
 # 项目AI配置
 
 ## 标准规范引用
-@standards/core/seven-step-cycle/
+@standards/core/ten-step-cycle/
 @standards/workflow/
 @standards/conventions/
 
