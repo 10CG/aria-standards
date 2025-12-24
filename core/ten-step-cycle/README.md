@@ -128,7 +128,7 @@ For detailed documentation, see [Phase A: Planning](./phase-a-spec-planning.md#d
 | A.2 | `task-planner` | 90% | 双层架构生成 |
 | A.3 | `task-planner` (集成) | 90% | Agent 自动分配 |
 | B.1 | `branch-manager` | 90% | 分支创建 |
-| B.2 | `openspec:apply` + `flutter-test-generator` | 30% | ⚠️ 覆盖薄弱 |
+| B.2 | `test-verifier` + `flutter-test-generator` | 80% | 多模块测试验证 |
 | B.3 | `arch-update` + `api-doc-generator` | 80% | 架构同步 |
 | C.1 | `commit-msg-generator` / `strategic-commit-orchestrator` | 95% | 简单/复杂提交 |
 | C.2 | `branch-manager` | 90% | PR 创建与合并 |
