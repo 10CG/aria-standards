@@ -39,7 +39,7 @@
 第二步：读取模块UPM文档
   路径模式:
     - 标准路径: {module}/project-planning/unified-progress-management.md
-    - 备选路径: docs/maintained/development/{module}/project-planning/unified-progress-management.md
+    - 备选路径: {module}/[docs/]project-planning/unified-progress-management.md
 
   读取优先级:
     1. UPMv2-STATE机读片段（YAML frontmatter，必读）

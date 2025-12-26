@@ -397,7 +397,7 @@ stateToken: "sha256:new_hash_value..."
 
 **Step 4: 提交变更**
 ```bash
-git add docs/maintained/development/backend/project-planning/unified-progress-management.md
+git add backend/project-planning/unified-progress-management.md
 git commit -m "docs(backend): 更新进度状态 - 完成BE-001
 
 更新Backend UPM文档：
@@ -419,7 +419,7 @@ git commit -m "docs(backend): 更新进度状态 - 完成BE-001
 **YAML语法验证**:
 ```bash
 # 使用YAML linter验证语法
-yamllint docs/maintained/development/{module}/project-planning/unified-progress-management.md
+yamllint {module}/[docs/]project-planning/unified-progress-management.md
 ```
 
 **必需字段检查**:
