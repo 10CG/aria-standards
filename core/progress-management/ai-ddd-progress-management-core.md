@@ -13,24 +13,24 @@
 
 ### 🔍 核心标准子文档系统：
 
-- **工作流标准** → `@docs/standards/core/ai-ddd-workflow-standards.md`
+- **工作流标准** → `../workflow/ai-ddd-workflow-standards.md`
   * 七步循环详细流程（Step 1-7完整说明）
   * 开发前后检查流程
   * Subagent分配策略
 
-- **状态管理标准** → `@docs/standards/core/ai-ddd-state-management.md`
+- **状态管理标准** → `../state-management/ai-ddd-state-management.md`
   * UPMv2-STATE机读接口规范
   * 并发与幂等更新协议
   * UPM体量控制与滚动窗口
   * 项目周期文档组织规范
 
-- **文档同步机制** → `@docs/standards/core/document-sync-mechanisms.md`
+- **文档同步机制** → `../workflow/document-sync-mechanisms.md`
   * 文档同步标准机制
   * 智能任务调度
   * 智能混合策略集成
   * 偏差管理与修正
 
-- **实施最佳实践** → `@docs/standards/core/implementation-best-practices.md`
+- **实施最佳实践** → `../workflow/implementation-best-practices.md`
   * AI操作最佳实践
   * 文档维护指南
   * 故障处理与应急机制
@@ -38,15 +38,19 @@
 
 ### 🔍 模块扩展标准：
 
-- **Mobile模块** → `@docs/standards/extensions/mobile-ai-ddd-extension.md`
-- **Backend模块** → `@docs/standards/extensions/backend-ai-ddd-extension.md`
-- **Frontend模块** → `@docs/standards/extensions/frontend-ai-ddd-extension.md`
-- **Shared模块** → `@docs/standards/extensions/shared-ai-ddd-extension.md`
+- **Mobile模块** → `../../extensions/mobile-ai-ddd-extension.md`
+- **Backend模块** → `../../extensions/backend-ai-ddd-extension.md`
+<!-- 以下模块扩展待创建：
+- **Frontend模块** → frontend-ai-ddd-extension.md
+- **Shared模块** → shared-ai-ddd-extension.md
+-->
 
 ### 📚 相关标准文档：
 
-- **Git提交规范** → `@.cursor/rules/git-rule.mdc`
-- **架构文档管理** → `@docs/standards/architecture-documentation-management-system.md`
+- **Git提交规范** → `../../conventions/git-commit.md`
+<!-- 项目特定规范（主项目文档）：
+- 架构文档管理 → docs/project-standards/architecture-documentation-management-system.md
+-->
 
 ---
 
@@ -162,7 +166,7 @@ Stage (状态):
 
 ## 🔄 3. 七步循环开发模型（概要）
 
-**完整详细流程** → `@docs/standards/core/ai-ddd-workflow-standards.md`
+**完整详细流程** → `../workflow/ai-ddd-workflow-standards.md`
 
 ### 3.1 七步流程概览
 
@@ -359,7 +363,7 @@ AI-DDD进度管理核心标准 (本文档):
 ### 5.3 与架构文档管理体系协作
 
 本标准在Step 5中维护的架构文档必须遵循：
-- 参考: `@docs/standards/architecture-documentation-management-system.md`
+<!-- 参考: docs/project-standards/architecture-documentation-management-system.md -->
 - v4.5架构文档管理系统
 - 三层架构体系（L0/L1/L2）
 
@@ -407,7 +411,7 @@ AI-DDD进度管理核心标准 (本文档):
   ✗ 引入与核心标准冲突的流程
 ```
 
-**详细质量保证实践** → `@docs/standards/core/implementation-best-practices.md`
+**详细质量保证实践** → `../workflow/implementation-best-practices.md`
 
 ---
 
@@ -499,7 +503,7 @@ Step 2: 读取模块UPM (unified-progress-management.md)
 Step 3: 解析UPMv2-STATE片段
 ```
 
-详细查询流程 → `@docs/standards/core/ai-ddd-workflow-standards.md`
+详细查询流程 → `../workflow/ai-ddd-workflow-standards.md`
 
 **创建新模块扩展标准**：
 ```bash

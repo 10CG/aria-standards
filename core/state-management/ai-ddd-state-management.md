@@ -11,8 +11,8 @@
 本文档定义AI-DDD进度管理的状态管理机制，包括UPMv2-STATE机读接口规范、并发更新协议、UPM体量控制策略和项目周期文档组织规范。
 
 **相关文档**：
-- **主标准** → `@docs/standards/core/ai-ddd-progress-management-core.md`
-- **工作流标准** → `@docs/standards/core/ai-ddd-workflow-standards.md`
+- **主标准** → `../progress-management/ai-ddd-progress-management-core.md`
+- **工作流标准** → `../workflow/ai-ddd-workflow-standards.md`
 
 ---
 

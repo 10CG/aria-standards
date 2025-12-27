@@ -239,7 +239,9 @@ Execute each step individually with full control.
 - [Mobile Extension](../../extensions/mobile-ai-ddd-extension.md)
 
 ### Full Planning Document
-- [Spec-Enhanced AI-DDD Fusion Plan](../../../docs/analysis/spec-enhanced-ai-ddd-fusion-plan.md) (in main repo)
+<!-- 设计背景参考（主项目文档）:
+     - docs/analysis/spec-enhanced-ai-ddd-fusion-plan.md
+-->
 
 ---
 

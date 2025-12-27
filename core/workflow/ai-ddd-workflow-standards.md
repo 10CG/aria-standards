@@ -11,9 +11,9 @@
 本文档详细定义AI-DDD七步循环开发模型的完整流程，包括每步的详细操作、输入输出、标准流程和最佳实践。
 
 **相关文档**：
-- **主标准** → `@docs/standards/core/ai-ddd-progress-management-core.md`
-- **状态管理** → `@docs/standards/core/ai-ddd-state-management.md`
-- **文档同步** → `@docs/standards/core/document-sync-mechanisms.md`
+- **主标准** → `../progress-management/ai-ddd-progress-management-core.md`
+- **状态管理** → `../state-management/ai-ddd-state-management.md`
+- **文档同步** → `./document-sync-mechanisms.md`
 
 ---
 

@@ -17,11 +17,14 @@ priority_level: S级
 
 ## 📄 完整文档位置
 
-**[OpenSpec 试点集成指南](../../docs/analysis/openspec-pilot-guide.md)**
+<!-- 设计背景参考（主项目文档）:
+     - docs/analysis/openspec-pilot-guide.md (OpenSpec 试点集成指南)
+     - docs/analysis/spec-system-comparison-analysis.md (规范系统对比分析)
+-->
 
 该文档已移动到主仓库的 `docs/analysis/` 目录，原因：
 - 这是项目级战略决策文档，不仅限于 standards 子模块
-- 与 [规范系统对比分析](../../docs/analysis/spec-system-comparison-analysis.md) 形成完整的决策链
+- 与规范系统对比分析形成完整的决策链
 - 便于所有子模块（standards、shared、mobile、backend）的开发者访问
 
 ---
@@ -68,11 +71,12 @@ priority_level: S级
 ## 🔗 相关文档链接
 
 ### 分析决策文档
-- **[规范系统对比分析](../../docs/analysis/spec-system-comparison-analysis.md)**
-  对比 AI-DDD、Spec-Kit、OpenSpec 三个系统，解释为什么选择 OpenSpec
-
-- **[OpenSpec 试点集成指南](../../docs/analysis/openspec-pilot-guide.md)**
-  回答四个核心问题，提供完整的试点行动方案
+<!-- 设计背景参考（主项目文档）:
+     - docs/analysis/spec-system-comparison-analysis.md (规范系统对比分析)
+       对比 AI-DDD、Spec-Kit、OpenSpec 三个系统，解释为什么选择 OpenSpec
+     - docs/analysis/openspec-pilot-guide.md (OpenSpec 试点集成指南)
+       回答四个核心问题，提供完整的试点行动方案
+-->
 
 ### Standards 工作流文档
 - **[子模块开发路线图](./submodule-development-roadmap.md)**

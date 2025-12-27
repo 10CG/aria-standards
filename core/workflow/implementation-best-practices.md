@@ -11,10 +11,10 @@
 本文档提供AI-DDD进度管理的实施指南、最佳实践、故障处理和质量保证机制，帮助AI和开发团队高效、准确地使用AI-DDD规范。
 
 **相关文档**：
-- **主标准** → `@docs/standards/core/ai-ddd-progress-management-core.md`
-- **工作流标准** → `@docs/standards/core/ai-ddd-workflow-standards.md`
-- **状态管理标准** → `@docs/standards/core/ai-ddd-state-management.md`
-- **文档同步机制** → `@docs/standards/core/document-sync-mechanisms.md`
+- **主标准** → `../progress-management/ai-ddd-progress-management-core.md`
+- **工作流标准** → `./ai-ddd-workflow-standards.md`
+- **状态管理标准** → `../state-management/ai-ddd-state-management.md`
+- **文档同步机制** → `./document-sync-mechanisms.md`
 
 ---
 

@@ -11,9 +11,9 @@
 本文档定义AI-DDD进度管理的文档同步机制、智能任务调度、智能混合策略集成和偏差管理标准。
 
 **相关文档**：
-- **主标准** → `@docs/standards/core/ai-ddd-progress-management-core.md`
-- **工作流标准** → `@docs/standards/core/ai-ddd-workflow-standards.md`
-- **状态管理标准** → `@docs/standards/core/ai-ddd-state-management.md`
+- **主标准** → `../progress-management/ai-ddd-progress-management-core.md`
+- **工作流标准** → `./ai-ddd-workflow-standards.md`
+- **状态管理标准** → `../state-management/ai-ddd-state-management.md`
 
 ---
 

@@ -344,7 +344,7 @@ AI 生成内容必须:
 
 - [Git Commit 规范](./git-commit.md)
 - [命名规范](./naming-conventions.md)
-- [文档健康度监控](../../docs/standards/do-ref-health.md)
+<!-- 文档健康度监控已移至项目特定规范: docs/project-standards/do-ref-health.md -->
 
 ---
 

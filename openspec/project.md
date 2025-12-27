@@ -33,8 +33,10 @@ Current: v1.0.0-experimental
 ## Related Documentation
 
 ### Main Repository
-- [OpenSpec 试点集成指南](../../docs/analysis/openspec-pilot-guide.md)
-- [规范系统对比分析](../../docs/analysis/spec-system-comparison-analysis.md)
+<!-- 设计背景参考（主项目文档）:
+     - docs/analysis/openspec-pilot-guide.md
+     - docs/analysis/spec-system-comparison-analysis.md
+-->
 
 ### Standards Workflow
 - [子模块开发路线图](../workflow/submodule-development-roadmap.md)
