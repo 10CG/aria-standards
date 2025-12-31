@@ -1,8 +1,8 @@
 # Architecture Document Templates
 
-> **Version**: 1.0.0
-> **Created**: 2025-12-27
+> **Version**: 1.1.0
 > **Status**: production
+> **Updated**: 2025-12-29
 
 ## Overview
 
@@ -18,19 +18,19 @@
 ## AI Quick Index (AI快速索引)
 - **Document Type**: [type]
 - **Version**: X.Y.Z
-- **Created**: YYYY-MM-DDTHH:mm:ss+TZ
-- **Updated**: YYYY-MM-DDTHH:mm:ss+TZ
-- **Author**: [team/person]
 - **Status**: [draft/production/deprecated]
+- **Updated**: YYYY-MM-DD
 
 ## Core Value (核心价值)
-[30 characters or less describing unique value]
+[Brief description of unique value]
 
 [Main content sections...]
 
 ## Version History (版本历史)
-| Version | Date | Type | Changes |
+| Version | Date | Changes |
 ```
+
+> **简化说明**: Created/Author 字段可选，时间戳使用日期格式即可
 
 ---
 
@@ -45,10 +45,8 @@ For module-level index documents (`ARCHITECTURE_DOCS_INDEX.md`).
 - **Document Type**: Architecture Index
 - **Module Type**: [Mobile/Backend/Frontend/Shared]
 - **Version**: X.Y.Z
-- **Created**: YYYY-MM-DDTHH:mm:ss+08:00
-- **Updated**: YYYY-MM-DDTHH:mm:ss+08:00
-- **Author**: [Team]
 - **Status**: production
+- **Updated**: YYYY-MM-DD
 - **Document Count**: N documents
 
 ## Core Value
@@ -106,12 +104,9 @@ For major component documents (≥10 files).
 - **Module Type**: [Business Logic/API/UI/Data/Test]
 - **Core Function**: [one-line description]
 - **Key Files**: [3-5 core files]
-- **Dependencies**: [key dependencies]
 - **Version**: X.Y.Z
-- **Created**: YYYY-MM-DDTHH:mm:ss+08:00
-- **Updated**: YYYY-MM-DDTHH:mm:ss+08:00
-- **Author**: [Team]
 - **Status**: production
+- **Updated**: YYYY-MM-DD
 
 ## Core Value
 [Component's unique value in ≤30 chars]
@@ -164,14 +159,11 @@ For sub-component documents (5-10 files).
 ## AI Quick Index
 - **Document Type**: Sub-Component Architecture
 - **Module Type**: [specific type]
-- **Core Function**: [detailed description]
+- **Core Function**: [description]
 - **Key Files**: [core files]
-- **Dependencies**: [dependencies]
 - **Version**: X.Y.Z
-- **Created**: YYYY-MM-DDTHH:mm:ss+08:00
-- **Updated**: YYYY-MM-DDTHH:mm:ss+08:00
-- **Author**: [Team]
 - **Status**: production
+- **Updated**: YYYY-MM-DD
 
 ## Core Value
 [Sub-component's value in ≤30 chars]
@@ -219,12 +211,14 @@ X.Y.Z
 └────── Major: Breaking changes, restructuring
 ```
 
-### Timestamp Format
+### Date Format
 
-ISO 8601 with timezone:
+简化日期格式:
 ```
-YYYY-MM-DDTHH:mm:ss+08:00
+YYYY-MM-DD
 ```
+
+> 小团队项目无需精确到秒的时间戳
 
 ### Status Values
 

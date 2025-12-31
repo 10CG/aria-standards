@@ -33,13 +33,16 @@
 
 ### 2.1 文档文件 (Markdown)
 
-#### 四段式命名规范 (v2.0.0)
+#### 四段式命名 (推荐)
 
-所有技术文档采用统一的四段式命名模式：
+对于复杂项目的技术文档，**推荐**使用四段式命名模式：
 
 ```
 [领域代码]-[类型代码]-[主题]-[子主题].md
 ```
+
+> **适用场景**: 大型项目、需要精确分类的文档
+> **可选**: 小型项目或简单文档可使用描述性名称 (如 `api-design.md`)
 
 #### 领域代码 (Domain)
 
@@ -73,20 +76,22 @@
 | 索引文件 | `index.md` | 固定小写 |
 | 报告文件 | `{name}-report-{date}.md` | `test-status-report-2025-07-28.md` |
 
-#### 示例对比
+#### 示例
 
 ```yaml
-✅ 推荐 (四段式):
+✅ 四段式 (复杂项目):
   - be-dev-api-design.md        # 后端API设计开发文档
   - mo-test-component-plan.md   # 移动端组件测试计划
   - pr-arch-overview.md         # 项目架构概览
-  - da-dev-database-schema.md   # 数据库模式开发文档
-  - do-ref-style.md             # 文档风格参考
+
+✅ 简洁式 (小型项目/模块):
+  - api-design.md               # API设计文档
+  - architecture.md             # 架构文档
+  - database-schema.md          # 数据库模式
 
 ❌ 不推荐:
-  - database_structure.md       # 使用下划线
+  - database_structure.md       # 使用下划线（应用连字符）
   - DatabaseStructure.md        # 使用驼峰
-  - database.md                 # 过于简单
   - dev plan.md                 # 使用空格
 ```
 

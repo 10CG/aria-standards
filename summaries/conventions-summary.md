@@ -26,7 +26,7 @@
 - **Classes**: PascalCase
 - **Variables**: snake_case (Python), camelCase (Dart)
 - **Constants**: SCREAMING_SNAKE_CASE
-- **Docs**: `{domain}-{type}-{topic}.md` (e.g., `be-dev-api.md`)
+- **Docs**: `{domain}-{type}-{topic}.md` (recommended, e.g., `be-dev-api.md`)
 
 ## Content Integrity
 
