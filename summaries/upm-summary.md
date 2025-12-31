@@ -9,6 +9,29 @@ Mobile:  mobile/docs/project-planning/unified-progress-management.md
 Backend: backend/project-planning/unified-progress-management.md
 ```
 
+## Requirements Section (Aria v3.0, Optional)
+
+```yaml
+requirements:
+  prd:
+    path: "docs/requirements/prd-v1.0.0.md"
+    status: approved  # draft | review | approved | deprecated
+    wiki_page: "PRD-v1.0.0"  # Optional: Forgejo Wiki page
+  user_stories:
+    total: 8
+    by_status:
+      draft: 1
+      ready: 3
+      in_progress: 2
+      done: 2
+      blocked: 0
+  forgejo:
+    enabled: true
+    synced_at: "2025-12-25T10:00:00Z"
+```
+
+> **Note**: This section is optional for backward compatibility. See `standards/core/upm/upm-requirements-extension.md`
+
 ## UPMv2-STATE Format
 
 ```yaml

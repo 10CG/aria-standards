@@ -1,6 +1,6 @@
 # Workflow Summary
 
-> **Sources**: `standards/core/workflow/*.md`
+> **Sources**: `standards/core/workflow/*.md`, `standards/core/ten-step-cycle/`
 
 ## AI Context Loading
 
@@ -13,15 +13,27 @@ Priority:
   3. Code files (only task-related)
 ```
 
-## Seven-Step Cycle (Original)
+## Ten-Step Cycle (Aria v3.0)
 
-1. **State Recognition** - Read UPM
-2. **Task Planning** - Plan next tasks
-3. **Subagent Assignment** - Select agent
-4. **Execution & Verification** - Implement
-5. **Architecture Sync** - Update docs
-6. **Git Commit** - Standard format
-7. **Progress Update** - Update UPM
+| Phase | Steps | Purpose |
+|-------|-------|---------|
+| **A: Planning** | A.0-A.3 | State scan → Spec → Tasks → Agents |
+| **B: Development** | B.1-B.3 | Branch → Implement → Sync docs |
+| **C: Integration** | C.1-C.2 | Commit → PR/Merge |
+| **D: Closure** | D.1-D.2 | Update UPM → Archive Spec |
+
+> **Note**: Seven-Step Cycle is DEPRECATED. Use Ten-Step Cycle.
+
+## Requirements Workflows (Aria v3.0)
+
+| Workflow | Purpose | Trigger |
+|----------|---------|---------|
+| requirements-check | Validate PRD/Story | `/requirements-check` |
+| requirements-update | Sync Story → UPM | `/requirements-update` |
+| iteration-planning | Sprint kickoff review | `/iteration-planning` |
+| publish-prd | PRD → Forgejo Wiki | `/publish-prd` |
+
+> See `standards/workflow/requirements-workflows.md` for details.
 
 ## Document Sync
 
