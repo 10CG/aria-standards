@@ -1,9 +1,11 @@
 # User Story: {简短标题}
 
 > **Story ID**: US-{XXX}
-> **Status**: Draft | Ready | In Progress | Done
+> **Status**: draft | ready | in_progress | done | blocked
 > **Priority**: HIGH | MEDIUM | LOW
 > **Created**: {YYYY-MM-DD}
+> **Forgejo Issue**: #{issue_number}
+> **Forgejo Milestone**: {milestone_name}
 
 ---
 
@@ -108,6 +110,19 @@ As a [角色], I want [功能], so that [价值].
 | HIGH | 必须在当前迭代完成 |
 | MEDIUM | 应该在当前迭代完成 |
 | LOW | 可以延后 |
+
+**Status 定义**:
+| 状态 | 含义 |
+|------|------|
+| draft | 草稿，尚未确认 |
+| ready | 已确认，可以开始实现 |
+| in_progress | 正在实现中 |
+| done | 已完成 |
+| blocked | 被阻塞，无法继续 |
+
+**Forgejo 字段** (可选):
+- `Forgejo Issue`: 关联的 Forgejo Issue 编号，由 `forgejo-sync` Skill 自动填充
+- `Forgejo Milestone`: 所属里程碑，用于版本规划
 
 **与项目格式兼容**:
 - 使用 `✅/❌` 标记功能状态

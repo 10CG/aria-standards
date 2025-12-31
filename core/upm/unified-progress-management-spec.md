@@ -251,6 +251,31 @@ deploymentEnv: "staging"
 - 必须在模块扩展标准中文档化
 - 不应与必需字段冲突
 
+#### 3.3 requirements (可选 - 扩展)
+
+**类型**: `object`
+**说明**: 需求追踪扩展，用于管理 PRD 和 User Story 状态
+
+详细规范请参见: [UPM Requirements Extension](./upm-requirements-extension.md)
+
+**简要示例**:
+```yaml
+requirements:
+  prd:
+    id: "prd-v2.1.0-notification"
+    status: approved
+    path: "docs/requirements/prd-v2.1.0-notification.md"
+  user_stories:
+    total: 8
+    ready: 3
+    in_progress: 2
+    done: 2
+```
+
+**约束**:
+- 此字段完全可选，不影响现有 UPM 文档兼容性
+- 启用需求追踪时，建议同时配置 Forgejo 集成
+
 ---
 
 ## 📄 完整文档结构
