@@ -136,6 +136,65 @@ Is it a simple fix/config/formatting?
             └─ No → Level 2 (Minimal Spec)
 ```
 
+### OpenSpec vs System Architecture
+
+OpenSpec and System Architecture serve different but complementary purposes:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Document Type Comparison                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  System Architecture                 OpenSpec Spec                  │
+│  ─────────────────────────           ─────────────                  │
+│  Location:                           Location:                      │
+│    docs/architecture/                  openspec/changes/{id}/       │
+│    system-architecture.md              proposal.md, tasks.md        │
+│                                                                     │
+│  Purpose:                            Purpose:                       │
+│    HOW the system is organized         WHAT to implement            │
+│    Technical decisions                 Implementation requirements  │
+│    Module boundaries                   Scenarios and acceptance     │
+│                                                                     │
+│  Lifecycle:                          Lifecycle:                     │
+│    Long-lived, evolves slowly          Active during development    │
+│    Persists across versions            Archived after completion    │
+│                                                                     │
+│  Updates:                            Updates:                       │
+│    When architecture changes           Per feature/change           │
+│    Infrequent, deliberate              Frequent, iterative          │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**When to Use Which**:
+
+| Scenario | Document Type |
+|----------|---------------|
+| Define system module boundaries | System Architecture |
+| Choose database technology | System Architecture (Technology Decisions) |
+| Implement user authentication feature | OpenSpec Spec |
+| Add new API endpoint | OpenSpec Spec |
+| Refactor data layer architecture | Both (Architecture first, then Spec) |
+| Major technology migration | Both (Architecture first, then Spec) |
+
+**Relationship**:
+```
+PRD (What & Why)
+      │
+      ▼
+System Architecture (How - organized)
+      │
+      ├───────────────────┐
+      ▼                   ▼
+Module Architecture    OpenSpec Spec (How - implemented)
+      │                   │
+      ▼                   ▼
+Code Implementation    Code Implementation
+```
+
+**Reference**: See `standards/core/documentation/system-architecture-spec.md` for System Architecture document specification.
+
 ### Trigger Conditions
 - A.0 completed with direction [A] or [B]
 - New feature request
@@ -798,10 +857,12 @@ A.3: Assign agents → User confirms → Proceed to Phase B
 - [UPM Specification](../upm/unified-progress-management-spec.md)
 - [OpenSpec Project](../../openspec/project.md)
 - [OpenSpec Templates](../../openspec/templates/README.md)
+- [Product Doc Hierarchy](../documentation/product-doc-hierarchy.md)
+- [System Architecture Spec](../documentation/system-architecture-spec.md)
 
 ---
 
-**Version**: 2.1.0
+**Version**: 2.2.0
 **Created**: 2025-12-13
-**Updated**: 2025-12-20
+**Updated**: 2026-01-02
 **Maintainer**: AI-DDD Development Team
