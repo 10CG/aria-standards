@@ -12,6 +12,10 @@
 
 完善需求追踪链路，从 PRD 分解 User Stories，建立文档生命周期管理机制，清理文档债务。
 
+> **Aria 定位**: 本 Change 聚焦于 **Pre-Cycle 需求管理** 活动，不涉及 Ten-Step Cycle 的代码实现。
+>
+> 文档流转链路: `PRD (L0) → System Architecture (L1) → User Stories → OpenSpec`
+
 ---
 
 ## 2. Why
@@ -24,7 +28,7 @@
 - L2: Module Docs (backend/mobile) ✅
 
 但需求链路存在断裂：
-- **PRD → User Stories**: 仅 1 个 Story，无法追踪需求到实现
+- **PRD → Architecture → User Stories**: L0/L1 已完备，但 User Stories 仅 1 个，无法追踪需求到实现
 - **文档债务**: 30 个分析文档 + 110 个归档文档未管理
 
 ### 2.2 问题
@@ -67,6 +71,8 @@
 
 - [ ] User Stories >= 10 个，覆盖 PRD 核心功能
 - [ ] 每个 Story 有明确的 Acceptance Criteria
+- [ ] **Stories 尊重 System Architecture 模块边界**
+- [ ] **requirements-validator 验证通过 (链路完整性检查)**
 - [ ] 分析文档生命周期规范建立
 - [ ] 归档文档评估完成
 
@@ -82,6 +88,10 @@
 
 ## 6. References
 
-- Parent: `docs/requirements/prd-todo-app-v1.md`
+- Parent PRD: `docs/requirements/prd-todo-app-v1.md`
+- System Architecture: `docs/architecture/system-architecture.md`
 - Related: `restructure-doc-architecture` (archived)
-- Standards: `standards/core/documentation/product-doc-hierarchy.md`
+- Standards:
+  - `standards/core/documentation/product-doc-hierarchy.md` (文档层次)
+  - `standards/core/documentation/system-architecture-spec.md` (架构规范)
+  - `standards/methodology/aria-brand-guide.md` (Aria 方法论)
