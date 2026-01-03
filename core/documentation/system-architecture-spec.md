@@ -1,8 +1,9 @@
 # System Architecture Document Specification
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Created**: 2026-01-02
+> **Last Updated**: 2026-01-04
 > **Methodology**: Aria (AI-DDD v3.0)
 
 ---
@@ -47,6 +48,19 @@ A System Architecture document:
 ### 1.3 Terminology Note
 
 This document type replaces the former "RPD (Requirements Planning Document)" terminology. The new name better reflects its purpose as a technical architecture document rather than a requirements document.
+
+### 1.4 Development Phase
+
+System Architecture creation is a **Pre-Cycle** activity in Aria methodology:
+
+| Aspect | Description |
+|--------|-------------|
+| **Phase** | Pre-Cycle (before Ten-Step Cycle) |
+| **NOT** | Phase A (Phase A focuses on OpenSpec for specific features) |
+| **Purpose** | Establish technical constraints for User Stories and OpenSpec |
+| **Update Frequency** | Per major release or significant architecture change |
+
+> **Important**: System Architecture is created BEFORE entering Ten-Step Cycle, not during Phase A.
 
 ---
 
@@ -347,6 +361,22 @@ OpenSpec Specs:
   - Active during development, archived after
 ```
 
+### 5.4 Output: User Stories
+
+```yaml
+Relationship: System Architecture constrains User Stories
+
+System Architecture provides:
+  - Technical boundaries for story scope
+  - Module assignment for implementation
+  - Non-functional requirements as acceptance criteria
+
+User Stories MUST:
+  - Respect module boundaries defined here
+  - Reference architectural constraints when relevant
+  - Be created during Pre-Cycle phase
+```
+
 ---
 
 ## 6. Examples
@@ -356,9 +386,10 @@ OpenSpec Specs:
 ```markdown
 # Chunfeng Xuntiansi System Architecture
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Created**: 2026-01-02
+> **Last Updated**: 2026-01-04
 > **Parent Document**: `docs/requirements/prd-todo-app-v1.md`
 
 ## 1. Executive Summary
@@ -431,4 +462,5 @@ Chunfeng Xuntiansi is a personal productivity system with AI-powered memory...
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.1.0 | 2026-01-04 | Added Pre-Cycle concept (§1.4), User Stories relationship (§5.4) | AI Assistant |
 | 1.0.0 | 2026-01-02 | Initial version | AI Assistant |

@@ -1,6 +1,6 @@
 # Product Documentation Hierarchy Specification
 
-> **Version**: 1.2.0
+> **Version**: 1.2.1
 > **Status**: Active
 > **Created**: 2026-01-02
 > **Last Updated**: 2026-01-04
@@ -88,7 +88,7 @@ L0 PRD → L1 System Architecture → User Stories
 
 | Aspect | Description |
 |--------|-------------|
-| **Location** | `docs/requirements/stories/` |
+| **Location** | `docs/requirements/user-stories/` |
 | **Purpose** | Fine-grained, implementable requirement units |
 | **Owner** | Product Owner + Development Team |
 | **Input** | PRD goals, Architecture constraints |
@@ -463,6 +463,7 @@ PRD (L0) → System Architecture (L1) → User Stories → OpenSpec
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.2.1 | 2026-01-04 | Fixed User Stories path (stories/ → user-stories/) | AI Assistant |
 | 1.2.0 | 2026-01-04 | Added Pre-Cycle concept (§9.1), User Stories position (§2.3), fixed document flow (§9.2) | AI Assistant |
 | 1.1.0 | 2026-01-03 | Added Module Structure Standard (§6.3), Required/Optional files, Anti-Patterns (§6.4) | AI Assistant |
 | 1.0.0 | 2026-01-02 | Initial version - migrated from project DOC_HIERARCHY.md | AI Assistant |
