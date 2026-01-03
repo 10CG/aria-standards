@@ -3,6 +3,19 @@
 > **Aria Methodology** (AI-DDD v3.0) - AI + Rhythm + Iteration + Automation
 > 融合 OpenSpec、十步循环、需求管理的完整开发规范体系
 
+## Authoritative Source (权威文档)
+
+> **唯一权威信息源**: [`methodology/aria-brand-guide.md`](methodology/aria-brand-guide.md)
+>
+> 该文档定义了 Aria 方法论的完整结构，包括：
+> - **Aria Core Systems**: 开发周期模型、状态管理、需求管理、规范驱动系统
+> - **Brand Structure**: Pre-Cycle、Ten-Step Cycle、Skills 分类
+> - **Naming Conventions**: 文件、Skills、OpenSpec 命名规则
+
+所有关于 Aria 方法论的描述应以 aria-brand-guide.md 为准。
+
+---
+
 ## 核心价值
 
 本仓库提供了一套完整的AI驱动开发规范体系：

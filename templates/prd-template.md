@@ -126,11 +126,16 @@
 - 版本规划 (如 v2.0.0 MVP 范围)
 - 跨团队沟通的需求基线
 
-**PRD → User Story → OpenSpec 关系**:
+**文档关系 (Document Flow)**:
 ```
-PRD (What & Why)     →  User Stories (用户价值)  →  OpenSpec (How)
-宏观需求描述              细粒度需求点                技术实现方案
+PRD (L0) → System Architecture (L1) → User Stories → OpenSpec
+产品需求     系统架构设计              可实现需求单元   技术实现方案
 ```
+
+- **PRD**: 定义产品愿景、功能范围、成功标准 (What & Why)
+- **System Architecture**: 定义系统级技术设计 (How - 系统级)
+- **User Stories**: 细粒度的用户价值需求 (Who & Value)
+- **OpenSpec**: 具体功能的技术实现方案 (How - 实现级)
 
 **小团队简化建议**:
 - 可省略 RACI 职责分配

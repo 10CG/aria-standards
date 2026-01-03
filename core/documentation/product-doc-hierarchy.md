@@ -1,9 +1,9 @@
 # Product Documentation Hierarchy Specification
 
-> **Version**: 1.1.0
+> **Version**: 1.2.0
 > **Status**: Active
 > **Created**: 2026-01-02
-> **Last Updated**: 2026-01-03
+> **Last Updated**: 2026-01-04
 > **Methodology**: Aria (AI-DDD v3.0)
 
 ---
@@ -70,11 +70,30 @@ L4 - Implementation Documentation
 
 | Layer | Owner | Content | Update Frequency |
 |-------|-------|---------|------------------|
-| L0 | Product Owner | Vision, goals, user stories | Per major release |
+| L0 | Product Owner | Vision, goals, feature scope | Per major release |
 | L1 | Tech Lead | Architecture decisions, boundaries | Per phase change |
 | L2 | Module Lead | Module requirements, design | Per feature |
 | L3 | Developer | Detailed specs, contracts | Per implementation |
 | L4 | Developer | Code docs, guides | Continuous |
+
+### 2.3 User Stories Position
+
+User Stories are **not a documentation layer** but rather **implementable requirement units** derived from PRD (L0) and constrained by System Architecture (L1):
+
+```
+L0 PRD → L1 System Architecture → User Stories
+                                       ↓
+                             (ready for Ten-Step Cycle)
+```
+
+| Aspect | Description |
+|--------|-------------|
+| **Location** | `docs/requirements/stories/` |
+| **Purpose** | Fine-grained, implementable requirement units |
+| **Owner** | Product Owner + Development Team |
+| **Input** | PRD goals, Architecture constraints |
+| **Output** | Ready stories for Ten-Step Cycle |
+| **Phase** | Pre-Cycle (requirements management) |
 
 ---
 
@@ -391,24 +410,42 @@ The following content has been migrated:
 
 ## 9. Integration with Aria Methodology
 
-### 9.1 Ten-Step Cycle Integration
+### 9.1 Development Cycle Integration
+
+Aria 将开发活动分为两个阶段：
+
+#### Pre-Cycle: Requirements Management (需求管理 - 十步循环之前)
+
+| Activity | Output | Owner |
+|----------|--------|-------|
+| Product requirements definition | PRD (L0) | Product Owner |
+| System architecture design | System Architecture (L1) | Tech Lead |
+| Requirements refinement | User Stories (ready status) | Product Owner + Dev |
+
+> **Important**: PRD and System Architecture creation is a Pre-Cycle activity, NOT Phase A responsibility.
+
+#### Ten-Step Cycle: Implementation (实现周期)
 
 | Phase | Documentation Actions |
 |-------|----------------------|
-| Phase A | Create/Update PRD, System Architecture |
-| Phase B | Create Module PRD/Architecture |
+| Phase A | Select ready User Story, create OpenSpec (proposal.md, tasks.md) |
+| Phase B | Create Module PRD/Architecture as needed |
 | Phase C | Create detailed design, contracts |
 | Phase D | Update version history, status |
 
-### 9.2 OpenSpec Relationship
-
-- **OpenSpec Specs**: Focus on implementation requirements and scenarios
-- **System Architecture**: Focus on technical design and decisions
-- **PRD**: Focus on business requirements and user value
+### 9.2 Document Flow Relationship
 
 ```
-PRD (What & Why) → System Architecture (How) → OpenSpec Specs (Detailed How)
+PRD (L0) → System Architecture (L1) → User Stories → OpenSpec
+产品需求     系统架构设计              可实现需求单元   技术实现方案
 ```
+
+| Document | Purpose | Phase |
+|----------|---------|-------|
+| **PRD** | Business requirements and user value (What & Why) | Pre-Cycle |
+| **System Architecture** | Technical design and decisions (How - System Level) | Pre-Cycle |
+| **User Stories** | Fine-grained implementable requirement units | Pre-Cycle |
+| **OpenSpec Specs** | Implementation requirements and scenarios (How - Implementation Level) | Ten-Step Cycle |
 
 ---
 
@@ -426,5 +463,6 @@ PRD (What & Why) → System Architecture (How) → OpenSpec Specs (Detailed How)
 
 | Version | Date | Changes | Author |
 |---------|------|---------|--------|
+| 1.2.0 | 2026-01-04 | Added Pre-Cycle concept (§9.1), User Stories position (§2.3), fixed document flow (§9.2) | AI Assistant |
 | 1.1.0 | 2026-01-03 | Added Module Structure Standard (§6.3), Required/Optional files, Anti-Patterns (§6.4) | AI Assistant |
 | 1.0.0 | 2026-01-02 | Initial version - migrated from project DOC_HIERARCHY.md | AI Assistant |

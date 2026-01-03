@@ -1,8 +1,9 @@
 # UPM Requirements Extension
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Created**: 2026-01-01
+> **Updated**: 2026-01-04
 > **Parent**: unified-progress-management-spec.md
 
 ---
@@ -25,6 +26,12 @@ requirements:
     path: "docs/requirements/prd-*.md"    # Required: File path
     wiki_page: "PRD-{version}-{feature}"  # Optional: Forgejo Wiki page name
     wiki_synced_at: "ISO8601 timestamp"   # Optional: Last wiki sync time
+  system_architecture:                    # Optional: System Architecture tracking
+    exists: true | false                  # Required: Whether architecture doc exists
+    path: "docs/architecture/*.md"        # Required if exists: File path
+    status: draft | active | outdated     # Required if exists: Architecture status
+    last_updated: "ISO8601 timestamp"     # Optional: Last update time
+    parent_prd: "prd-{version}"           # Optional: Associated PRD id
   user_stories:
     total: {number}                       # Required: Total story count
     draft: {number}                       # Optional: Draft stories (default: 0)
@@ -60,6 +67,16 @@ requirements:
 | `wiki_page` | string | No | Forgejo Wiki page name if published |
 | `wiki_synced_at` | string | No | ISO8601 timestamp of last wiki sync |
 
+### System Architecture Section
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `exists` | boolean | Yes | Whether system architecture document exists |
+| `path` | string | If exists | Relative path to architecture file |
+| `status` | enum | If exists | One of: `draft`, `active`, `outdated` |
+| `last_updated` | string | No | ISO8601 timestamp of last update |
+| `parent_prd` | string | No | ID of associated PRD (e.g., `prd-v2.1.0`) |
+
 ### User Stories Section
 
 | Field | Type | Required | Default | Description |
@@ -93,6 +110,14 @@ requirements:
 | `approved` | PRD is finalized | Create OpenSpec, start implementation |
 | `superseded` | Newer version exists | Reference only, no new work |
 
+### System Architecture Status
+
+| Status | Meaning | Allowed Actions |
+|--------|---------|-----------------|
+| `draft` | Architecture being designed | Edit architecture, refine modules |
+| `active` | Architecture finalized and current | Create User Stories, start implementation |
+| `outdated` | Architecture needs update | Review and update before new development |
+
 ### User Story Status
 
 | Status | Meaning | Allowed Actions |
@@ -121,6 +146,12 @@ requirements:
     path: "docs/requirements/prd-v2.1.0-notification.md"
     wiki_page: "PRD-v2.1.0-notification"
     wiki_synced_at: "2026-01-01T10:00:00+08:00"
+  system_architecture:
+    exists: true
+    path: "docs/architecture/system-architecture.md"
+    status: active
+    last_updated: "2026-01-01T09:00:00+08:00"
+    parent_prd: "prd-v2.1.0-notification"
   user_stories:
     total: 8
     draft: 1
@@ -190,6 +221,22 @@ draft + ready + in_progress + done + blocked == total
 ### Rule 3: Forgejo Sync Dependency
 
 If `forgejo.enabled` is `true`, user stories with `ready` or higher status SHOULD have associated Forgejo Issues.
+
+### Rule 4: Architecture-PRD Linkage
+
+If `system_architecture.exists` is `true` and `system_architecture.parent_prd` is set, the referenced PRD MUST exist.
+
+### Rule 5: Architecture Status Consistency
+
+If `prd.status` is `draft`, `system_architecture.status` SHOULD NOT be `active` (architecture should wait for PRD approval).
+
+### Rule 6: Requirement Chain Integrity
+
+For complete requirements tracking:
+```
+PRD (approved) → System Architecture (active) → User Stories (ready/in_progress/done)
+```
+User Stories SHOULD NOT be `in_progress` or `done` if `system_architecture.status` is `draft` or `outdated`.
 
 ---
 
