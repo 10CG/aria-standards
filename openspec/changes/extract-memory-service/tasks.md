@@ -33,8 +33,10 @@
 
 ### Task 1.3: 创建 Memory ARCHITECTURE.md
 - [ ] 创建 `memory/docs/ARCHITECTURE.md`
-- [ ] 定义技术架构（Mem0 + Zep + HippoRAG + Triplex）
-- [ ] 定义数据流和存储架构
+- [ ] 定义技术架构（Mem0 + Zep + Fast GraphRAG + Triplex via Ollama）
+- [ ] 定义数据流和存储架构（PostgreSQL + pgvector）
+- [ ] 定义 LLM 接口抽象（OpenAI 兼容）
+- [ ] 定义分阶段演进路线（MVP → 成长期 → 规模化）
 - [ ] 引用 Parent Documents
 
 **产出**: `memory/docs/ARCHITECTURE.md`
