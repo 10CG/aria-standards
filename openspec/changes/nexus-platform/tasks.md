@@ -89,13 +89,53 @@
 **产出**: `nexus/CLAUDE.md`
 
 ### Task 1.3: 创建 Nexus PRD
-- [ ] 创建 `docs/requirements/prd-nexus.md`
-- [ ] 定义产品愿景和定位
-- [ ] 定义核心功能 (Memory, Conversation, Knowledge)
-- [ ] 定义多租户需求
-- [ ] 定义非功能需求 (性能、安全)
 
-**产出**: `docs/requirements/prd-nexus.md`
+> **PRD vs OpenSpec 边界说明**:
+> - `proposal.md` = 技术变更提案，关注"如何做" (How)，Change 完成后归档
+> - `prd-nexus.md` = 产品需求定义，关注"做什么" (What)，长期维护
+> - PRD 通过引用 proposal.md 避免内容重复
+
+#### 1. 产品定位 (扩展 proposal.md)
+- [ ] 产品愿景声明
+- [ ] 目标用户画像 (租户类型: AI 应用开发团队)
+- [ ] 核心价值主张
+- [ ] 与竞品差异化 (自托管、数据主权、可定制)
+
+#### 2. 功能需求 (用户故事格式)
+- [ ] **Memory Service**
+  - 用户故事 (作为租户，我希望...)
+  - 使用场景 (记忆创建、语义检索、记忆关联)
+  - 验收标准 (AC)
+- [ ] **Conversation Service**
+  - 用户故事
+  - 使用场景 (对话管理、消息追加、摘要生成)
+  - 验收标准
+- [ ] **Knowledge Service** (Phase 2 占位)
+  - 高层描述
+  - 预期能力
+- [ ] **Tenant Management**
+  - 用户故事
+  - 使用场景 (租户注册、API Key 管理、配额管理)
+  - 验收标准
+
+#### 3. 非功能需求
+- [ ] **性能**: P95 延迟 < 200ms, 吞吐量目标
+- [ ] **安全**: API 认证、数据加密、审计日志、RLS 隔离
+- [ ] **可用性**: SLA 目标、灾备策略
+- [ ] **可扩展性**: 水平扩展、租户隔离
+
+#### 4. 路线图
+- [ ] MVP 功能清单 (引用 proposal.md Phase 1)
+- [ ] Phase 2/3/4 功能预览
+- [ ] 长期愿景
+
+#### 5. 关联文档
+- [ ] 引用 `openspec/changes/nexus-platform/proposal.md` (架构决策)
+- [ ] 引用 `todo-app PRD` (首个租户关系说明)
+
+**产出**: `nexus/docs/requirements/prd-nexus.md`
+
+**依赖**: Task 1.1 (仓库骨架), Stage 0 完成 (架构决策确定)
 
 ### Task 1.4: 创建 Nexus ARCHITECTURE.md
 - [ ] 创建 `docs/ARCHITECTURE.md`
