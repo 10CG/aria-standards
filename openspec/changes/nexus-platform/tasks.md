@@ -6,13 +6,13 @@
 
 | Stage | 任务数 | 状态 | 描述 |
 |-------|--------|------|------|
-| Stage 0: 架构决策 | 3 | ⏳ 待开始 | 确定关键架构决策 |
+| Stage 0: 架构决策 | 4 | ⏳ 待开始 | 确定关键架构决策 |
 | Stage 1: 仓库初始化 | 5 | ⏳ 待开始 | 创建独立仓库和文档 |
 | Stage 2: 核心服务 | 6 | ⏳ 待开始 | 实现核心 API |
 | Stage 3: SDK 与文档 | 4 | ⏳ 待开始 | Python SDK 和 API 文档 |
-| Stage 4: 集成与测试 | 4 | ⏳ 待开始 | Todo App 集成 |
+| Stage 4: 集成与测试 | 5 | ⏳ 待开始 | Todo App 集成 |
 
-**总计**: 22 个任务
+**总计**: 24 个任务
 
 ---
 
@@ -42,6 +42,17 @@
 - [ ] 创建 OpenAPI 初稿
 
 **产出**: `docs/api/openapi.yaml` (草稿)
+
+### Task 0.4: Backend 功能边界定义
+- [ ] 定义 AI Adapter Layer 职责边界
+- [ ] 确认 "数字元神" 人格层归属 Backend
+- [ ] 设计 Nexus 降级策略
+- [ ] 定义 Backend ↔ Nexus 用户 ID 映射方案
+- [ ] 创建 Backend AI 功能分层文档
+
+**产出**: `backend/docs/architecture/nexus-integration.md`
+
+**依赖**: Task 0.2, Task 0.3
 
 ---
 
@@ -236,6 +247,19 @@
 
 **产出**: 集成测试报告
 
+### Task 4.5: Backend AI Adapter Layer 实现
+- [ ] 创建 `backend/app/adapters/nexus/` 模块
+- [ ] 实现 NexusAdapter 基础类
+- [ ] 实现 Memory 适配器 (调用 nexus-sdk)
+- [ ] 实现 Conversation 适配器
+- [ ] 实现 "数字元神" 人格层接口
+- [ ] 实现降级策略 (CircuitBreaker + Fallback)
+- [ ] 编写单元测试和集成测试
+
+**产出**: Backend AI Adapter Layer 完整实现
+
+**依赖**: Task 4.3
+
 ---
 
 ## 依赖关系
@@ -245,7 +269,9 @@ Stage 0 (架构决策)
     │
     ├── Task 0.1 ──┐
     ├── Task 0.2 ──┤ (可并行)
-    └── Task 0.3 ──┘
+    ├── Task 0.3 ──┘
+    │              │
+    └── Task 0.4 ←─┘ (依赖 0.2, 0.3)
     │
     ▼
 Stage 1 (仓库初始化)
@@ -278,7 +304,11 @@ Stage 4 (集成与测试) ←─────────────────
     ├── Task 4.1 ──┐
     ├── Task 4.2 ──┤ (可并行)
     │              │
-    └── Task 4.3 ←─┴── Task 4.4
+    ├── Task 4.3 ←─┘
+    │         │
+    ├── Task 4.4 ←─┐
+    │              │
+    └── Task 4.5 ←─┘ (依赖 4.3)
 ```
 
 ---
@@ -289,6 +319,7 @@ Stage 4 (集成与测试) ←─────────────────
 |-------|--------|------|
 | Stage 0 | 仓库创建 | GitHub/Forgejo 仓库存在 |
 | Stage 0 | 数据模型 | ERD 图完成 |
+| Stage 0 | Backend 边界 | nexus-integration.md 文档完成 |
 | Stage 1 | 项目骨架 | 目录结构完整 |
 | Stage 1 | 文档完整 | PRD + ARCHITECTURE 存在 |
 | Stage 1 | 迁移脚本 | Alembic 可执行 |
@@ -299,6 +330,7 @@ Stage 4 (集成与测试) ←─────────────────
 | Stage 3 | 文档完整 | OpenAPI 验证通过 |
 | Stage 4 | Docker 部署 | `docker-compose up` 成功 |
 | Stage 4 | 集成测试 | Backend → Nexus 调用成功 |
+| Stage 4 | AI Adapter | 降级策略测试通过 |
 
 ---
 
@@ -319,9 +351,9 @@ Stage 4 (集成与测试) ←─────────────────
 
 | 阶段 | 预估工时 | 说明 |
 |------|----------|------|
-| Stage 0 | 0.5 周 | 决策已基本完成 |
+| Stage 0 | 1 周 | 决策 + Backend 边界定义 |
 | Stage 1 | 1 周 | 仓库和文档 |
 | Stage 2 | 2-3 周 | 核心服务实现 |
 | Stage 3 | 1 周 | SDK 和文档 |
-| Stage 4 | 1 周 | 集成和测试 |
-| **总计** | **5-6 周** | MVP 阶段 |
+| Stage 4 | 1.5 周 | 集成、测试 + AI Adapter |
+| **总计** | **6-7 周** | MVP 阶段 |
