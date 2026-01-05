@@ -1,6 +1,7 @@
 # OpenSpec Proposal: .claude 目录子模块化架构
 
-> **Status**: 🟡 Draft - 待讨论
+> **Status**: 🟢 Implemented - 已通过 Plugin Marketplace 方案实现
+> **Updated**: 2026-01-06
 > **Created**: 2025-12-29
 > **Author**: AI Assistant
 
