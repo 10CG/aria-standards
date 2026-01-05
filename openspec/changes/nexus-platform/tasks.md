@@ -6,7 +6,7 @@
 
 | Stage | 任务数 | 状态 | 描述 |
 |-------|--------|------|------|
-| Stage 0: 架构决策 | 5 | ⏳ 待开始 | 确定关键架构决策 |
+| Stage 0: 架构决策 | 5 | 🔄 进行中 | 确定关键架构决策 |
 | Stage 1: 仓库初始化 | 5 | ⏳ 待开始 | 创建独立仓库和文档 |
 | Stage 2: 核心服务 | 6 | ⏳ 待开始 | 实现核心 API |
 | Stage 3: SDK 与文档 | 4 | ⏳ 待开始 | Python SDK 和 API 文档 |
@@ -23,9 +23,9 @@
 ### Task 0.1: 确定仓库结构
 - [x] 决定独立仓库 vs 子目录 → **独立仓库**
 - [x] 确定仓库名称 → **nexus**
-- [ ] 创建 GitHub/Forgejo 仓库
+- [x] 创建 GitHub/Forgejo 仓库 → **https://forgejo.10cg.pub/10CG/nexus**
 
-**产出**: 空仓库 `nexus/`
+**产出**: 仓库 `nexus/` (已创建，含 README.md 和 .gitignore)
 
 ### Task 0.2: 多租户数据模型设计
 - [ ] 设计核心表结构 (tenants, api_keys, memories, etc.)
