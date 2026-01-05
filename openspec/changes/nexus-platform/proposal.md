@@ -520,7 +520,186 @@ class ResilientNexusClient:
 
 ---
 
-## 9. Appendix: API Key 格式
+## 9. Shared 子模块边界决策
+
+> **核心结论**: Nexus API 契约**不应该**放入 todo-app 的 shared 子模块。
+
+### 9.1 边界规则
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       shared 边界定义                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ✅ 包含:                                                        │
+│     - Mobile 直接调用 Backend 的 API 契约                        │
+│     - Mobile 和 Backend 共享的数据模型                           │
+│     - Mobile 需要展示的 Nexus 数据的「展示模型」                  │
+│                                                                  │
+│  ❌ 不包含:                                                      │
+│     - Nexus 原生 API 契约 (在 nexus/docs/api/openapi.yaml)      │
+│     - Backend 与外部系统的集成接口                               │
+│     - nexus-sdk 的类型定义                                       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 9.2 决策理由
+
+| 评估维度 | 放入 shared | 保持独立 |
+|----------|-------------|----------|
+| **独立性** | ❌ 耦合增加 | ✅ 清晰边界 |
+| **可复用性** | ❌ 其他项目需依赖 todo-app | ✅ nexus 独立分发 |
+| **版本管理** | ❌ 耦合版本 | ✅ 独立演进 |
+| **维护成本** | ❌ 双重维护 | ✅ 单点维护 |
+
+### 9.3 Mobile 展示 Nexus 数据的方案
+
+**Backend 作为 Anti-Corruption Layer (ACL)**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    数据流转与模型转换                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Mobile              Backend (ACL)              Nexus           │
+│   (Dart)              (Python)                   (Python)        │
+│                                                                  │
+│   ┌─────────────┐    ┌───────────────────┐    ┌─────────────┐   │
+│   │ TodoMemory  │    │   Transformer     │    │ NexusMemory │   │
+│   │ (shared)    │<───│ nexus_to_todo()   │<───│ (nexus-sdk) │   │
+│   │             │    │                   │    │             │   │
+│   │ - id        │    │                   │    │ - id        │   │
+│   │ - summary   │    │                   │    │ - content   │   │
+│   │ - type      │    │                   │    │ - memory_type│  │
+│   │ - createdAt │    │                   │    │ - score     │   │
+│   └─────────────┘    └───────────────────┘    │ - metadata  │   │
+│                                                │ - embedding │   │
+│                                                └─────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**设计原则**:
+1. **薄接口**: shared 只定义 Mobile 实际需要的字段
+2. **Backend 负责转换**: 将 Nexus 复杂模型转换为简化的展示模型
+3. **隐藏实现细节**: Mobile 不感知 Nexus 的存在
+4. **版本隔离**: Nexus 模型变化只影响 Backend 转换层
+
+### 9.4 Shared 新增模型定义
+
+```json
+// shared/schemas/ai/memory.schema.json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TodoMemory",
+  "description": "Mobile 端展示的记忆模型 (源自 Nexus)",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "summary": { "type": "string", "description": "记忆摘要 (截取自 content)" },
+    "type": { "enum": ["episodic", "semantic", "procedural"] },
+    "relevance_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["id", "summary", "type", "created_at"]
+}
+```
+
+```json
+// shared/schemas/ai/conversation.schema.json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TodoConversation",
+  "description": "Mobile 端展示的对话模型 (源自 Nexus)",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string", "description": "对话标题 (自动生成)" },
+    "last_message": { "type": "string", "description": "最后一条消息预览" },
+    "message_count": { "type": "integer" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["id", "title", "updated_at"]
+}
+```
+
+### 9.5 Backend Transformer 示例
+
+```python
+# backend/app/adapters/nexus/transformers.py
+from nexus_sdk.models import NexusMemory, NexusConversation
+from shared.models.ai import TodoMemory, TodoConversation
+
+class MemoryTransformer:
+    @staticmethod
+    def to_todo_memory(nexus_memory: NexusMemory) -> TodoMemory:
+        """将 Nexus 记忆模型转换为 Todo 应用的展示模型"""
+        return TodoMemory(
+            id=str(nexus_memory.id),
+            summary=nexus_memory.content[:200] + "..." if len(nexus_memory.content) > 200 else nexus_memory.content,
+            type=nexus_memory.memory_type.value,
+            relevance_score=nexus_memory.score or 0.0,
+            created_at=nexus_memory.created_at.isoformat()
+        )
+
+    @staticmethod
+    def to_todo_memories(nexus_memories: list[NexusMemory]) -> list[TodoMemory]:
+        return [MemoryTransformer.to_todo_memory(m) for m in nexus_memories]
+
+
+class ConversationTransformer:
+    @staticmethod
+    def to_todo_conversation(nexus_conv: NexusConversation) -> TodoConversation:
+        """将 Nexus 对话模型转换为 Todo 应用的展示模型"""
+        return TodoConversation(
+            id=str(nexus_conv.id),
+            title=nexus_conv.summary or f"对话 {nexus_conv.id[:8]}",
+            last_message=nexus_conv.messages[-1].content[:100] if nexus_conv.messages else "",
+            message_count=len(nexus_conv.messages),
+            updated_at=nexus_conv.updated_at.isoformat()
+        )
+```
+
+### 9.6 其他项目使用 Nexus
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    多项目共享 Nexus 的架构                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
+│  │ todo-app     │    │ project-B    │    │ project-C    │       │
+│  │ (Backend)    │    │ (Backend)    │    │ (Backend)    │       │
+│  └──────┬───────┘    └──────┬───────┘    └──────┬───────┘       │
+│         │                   │                   │                │
+│         │ pip install       │ pip install       │ pip install    │
+│         │ nexus-sdk         │ nexus-sdk         │ nexus-sdk      │
+│         │                   │                   │                │
+│         └───────────────────┼───────────────────┘                │
+│                             ↓                                    │
+│               ┌─────────────────────────┐                        │
+│               │       nexus-sdk          │                        │
+│               │   (PyPI Package)         │                        │
+│               └─────────────┬───────────┘                        │
+│                             │ HTTP                                │
+│                             ↓                                    │
+│               ┌─────────────────────────┐                        │
+│               │    Nexus Platform        │                        │
+│               │   (Self-hosted)          │                        │
+│               └─────────────────────────┘                        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**优势**:
+- 每个项目独立依赖 nexus-sdk，无需引用 todo-app 的 shared
+- Nexus 可独立演进，发布新版本
+- 各项目自行定义展示模型，互不影响
+
+---
+
+## 10. Appendix: API Key 格式
 
 ```
 前缀: nx_live_ (生产) / nx_test_ (测试)

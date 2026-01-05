@@ -6,13 +6,13 @@
 
 | Stage | 任务数 | 状态 | 描述 |
 |-------|--------|------|------|
-| Stage 0: 架构决策 | 4 | ⏳ 待开始 | 确定关键架构决策 |
+| Stage 0: 架构决策 | 5 | ⏳ 待开始 | 确定关键架构决策 |
 | Stage 1: 仓库初始化 | 5 | ⏳ 待开始 | 创建独立仓库和文档 |
 | Stage 2: 核心服务 | 6 | ⏳ 待开始 | 实现核心 API |
 | Stage 3: SDK 与文档 | 4 | ⏳ 待开始 | Python SDK 和 API 文档 |
-| Stage 4: 集成与测试 | 5 | ⏳ 待开始 | Todo App 集成 |
+| Stage 4: 集成与测试 | 7 | ⏳ 待开始 | Todo App 集成 |
 
-**总计**: 24 个任务
+**总计**: 27 个任务
 
 ---
 
@@ -53,6 +53,16 @@
 **产出**: `backend/docs/architecture/nexus-integration.md`
 
 **依赖**: Task 0.2, Task 0.3
+
+### Task 0.5: Shared 边界决策
+- [x] 确定 Nexus API 契约不放入 shared → **保持独立**
+- [ ] 定义 shared 边界规则文档
+- [ ] 设计 Mobile 展示模型 (TodoMemory, TodoConversation)
+- [ ] 设计 Backend ACL 转换策略
+
+**产出**: `shared/docs/BOUNDARY_RULES.md`
+
+**依赖**: Task 0.3
 
 ---
 
@@ -260,6 +270,29 @@
 
 **依赖**: Task 4.3
 
+### Task 4.6: Shared 展示模型定义
+- [ ] 创建 `shared/schemas/ai/` 目录
+- [ ] 定义 `memory.schema.json` (TodoMemory)
+- [ ] 定义 `conversation.schema.json` (TodoConversation)
+- [ ] 生成 Dart 模型 (Mobile)
+- [ ] 生成 Python 模型 (Backend)
+- [ ] 更新 `shared/README.md` 边界说明
+
+**产出**: `shared/schemas/ai/*.schema.json`
+
+**依赖**: Task 0.5
+
+### Task 4.7: Backend Transformer 实现
+- [ ] 创建 `backend/app/adapters/nexus/transformers.py`
+- [ ] 实现 MemoryTransformer (NexusMemory → TodoMemory)
+- [ ] 实现 ConversationTransformer (NexusConversation → TodoConversation)
+- [ ] 编写转换器单元测试
+- [ ] 集成到 Backend API 响应
+
+**产出**: Backend 模型转换层
+
+**依赖**: Task 4.5, Task 4.6
+
 ---
 
 ## 依赖关系
@@ -271,7 +304,8 @@ Stage 0 (架构决策)
     ├── Task 0.2 ──┤ (可并行)
     ├── Task 0.3 ──┘
     │              │
-    └── Task 0.4 ←─┘ (依赖 0.2, 0.3)
+    ├── Task 0.4 ←─┤ (依赖 0.2, 0.3)
+    └── Task 0.5 ←─┘ (依赖 0.3)
     │
     ▼
 Stage 1 (仓库初始化)
@@ -306,9 +340,13 @@ Stage 4 (集成与测试) ←─────────────────
     │              │
     ├── Task 4.3 ←─┘
     │         │
-    ├── Task 4.4 ←─┐
-    │              │
-    └── Task 4.5 ←─┘ (依赖 4.3)
+    ├── Task 4.4
+    │
+    ├── Task 4.5 ←── Task 4.3
+    │         │
+    ├── Task 4.6 ←── Task 0.5
+    │         │
+    └── Task 4.7 ←── Task 4.5 + Task 4.6
 ```
 
 ---
@@ -320,6 +358,7 @@ Stage 4 (集成与测试) ←─────────────────
 | Stage 0 | 仓库创建 | GitHub/Forgejo 仓库存在 |
 | Stage 0 | 数据模型 | ERD 图完成 |
 | Stage 0 | Backend 边界 | nexus-integration.md 文档完成 |
+| Stage 0 | Shared 边界 | BOUNDARY_RULES.md 文档完成 |
 | Stage 1 | 项目骨架 | 目录结构完整 |
 | Stage 1 | 文档完整 | PRD + ARCHITECTURE 存在 |
 | Stage 1 | 迁移脚本 | Alembic 可执行 |
@@ -331,6 +370,8 @@ Stage 4 (集成与测试) ←─────────────────
 | Stage 4 | Docker 部署 | `docker-compose up` 成功 |
 | Stage 4 | 集成测试 | Backend → Nexus 调用成功 |
 | Stage 4 | AI Adapter | 降级策略测试通过 |
+| Stage 4 | 展示模型 | shared/schemas/ai/*.schema.json 存在 |
+| Stage 4 | Transformer | 模型转换单元测试通过 |
 
 ---
 
@@ -351,9 +392,9 @@ Stage 4 (集成与测试) ←─────────────────
 
 | 阶段 | 预估工时 | 说明 |
 |------|----------|------|
-| Stage 0 | 1 周 | 决策 + Backend 边界定义 |
+| Stage 0 | 1 周 | 决策 + Backend/Shared 边界定义 |
 | Stage 1 | 1 周 | 仓库和文档 |
 | Stage 2 | 2-3 周 | 核心服务实现 |
 | Stage 3 | 1 周 | SDK 和文档 |
-| Stage 4 | 1.5 周 | 集成、测试 + AI Adapter |
-| **总计** | **6-7 周** | MVP 阶段 |
+| Stage 4 | 2 周 | 集成、测试 + AI Adapter + Transformer |
+| **总计** | **7-8 周** | MVP 阶段 |
