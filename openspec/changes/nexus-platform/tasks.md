@@ -56,9 +56,9 @@
 
 ### Task 0.5: Shared 边界决策
 - [x] 确定 Nexus API 契约不放入 shared → **保持独立**
-- [ ] 定义 shared 边界规则文档
-- [ ] 设计 Mobile 展示模型 (TodoMemory, TodoConversation)
-- [ ] 设计 Backend ACL 转换策略
+- [x] 定义 shared 边界规则文档
+- [x] 设计 Mobile 展示模型 (TodoMemory, TodoConversation)
+- [x] 设计 Backend ACL 转换策略
 
 **产出**: `shared/docs/BOUNDARY_RULES.md`
 
