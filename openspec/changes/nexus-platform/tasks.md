@@ -28,27 +28,27 @@
 **产出**: 仓库 `nexus/` (已创建，含 README.md 和 .gitignore)
 
 ### Task 0.2: 多租户数据模型设计
-- [ ] 设计核心表结构 (tenants, api_keys, memories, etc.)
-- [ ] 设计 RLS 策略
-- [ ] 设计向量索引策略
-- [ ] 创建 ERD 图
+- [x] 设计核心表结构 (tenants, api_keys, memories, etc.)
+- [x] 设计 RLS 策略
+- [x] 设计向量索引策略
+- [x] 创建 ERD 图
 
-**产出**: `docs/architecture/data-model.md`
+**产出**: `docs/architecture/data-model.md` ✅
 
 ### Task 0.3: API 规范评审
-- [ ] 评审 API 端点设计
-- [ ] 确定认证机制 (API Key 格式)
-- [ ] 确定 Rate Limiting 策略
-- [ ] 创建 OpenAPI 初稿
+- [x] 评审 API 端点设计
+- [x] 确定认证机制 (API Key 格式)
+- [x] 确定 Rate Limiting 策略
+- [x] 创建 OpenAPI 初稿
 
-**产出**: `docs/api/openapi.yaml` (草稿)
+**产出**: `docs/api/openapi.yaml` ✅
 
 ### Task 0.4: Backend 功能边界定义
-- [ ] 定义 AI Adapter Layer 职责边界
-- [ ] 确认 "数字元神" 人格层归属 Backend
-- [ ] 设计 Nexus 降级策略
-- [ ] 定义 Backend ↔ Nexus 用户 ID 映射方案
-- [ ] 创建 Backend AI 功能分层文档
+- [x] 定义 AI Adapter Layer 职责边界
+- [x] 确认 "数字元神" 人格层归属 Backend
+- [x] 设计 Nexus 降级策略
+- [x] 定义 Backend ↔ Nexus 用户 ID 映射方案
+- [x] 创建 Backend AI 功能分层文档
 
 **产出**: `backend/docs/architecture/nexus-integration.md`
 
