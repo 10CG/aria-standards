@@ -2,7 +2,7 @@
 
 > **Status**: Approved
 > **Created**: 2026-01-04
-> **Updated**: 2026-01-05
+> **Updated**: 2026-01-07
 > **Author**: AI Assistant
 > **Priority**: P0
 > **Depends-On**: complete-requirements-chain (blocked until this completes)
@@ -706,3 +706,84 @@ class ConversationTransformer:
 长度: 32 字符随机串
 示例: nx_live_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
 ```
+
+---
+
+## 11. v1.1 架构决策记录 (ADR)
+
+> **Date**: 2026-01-07
+> **Status**: Approved
+> **Participants**: User, AI Assistant
+
+### 11.1 决策背景
+
+在 v1.0 架构评审中，识别出以下关键问题需要在开发前明确：
+
+1. Agent 数据归属问题
+2. Cognitive Orchestrator 位置
+3. 多租户隔离策略 (Mem0/Zep/GraphRAG 不支持 tenant_id)
+4. 社会关系 (Subject) 存储模型
+5. 统一入口 API 设计
+6. 异步写入需求
+
+### 11.2 架构决策清单
+
+| # | 问题 | 决策 | 理由 |
+|---|------|------|------|
+| **D1** | Agent 数据归属 | **Backend 存配置，Nexus 只存 ID** | 关注点分离，Nexus 是"Memory Middleware"，不关心业务逻辑 |
+| **D2** | Orchestrator 位置 | **在 Backend** | Nexus 只返回记忆信息，提供高质量上下文，不理解业务 |
+| **D3** | 多租户隔离 | **复合 ID 策略 (`tenant::user`)** | 不修改第三方库源码，MVP 阶段逻辑隔离足够 |
+| **D4** | 分隔符 | **`::` (双冒号)** | 编程语言命名空间惯例，避免 URL 编码问题 |
+| **D5** | Subject 存储 | **GraphRAG Node + owner_user_id** | In-Graph Storage，不建新表，保持图遍历完整性 |
+| **D6** | 统一入口 API | **混合模式** | `/context/retrieve` 聚合 + CRUD 原子接口 |
+| **D7** | 技术栈确认 | **Fast GraphRAG + Arq + Redis** | Fast GraphRAG 工程化更好，Arq 异步原生支持 |
+| **D8** | 异步写入 | **Arq Workers** | Triplex 实体抽取放后台，Sync Read / Async Write |
+
+### 11.3 实体模型 (v1.1)
+
+```
+Tenant (租户)
+    │
+    ├── Agent (AI角色)     ─ 配置在 Backend，Nexus 只存 tenant::agent_id
+    │
+    ├── User (用户)        ─ 复合 ID: tenant::user_id
+    │       │
+    │       └── Subject    ─ 社会实体，作为 GraphRAG Node
+    │           (Sarah)      owner_user_id = tenant::user_id
+    │
+    └── Knowledge          ─ 公共知识库，compound_agent_id 归属
+```
+
+### 11.4 API 设计 (v1.1)
+
+| 接口 | 用途 | 说明 |
+|------|------|------|
+| `POST /context/retrieve` | 聚合上下文检索 | **Chat 主流程**，内部 asyncio.gather 并行查询 |
+| `/memories/*` | 记忆 CRUD | 管理接口 |
+| `/conversations/*` | 对话 CRUD | 管理接口 |
+| `/knowledge/*` | 知识图谱 | 管理接口 |
+
+### 11.5 文档更新
+
+本次决策导致以下文档更新：
+
+| 文档 | 更新内容 |
+|------|----------|
+| `nexus/docs/architecture/data-model.md` | v1.1 实体模型、复合 ID、Subject 节点 |
+| `nexus/docs/api/openapi.yaml` | 新增 `/context/retrieve` 端点和 Schema |
+| `nexus/docs/ARCHITECTURE.md` | 完整架构蓝图 (新建) |
+| `nexus/docs/architecture/tenancy-isolation.md` | 租户隔离策略详解 (新建) |
+
+### 11.6 隔离策略两阶段
+
+| 阶段 | 隔离级别 | 实现 |
+|------|----------|------|
+| **Phase 1 (MVP)** | 逻辑隔离 | 复合 ID 前缀 (`tenant::user`) |
+| **Phase 2** | 物理隔离 | PostgreSQL RLS + 触发器自动填充 tenant_id |
+
+### 11.7 相关文档
+
+- [Data Model v1.1](../../nexus/docs/architecture/data-model.md)
+- [Architecture Overview](../../nexus/docs/ARCHITECTURE.md)
+- [Tenancy Isolation Strategy](../../nexus/docs/architecture/tenancy-isolation.md)
+- [API Specification v1.1](../../nexus/docs/api/openapi.yaml)
