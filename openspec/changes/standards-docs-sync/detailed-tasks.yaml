@@ -221,7 +221,7 @@ tasks:
   - id: TASK-011
     parent: "4.1"
     title: 运行 openspec validate 验证文档格式
-    status: in_progress
+    status: completed
     complexity: S
     priority: P1
     dependencies: [TASK-001, TASK-002, TASK-003, TASK-004, TASK-005, TASK-006, TASK-007, TASK-008, TASK-009, TASK-010]
@@ -240,7 +240,7 @@ tasks:
   - id: TASK-012
     parent: "4.2"
     title: 检查所有链接有效性
-    status: pending
+    status: completed
     complexity: M
     priority: P1
     dependencies: [TASK-011]
@@ -260,7 +260,7 @@ tasks:
   - id: TASK-013
     parent: "4.3"
     title: 运行文档一致性检查
-    status: pending
+    status: completed
     complexity: M
     priority: P1
     dependencies: [TASK-012]
