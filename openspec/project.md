@@ -1,48 +1,99 @@
-# Standards Repository - Project Context
+# OpenSpec - Project Definition
+
+> **Version**: 2.0.0
+> **Status**: Active
+> **Purpose**: Methodology Definition Repository
 
 ## Purpose
-This repository is the **authoritative source** for development standards, processes, and quality gates for the Todo App multi-repository project.
 
-It stores the **Aria Methodology** (AI-DDD v3.0) using the **OpenSpec framework**.
+This repository defines the **OpenSpec format** - a standardized specification format for AI-driven development projects using the Aria methodology.
 
-> **Aria** = AI + Rhythm + Iteration + Automation
-> See [Aria Brand Guide](../standards/methodology/aria-brand-guide.md) for details.
+OpenSpec is the specification format used by the Aria AI-DDD (AI-Assisted Domain-Driven Design) methodology.
 
-## Scope
+## What is OpenSpec?
 
-### In Scope
-- Aria Methodology definitions (Ten-Step Cycle, UPM, OpenSpec, Validation Gates)
-- Architecture principles (Contract-First, Single Source of Truth)
-- Coding standards (language-specific conventions)
-- Workflow standards (Git, PR, review processes)
-- Quality gates (Spec-Kit inspired gates)
+OpenSpec is a Markdown-based specification format that enables:
 
-### Out of Scope
-- Feature-specific specifications (belong in mobile/backend/shared)
-- API contracts (belong in shared)
-- Implementation code
+- **Structured requirements capture** - proposal.md and tasks.md templates
+- **AI-readable specifications** - Optimized for Claude Code and other AI assistants
+- **Traceable development** - From PRD → System Architecture → Implementation
 
-## Organization Principle
+## Repository Structure
 
-Specs are organized by **capability domain**, not by feature:
-- `methodology/` - Aria Core concepts (Ten-Step Cycle, brand guide)
-- `core/` - Core specifications (UPM, workflow, ten-step-cycle)
-- `conventions/` - Coding and process conventions
-- `extensions/` - Platform-specific extensions (mobile, backend)
-- `templates/` - Document templates (PRD, User Story, etc.)
-- `summaries/` - Quick reference summaries
+```
+openspec/
+├── project.md        # This file - OpenSpec format definition
+├── templates/        # Specification templates
+│   ├── proposal-minimal.md    # Level 2 Spec template
+│   └── tasks.md                # Task breakdown template
+├── specs/            # Current active specifications
+├── VALIDATION.md     # Validation rules for OpenSpec documents
+└── AGENTS.md         # Agent capability definitions
+```
 
-## Standards Version
-Current: Aria v3.0.0 (AI-DDD)
+## Usage in Projects
 
-## Related Documentation
+### Projects Using OpenSpec
 
-### Main Repository
-<!-- 设计背景参考（主项目文档）:
-     - docs/analysis/openspec-pilot-guide.md
-     - docs/analysis/spec-system-comparison-analysis.md
--->
+Each project should maintain its own `openspec/` directory:
 
-### Standards Workflow
-- [子模块开发路线图](../workflow/submodule-development-roadmap.md)
-- [OpenSpec 试点引用](../workflow/openspec-pilot-reference.md)
+```
+your-project/
+├── openspec/
+│   ├── changes/          # Proposed changes (Draft/Review)
+│   │   └── {feature}/
+│   │       ├── proposal.md
+│   │       └── tasks.md
+│   └── archive/          # Completed changes
+│       └── {date}-{feature}/
+└── ...
+```
+
+### Integration with aria-standards
+
+Projects include aria-standards as a Git submodule:
+
+```bash
+# In your project
+git submodule add ssh://forgejo@forgejo.10cg.pub/10CG/aria-standards.git standards
+```
+
+This provides:
+- OpenSpec format definitions
+- Template files for creating new specs
+- Validation rules
+- Aria methodology documentation
+
+## OpenSpec Levels
+
+| Level | Name | When to Use | Output |
+|-------|------|-------------|--------|
+| 1 | Skip | Simple fixes, typos | No spec needed |
+| 2 | Minimal | Medium features (1-3 days) | proposal.md |
+| 3 | Full | Architecture changes | proposal.md + tasks.md |
+
+## Specification Lifecycle
+
+```
+Draft → Review → Approved → Implementing → Implemented → Archived
+                                                           ↓
+                                              Move to archive/
+```
+
+## Related Resources
+
+- **Aria Methodology**: https://forgejo.10cg.pub/10CG/Aria
+- **OpenSpec Validation**: VALIDATION.md
+- **Agent Capabilities**: AGENTS.md
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.0.0 | 2026-01-19 | Restructured as methodology definition only |
+| 1.0.0 | 2025-12-17 | Initial version |
+
+---
+
+**Maintained By**: 10CG Lab
+**Repository**: https://forgejo@forgejo.10cg.pub/10CG/aria-standards.git
