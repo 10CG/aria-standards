@@ -1,6 +1,6 @@
 # AI 开发工作流标准
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Purpose**: 定义 AI 辅助开发的标准工作流程，确保开发质量和一致性
 
@@ -97,6 +97,124 @@
   同步状态:
     - 等待同步完成后再开发
     - 置信度: 待评估
+```
+
+### 2.4 TDD Enforcer 开发前检查
+
+TDD Enforcer 强制执行 RED-GREEN-REFACTOR 循环，确保测试先于实现：
+
+```yaml
+开发前检查流程:
+  RED Phase (测试编写):
+    检查项:
+      - [ ] 测试文件已创建/更新
+      - [ ] 测试用例覆盖需求场景
+      - [ ] 运行测试确认失败
+    强制规则:
+      - 测试失败前禁止编写业务代码
+      - 失败原因是功能未实现 (非测试错误)
+
+  GREEN Phase (最小实现):
+    检查项:
+      - [ ] 最小代码使测试通过
+      - [ ] 运行测试确认通过
+      - [ ] 无额外功能实现
+    强制规则:
+      - 测试通过后停止编码
+      - 禁止添加未测试的功能
+
+  REFACTOR Phase (代码重构):
+    检查项:
+      - [ ] 代码结构优化
+      - [ ] 保持测试通过
+      - [ ] 无功能变更
+    强制规则:
+      - 每次重构后运行测试
+      - 测试失败立即停止重构
+
+语言支持:
+  - Python: pytest, unittest
+  - JavaScript/TypeScript: jest, mocha
+  - Dart (Flutter): flutter test
+  - Java: JUnit
+  - Go: testing
+```
+
+### 2.5 Auto-Trigger 自动触发系统
+
+trigger-rules.json 定义了意图关键词到 Skill 的自动映射：
+
+```yaml
+触发机制:
+  配置位置: .claude/trigger-rules.json
+  匹配算法: 模糊匹配 + 上下文加成
+  置信度阈值:
+    - ≥ 0.8: 自动触发
+    - 0.6-0.8: 确认后触发
+    - < 0.6: 不触发
+
+常用关键词映射:
+  测试相关:
+    "测试", "test", "tdd" → tdd-enforcer
+    "覆盖率", "coverage" → flutter-test-generator
+
+  分支相关:
+    "分支", "branch", "pr" → branch-manager
+    "合并", "merge" → branch-manager
+
+  提交相关:
+    "提交", "commit" → commit-msg-generator
+    "变更", "changes" → strategic-commit-orchestrator
+
+  规划相关:
+    "规划", "plan", "task" → task-planner
+    "状态", "state", "progress" → state-scanner
+
+  文档相关:
+    "架构", "architecture" → arch-update
+    "文档同步", "doc sync" → arch-update
+
+上下文加成规则:
+  - 技术栈关键词增加相关 Skill 置信度
+  - 模块名 (mobile/backend) 增加 0.1 加成
+  - 多个关键词叠加计算最高置信度
+```
+
+### 2.6 Hooks 系统集成
+
+Hooks 系统在关键节点自动执行验证，确保工作流程合规：
+
+```yaml
+SessionStart Hook (会话开始):
+  触发时机: 每次 Claude Code 会话启动
+  验证内容:
+    - Git 状态检查 (分支、未提交变更)
+    - 依赖完整性验证
+    - 环境配置加载
+  配置: aria/hooks/hooks.json → session-start
+
+PreCommit Hook (提交前):
+  触发时机: git commit 执行前
+  验证内容:
+    - TDD 状态验证 (测试覆盖率)
+    - 代码格式检查
+    - 提交消息格式验证
+  配置: aria/hooks/hooks.json → pre-commit
+
+TaskComplete Hook (任务完成):
+  触发时机: 任务状态变更为 completed
+  验证内容:
+    - 测试覆盖率验证 (≥85%)
+    - 文档同步检查
+    - 架构文档更新确认
+  配置: aria/hooks/hooks.json → task-complete
+
+SubagentStop Hook (子代理停止):
+  触发时机: Subagent 任务结束
+  验证内容:
+    - 任务输出验证
+    - 生成物检查
+    - 错误日志收集
 ```
 
 ---
@@ -211,6 +329,61 @@
     - 任务延期或验证失败
     - 测试通过率 < 80%
     - 存在阻塞性问题
+```
+
+### 4.3 两阶段评审机制
+
+Phase B.2 执行验证包含两个阶段的评审，确保规范合规性和代码质量：
+
+```yaml
+Phase 1 - 规范合规性评审:
+  目的: 确保开发过程符合规范要求
+  检查项:
+    - [ ] OpenSpec 格式正确
+    - [ ] UPM 已同步更新
+    - [ ] 架构文档已更新
+    - [ ] 提交消息符合规范
+  验证工具:
+    - openspec validate
+    - UPM 格式检查
+    - 架构文档链接检查
+  通过标准: 所有检查项通过
+
+Phase 2 - 代码质量评审:
+  目的: 确保代码质量和安全性
+  检查项:
+    - [ ] 测试覆盖率 ≥ 85%
+    - [ ] 无安全漏洞
+    - [ ] 代码复杂度正常
+    - [ ] Lint 检查通过
+  验证工具:
+    - 代码覆盖率工具
+    - 安全扫描工具
+    - 复杂度分析工具
+  通过标准:
+    - 新增代码覆盖率 ≥ 85%
+    - 无高危/中危漏洞
+    - 圈复杂度 ≤ 15
+
+评审流程:
+  1. 执行 Phase 1 检查
+  2. 失败 → 修复问题 → 重新检查
+  3. 通过 → 执行 Phase 2 检查
+  4. 失败 → 修复问题 → 重新检查
+  5. 通过 → 标记评审完成
+
+评审记录:
+  格式:
+    phase1_review:
+      timestamp: ISO 8601 时间戳
+      status: passed | failed
+      issues: []
+    phase2_review:
+      timestamp: ISO 8601 时间戳
+      status: passed | failed
+      coverage: 87.5
+      vulnerabilities: []
+      complexity: 12
 ```
 
 ---
@@ -435,9 +608,13 @@ Step 5 - 经验总结:
 - [Git 子模块工作流](./git-submodule-workflow.md)
 - [契约驱动开发](../methodology/contract-driven-development.md)
 - [RACI 职责分工](../governance/raci-standard.md)
+- [TDD Enforcer](../../.claude/skills/tdd-enforcer/SKILL.md)
+- [Auto-Trigger 规则](../../.claude/trigger-rules.json)
+- [Hooks 系统](../../aria/hooks/README.md)
 
 ---
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Created**: 2025-12-14
+**Updated**: 2026-01-20
 **Maintainer**: AI-DDD Development Team

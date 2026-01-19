@@ -34,6 +34,75 @@ The Ten-Step Cycle is an enhanced development methodology that integrates:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+## Quality Enforcement (质量保障)
+
+Aria 采用**多层质量保障机制**，确保代码质量和工作流规范：
+
+### TDD Enforcer (测试驱动强制)
+
+遵循 **RED-GREEN-REFACTOR** 循环，强制测试先于代码：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    TDD Development Cycle                    │
+│                                                             │
+│   RED (失败测试)     GREEN (最小实现)    REFACTOR (重构)    │
+│   ─────────────     ────────────────    ─────────────────   │
+│                                                             │
+│   1. 编写测试        1. 编写最小代码       1. 优化结构       │
+│   2. 运行测试        2. 运行测试           2. 提取抽象       │
+│   3. 确认失败        3. 确认通过           3. 运行测试       │
+│   4. 停止编码        4. 停止扩展           4. 确认通过       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- **强制规则**: 编写业务代码前必须存在对应测试
+- **删除保护**: 删除测试前验证无业务代码依赖
+- **语言支持**: Python, JavaScript, TypeScript, Dart, Java, Go
+
+详情: [.claude/skills/tdd-enforcer/SKILL.md](../../../.claude/skills/tdd-enforcer/SKILL.md)
+
+### Auto-Trigger System (自动触发)
+
+基于意图关键词自动激活对应 Skill：
+
+```yaml
+意图关键词 → Skill 映射 (示例):
+  "test", "测试", "tdd"           → tdd-enforcer
+  "branch", "分支", "pr"          → branch-manager
+  "commit", "提交"                → commit-msg-generator
+  "plan", "规划", "task"          → task-planner
+  "state", "状态", "progress"     → state-scanner
+```
+
+- **配置文件**: `.claude/trigger-rules.json`
+- **匹配算法**: 模糊匹配 + 上下文加成
+- **置信度阈值**: ≥ 0.8 自动触发，0.6-0.8 确认触发
+
+### Hooks System (钩子系统)
+
+在关键节点自动执行验证：
+
+```yaml
+SessionStart (会话开始):
+  - 环境检查 (Git status, dependencies)
+  - 配置加载 (环境变量, aliases)
+
+PreCommit (提交前):
+  - TDD 状态验证 (计划中)
+  - 代码格式检查
+
+TaskComplete (任务完成):
+  - 测试覆盖率验证
+  - 文档同步检查
+```
+
+- **配置**: `aria/hooks/hooks.json`
+- **实现**: `aria/hooks/session-start.sh`, `run-hook.cmd`
+
+---
+
 ## Phase Details
 
 ### Phase A: Planning (规划)
@@ -50,8 +119,13 @@ The Ten-Step Cycle is an enhanced development methodology that integrates:
 | Step | Name | Purpose | Key Output |
 |------|------|---------|------------|
 | **B.1** | 分支创建 | Create isolated development environment | `feature/{module}/{task-id}-{desc}` |
-| **B.2** | 执行验证 | Implement and verify against Spec | Code + test results |
+| **B.2** | 执行验证 | Implement with TDD + quality checks | Code + tests + verification report |
 | **B.3** | 架构同步 | Keep docs in sync with implementation | Updated ARCHITECTURE.md |
+
+**B.2 质量检查要点**:
+- TDD 验证: 测试先于实现 (RED → GREEN → REFACTOR)
+- 两阶段评审: 规范合规性 + 代码质量
+- 测试覆盖: 新增代码必须有对应测试
 
 ### Phase C: Integration (集成)
 
@@ -168,6 +242,11 @@ workflow-runner (轻量编排器)
 ## Quick Reference
 
 ```yaml
+Quality Enforcement (质量保障):
+  TDD Cycle: RED (写测试) → GREEN (实现) → REFACTOR (重构)
+  Auto-Trigger: 意图关键词 → Skill 自动激活
+  Hooks: SessionStart/PreCommit/TaskComplete 自动验证
+
 Phase A - Planning (规划):
   A.0: State scan → Read UPM + list active Specs → User chooses direction
   A.1: Spec manage → Create/select Spec → proposal.md + tasks.md (coarse-grained)
@@ -176,7 +255,7 @@ Phase A - Planning (规划):
 
 Phase B - Development (开发):
   B.1: Create branch → branch-manager → feature/{module}/{task-id}-{short-desc}
-  B.2: Implement → Code + tests + quality checks
+  B.2: Implement → RED→GREEN→REFACTOR + tests + quality checks
   B.3: Sync docs → ARCHITECTURE.md + API docs
 
 Phase C - Integration (集成):
@@ -222,6 +301,12 @@ Execute each step individually with full control.
 
 ## Related Documents
 
+### Quality Enhancement (工作流增强)
+- [TDD Enforcer](../../../.claude/skills/tdd-enforcer/SKILL.md) - RED-GREEN-REFACTOR 强制循环
+- [Auto-Trigger Guide](../../workflow/auto-trigger-guide.md) - 意图关键词自动触发
+- [Hooks System](../../../aria/hooks/README.md) - 关键节点自动验证
+- [Migration Guide](../../workflow/migration-guide.md) - 从旧工作流迁移
+
 ### Core Standards (in this submodule)
 - [Progress Management](../progress-management/ai-ddd-progress-management-core.md)
 - [State Management](../state-management/ai-ddd-state-management.md)
@@ -245,7 +330,7 @@ Execute each step individually with full control.
 
 ---
 
-**Version**: 2.2.0
+**Version**: 2.3.0
 **Created**: 2025-12-13
-**Updated**: 2025-12-25
+**Updated**: 2026-01-20
 **Maintainer**: AI-DDD Development Team

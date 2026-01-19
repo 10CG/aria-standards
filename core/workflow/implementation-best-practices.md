@@ -1,7 +1,8 @@
 # 实施指南与最佳实践
 
-> **文档版本**: 1.0.0-practices
+> **文档版本**: 1.1.0-practices
 > **创建日期**: 2025-12-09
+> **最后更新**: 2026-01-20
 > **基于**: ai-ddd-progress-management-core.md v1.0.0
 > **适用范围**: 所有模块（mobile/backend/frontend/shared）
 > **责任人**: Tech Lead + AI Development Team
@@ -365,7 +366,221 @@
     Quality: coverage=89%, build=green, lint=0
 ```
 
-### 1.4 错误避免清单
+### 1.4 TDD Enforcer 最佳实践
+
+```yaml
+RED-GREEN-REFACTOR 循环:
+  强制执行原则:
+    - 测试必须先于业务代码编写
+    - 测试失败前禁止编写实现代码
+    - 测试通过后立即停止编码
+    - 重构时必须保持测试通过
+
+  Phase 执行规范:
+    RED Phase (测试编写):
+      目标: 编写会失败但应该通过的测试
+      验证: 运行测试确认失败 (非语法错误)
+      停止: 确认失败后立即停止，不编写业务代码
+
+    GREEN Phase (最小实现):
+      目标: 编写最少代码使测试通过
+      验证: 运行测试确认通过
+      停止: 通过后立即停止，不添加额外功能
+      禁止: 优化代码、添加未测试功能
+
+    REFACTOR Phase (代码重构):
+      目标: 优化代码结构，保持功能不变
+      验证: 每次重构后运行测试
+      保持: 测试必须始终通过
+      禁止: 修改功能需求
+
+  常见错误:
+    ❌ 在 GREEN Phase 添加"顺便"的功能
+    ❌ 跳过 RED Phase 直接编写代码
+    ❌ 重构时不运行测试
+    ❌ 测试通过后继续添加未测试代码
+
+  正确示例:
+    ✅ RED:
+       ```python
+       # 编写测试
+       def test_user_login_empty_username():
+           with pytest.raises(ValueError):
+               UserAuth.login("", "password")
+
+       # 运行确认失败 (函数不存在)
+       # 停止编码
+       ```
+
+    ✅ GREEN:
+       ```python
+       # 最小实现
+       class UserAuth:
+           @staticmethod
+           def login(username, password):
+               if not username:
+                   raise ValueError("Username required")
+               return True
+
+       # 运行确认通过
+       # 停止编码
+       ```
+
+    ✅ REFACTOR:
+       ```python
+       # 提取验证器
+       class UsernameValidator:
+           def validate(self, username):
+               if not username:
+                   raise ValueError("Username required")
+
+       # 运行确认测试仍然通过
+       ```
+
+  语言支持:
+    Python: pytest, unittest
+    JavaScript/TypeScript: jest, mocha
+    Dart (Flutter): flutter test
+    Java: JUnit
+    Go: testing package
+```
+
+### 1.5 Hooks 系统使用指南
+
+```yaml
+Hooks 配置位置:
+  文件: aria/hooks/hooks.json
+  结构:
+    session-start: 会话开始时执行
+    pre-commit: 提交前执行
+    task-complete: 任务完成时执行
+    subagent-stop: 子代理停止时执行
+
+  使用场景:
+    SessionStart Hook:
+      目的: 确保开发环境就绪
+      检查项:
+        - Git 状态 (分支、未提交变更)
+        - 依赖完整性
+        - 环境变量配置
+      示例配置:
+        ```json
+        {
+          "session-start": {
+            "enabled": true,
+            "checks": ["git-status", "dependencies"],
+            "on_fail": "warn"
+          }
+        }
+        ```
+
+    PreCommit Hook:
+      目的: 确保提交质量
+      检查项:
+        - TDD 状态验证 (测试覆盖率)
+        - 代码格式检查
+        - 提交消息格式验证
+      示例配置:
+        ```json
+        {
+          "pre-commit": {
+            "enabled": true,
+            "checks": ["tdd-status", "lint", "commit-format"],
+            "on_fail": "block"
+          }
+        }
+        ```
+
+    TaskComplete Hook:
+      目的: 确保任务完成质量
+      检查项:
+        - 测试覆盖率 ≥ 85%
+        - 文档同步状态
+        - 架构文档更新确认
+      示例配置:
+        ```json
+        {
+          "task-complete": {
+            "enabled": true,
+            "checks": ["coverage", "docs-sync"],
+            "coverage_threshold": 85
+          }
+        }
+        ```
+
+  最佳实践:
+    ✅ 渐进式启用: 从 warn 模式开始，逐步过渡到 block
+    ✅ 快速执行: Hook 应在 5 秒内完成
+    ✅ 清晰输出: 失败时提供明确的修复建议
+    ❌ 避免重复: 不检查已通过 CI 的内容
+```
+
+### 1.6 Auto-Trigger 配置最佳实践
+
+```yaml
+trigger-rules.json 配置:
+  文件位置: .claude/trigger-rules.json
+
+  规则结构:
+    skill_name:
+      name: "显示名称"
+      skill: "实际skill名"
+      keywords: ["关键词列表"]
+      contexts: ["上下文加成"]
+      threshold: 0.8
+
+  配置原则:
+    关键词选择:
+      - 使用高频、明确的关键词
+      - 中英文双语覆盖
+      - 避免歧义词汇
+      - 同义词归类
+
+    置信度阈值:
+      - ≥ 0.8: 自动触发 (高置信度)
+      - 0.6-0.8: 确认触发 (中置信度)
+      - < 0.6: 不触发 (低置信度)
+
+    上下文加成:
+      - 模块名加成: +0.1
+      - 技术栈加成: +0.1
+      - 多关键词叠加: 取最高值
+
+  示例配置:
+    ```yaml
+    tdd-enforcer:
+      name: "TDD 强制执行"
+      skill: "tdd-enforcer"
+      keywords:
+        - "测试"
+        - "test"
+        - "tdd"
+        - "单元测试"
+        - "覆盖率"
+      threshold: 0.8
+
+    branch-manager:
+      name: "分支管理"
+      skill: "branch-manager"
+      keywords:
+        - "分支"
+        - "branch"
+        - "pr"
+        - "合并"
+      contexts:
+        - "mobile": 0.1
+        - "backend": 0.1
+      threshold: 0.7
+    ```
+
+  维护建议:
+    - 定期审查规则效果
+    - 根据使用反馈调整关键词
+    - 记录误触发案例
+    - 保持规则数量适度 (< 20)
+```
+
+### 1.7 错误避免清单
 
 ```yaml
 常见错误类型:
@@ -1377,10 +1592,11 @@ find docs/project-lifecycle/ -name "*.md" -exec wc -l {} +  # 批量统计
 | 版本 | 日期 | 变更内容 |
 |------|------|----------|
 | 1.0.0-practices | 2025-12-09 | 初始版本，定义实施指南和最佳实践 |
+| 1.1.0-practices | 2026-01-20 | 添加 TDD Enforcer、Hooks、Auto-Trigger 最佳实践 |
 
 ---
 
 **文档维护者**: Tech Lead + AI Development Team
-**最后更新**: 2025-12-09
+**最后更新**: 2026-01-20
 **适用模块**: Mobile, Backend, Frontend, Shared
 **相关文档**: ai-ddd-progress-management-core.md, ai-ddd-workflow-standards.md, ai-ddd-state-management.md, document-sync-mechanisms.md
