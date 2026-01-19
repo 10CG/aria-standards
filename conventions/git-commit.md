@@ -1,6 +1,6 @@
 # Git Commit 规范
 
-> **Version**: 2.0.0
+> **Version**: 2.1.0
 > **Status**: Active
 > **Based on**: Conventional Commits + AI-DDD Enhanced Markers
 
@@ -235,6 +235,95 @@ BREAKING CHANGE: API响应格式变更
 | 批量架构文档创建 | strategic-commit-orchestrator |
 | Phase/Cycle里程碑 | strategic-commit-orchestrator |
 
+### 7.3 新工作流程相关提交
+
+#### TDD 相关提交
+
+当使用 TDD Enforcer 进行测试驱动开发时：
+
+```bash
+# RED Phase - 编写测试
+test(auth): 添加用户登录失败测试 / Add login failure test
+
+创建失败测试用例：
+- 测试用户名为空时抛出异常
+- 测试密码错误时返回401
+
+TDD Phase: RED
+```
+
+```bash
+# GREEN Phase - 最小实现
+feat(auth): 实现基础用户验证 / Implement basic user validation
+
+最小实现使测试通过：
+- 添加用户名验证逻辑
+- 添加密码验证逻辑
+- 返回401状态码
+
+TDD Phase: GREEN
+```
+
+```bash
+# REFACTOR Phase - 代码重构
+refactor(auth): 提取验证器为独立类 / Extract validator as separate class
+
+重构代码结构：
+- 创建UserValidator类
+- 移动验证逻辑
+- 保持测试通过
+
+TDD Phase: REFACTOR
+```
+
+#### Hooks 相关提交
+
+Hooks 系统相关变更使用特殊 scope：
+
+```bash
+# Hooks 配置更新
+chore(hooks): 添加 session-start 环境检查 / Add session-start env check
+
+更新hooks.json配置：
+- 添加Git状态检查
+- 添加依赖验证
+
+Ref: aria/hooks/hooks.json
+```
+
+#### Auto-Trigger 相关提交
+
+trigger-rules.json 更新：
+
+```bash
+chore(trigger): 添加"重构"关键词映射 / Add "refactor" keyword mapping
+
+更新自动触发规则：
+- 添加"重构"→arch-update映射
+- 添加上下文加成规则
+
+Ref: .claude/trigger-rules.json
+```
+
+#### 两阶段评审相关提交
+
+完成 Phase B.2 两阶段评审：
+
+```bash
+chore(review): 通过规范合规性和代码质量评审 / Pass spec compliance and code quality review
+
+Phase 1 - 规范合规性: ✅ 通过
+  - OpenSpec格式正确
+  - UPM已同步
+  - 架构文档已更新
+
+Phase 2 - 代码质量: ✅ 通过
+  - 测试覆盖率≥85%
+  - 无安全漏洞
+  - 代码复杂度正常
+
+Ref: .claude/skills/phase-b-developer/validators/
+
 ---
 
 ## 8. 禁止规则
@@ -367,6 +456,7 @@ git commit --amend
 
 ---
 
-**Version**: 2.0.0
+**Version**: 2.1.0
 **Created**: 2025-12-13
+**Updated**: 2026-01-20
 **Maintainer**: AI-DDD Development Team
