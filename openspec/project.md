@@ -40,14 +40,16 @@ Each project should maintain its own `openspec/` directory:
 ```
 your-project/
 ├── openspec/
-│   ├── changes/          # Proposed changes (Draft/Review)
+│   ├── changes/          # 活跃变更 (Draft/Review)
 │   │   └── {feature}/
 │   │       ├── proposal.md
 │   │       └── tasks.md
-│   └── archive/          # Completed changes
-│       └── {date}-{feature}/
+│   └── archive/          # 已完成变更 (顶层目录，非 changes 子目录)
+│       └── {YYYY-MM-DD}-{feature}/
 └── ...
 ```
+
+**重要**: `archive/` 是 `openspec/` 的直接子目录，**不是** `changes/` 的子目录。
 
 ### Integration with aria-standards
 
@@ -75,9 +77,10 @@ This provides:
 ## Specification Lifecycle
 
 ```
-Draft → Review → Approved → Implementing → Implemented → Archived
+Draft → Review → Approved → Implementing → Implemented
                                                            ↓
-                                              Move to archive/
+                                              Move to openspec/archive/
+                                              命名格式: {YYYY-MM-DD}-{feature}/
 ```
 
 ## Related Resources
