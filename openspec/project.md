@@ -1,55 +1,65 @@
-# OpenSpec - Project Definition
+# OpenSpec - Format Definition
 
-> **Version**: 2.0.0
+> **Version**: 2.1.0
 > **Status**: Active
-> **Purpose**: Methodology Definition Repository
+> **Purpose**: OpenSpec Format Specification
 
 ## Purpose
 
-This repository defines the **OpenSpec format** - a standardized specification format for AI-driven development projects using the Aria methodology.
+This document defines the **OpenSpec format** - a standardized specification format for AI-driven development projects using the Aria methodology.
 
-OpenSpec is the specification format used by the Aria AI-DDD (AI-Assisted Domain-Driven Design) methodology.
+## 什么是 OpenSpec？
 
-## What is OpenSpec?
+OpenSpec 是一种基于 Markdown 的规范格式，用于：
 
-OpenSpec is a Markdown-based specification format that enables:
+- **结构化需求捕获** - proposal.md 和 tasks.md 模板
+- **AI 可读规范** - 为 Claude Code 等 AI 助手优化
+- **可追溯开发** - 从 PRD → 系统架构 → 实现
 
-- **Structured requirements capture** - proposal.md and tasks.md templates
-- **AI-readable specifications** - Optimized for Claude Code and other AI assistants
-- **Traceable development** - From PRD → System Architecture → Implementation
+---
 
-## Repository Structure
+## ⚠️ 重要说明：两个不同的 "openspec/" 目录
 
-```
-openspec/
-├── project.md        # This file - OpenSpec format definition
-├── templates/        # Specification templates
-│   ├── proposal-minimal.md    # Level 2 Spec template
-│   └── tasks.md                # Task breakdown template
-├── specs/            # Current active specifications
-├── VALIDATION.md     # Validation rules for OpenSpec documents
-└── AGENTS.md         # Agent capability definitions
-```
+| | **standards/openspec/** | **{project}/openspec/** |
+|---|---|---|
+| **位置** | standards 子模块内部 | 项目根目录 |
+| **用途** | **格式定义** (只读参考) | **项目工作区** (读写) |
+| **内容** | templates/, specs/, VALIDATION.md | changes/, archive/ |
+| **职责** | 定义 OpenSpec 是什么 | 跟踪项目的变更和规范 |
 
-## Usage in Projects
-
-### Projects Using OpenSpec
-
-Each project should maintain its own `openspec/` directory:
+### 1. standards/openspec/ (格式定义库)
 
 ```
-your-project/
-├── openspec/
-│   ├── changes/          # 活跃变更 (Draft/Review)
+standards/
+└── openspec/                    # 方法定义，不存储项目变更
+    ├── project.md               # 本文件 - 格式定义
+    ├── templates/               # 规范模板
+    │   ├── proposal-minimal.md
+    │   └── tasks.md
+    ├── specs/                   # 格式规范文档
+    ├── VALIDATION.md            # 验证规则
+    └── AGENTS.md                # Agent 能力定义
+```
+
+**职责**: 定义 OpenSpec 格式的规范、模板和验证规则。作为 Git submodule 供各项目引用。
+
+### 2. {project}/openspec/ (项目工作区)
+
+```
+your-project/                    # 任何使用 Aria 方法的项目
+├── openspec/                    # 项目的 OpenSpec 工作区
+│   ├── changes/                 # 活跃变更 (Draft/Review)
 │   │   └── {feature}/
 │   │       ├── proposal.md
-│   │       └── tasks.md
-│   └── archive/          # 已完成变更 (顶层目录，非 changes 子目录)
+│   │       ├── tasks.md
+│   │       └── detailed-tasks.yaml
+│   └── archive/                 # 已完成变更
 │       └── {YYYY-MM-DD}-{feature}/
-└── ...
+└── standards/                   # Git submodule → aria-standards
+    └── openspec/                # 引用格式定义库
 ```
 
-**重要**: `archive/` 是 `openspec/` 的直接子目录，**不是** `changes/` 的子目录。
+**职责**: 跟踪该项目的需求变更、任务分解和完成归档。
 
 ### Integration with aria-standards
 
@@ -61,7 +71,7 @@ git submodule add ssh://forgejo@forgejo.10cg.pub/10CG/aria-standards.git standar
 ```
 
 This provides:
-- OpenSpec format definitions
+- OpenSpec format definitions (via `standards/openspec/`)
 - Template files for creating new specs
 - Validation rules
 - Aria methodology documentation
@@ -93,6 +103,7 @@ Draft → Review → Approved → Implementing → Implemented
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.1.0 | 2026-01-20 | 明确区分格式定义库和项目工作区；删除 changes/ 和 archive/ 目录 |
 | 2.0.0 | 2026-01-19 | Restructured as methodology definition only |
 | 1.0.0 | 2025-12-17 | Initial version |
 
