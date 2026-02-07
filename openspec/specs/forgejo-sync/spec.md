@@ -211,7 +211,64 @@ forgejo-sync Skill MUST be configurable via config file.
     wiki:
       enabled: true
       page_prefix: "PRD-"
+
+    # Cloudflare Access support (v1.1.0+)
+    cloudflare_access:
+      enabled: false  # default
+      client_id_env: "CF_ACCESS_CLIENT_ID"
+      client_secret_env: "CF_ACCESS_CLIENT_SECRET"
   ```
+
+---
+
+### Requirement: Cloudflare Access Support
+
+> **Added**: v1.1.0
+
+forgejo-sync Skill MUST support Cloudflare Access protected Forgejo instances.
+
+#### Scenario: Detect Cloudflare Access Before API Call
+- Given forgejo API call is about to be executed
+- When AI prepares the API call
+- Then it MUST check `forgejo.cloudflare_access.enabled`:
+  - If `enabled == true`: Add CF Access headers to all API calls
+  - If `enabled == false/undefined`: Use standard authentication
+
+#### Scenario: Cloudflare Access Headers
+- Given `cloudflare_access.enabled == true`
+- When forgejo-sync calls Forgejo API
+- Then it MUST add the following headers:
+  ```yaml
+  required_headers:
+    - "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}"
+    - "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}"
+  ```
+
+#### Scenario: Auto-Detect Cloudflare Access on Failure
+- Given API call returns 403
+- And response contains "cloudflare" OR "challenge"
+- When AI detects the error
+- Then it MUST output configuration prompt:
+  ```yaml
+  auto_prompt:
+    message: "⚠️ 检测到 Cloudflare Access 保护"
+    suggestion: "设置 cloudflare_access.enabled = true"
+    config_template: |
+      forgejo:
+        cloudflare_access:
+          enabled: true
+          client_id_env: "CF_ACCESS_CLIENT_ID"
+          client_secret_env: "CF_ACCESS_CLIENT_SECRET"
+  ```
+
+#### Scenario: Cloudflare Access Environment Variables
+- Given `cloudflare_access.enabled == true`
+- When forgejo-sync executes API calls
+- Then it MUST verify environment variables exist:
+  - `CF_ACCESS_CLIENT_ID`
+  - `CF_ACCESS_CLIENT_SECRET`
+- And it MUST skip API call if variables are missing
+- And it MUST report configuration error
 
 ---
 
