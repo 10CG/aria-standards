@@ -79,6 +79,7 @@ standards/
 │   ├── seven-step-cycle/           # 七步循环模型（原版）
 │   ├── upm/                        # 统一进度管理规范
 │   ├── architecture/               # 架构文档方法论
+│   ├── documentation/              # 产品文档层级、系统架构规范
 │   ├── design-system/              # 设计系统规范
 │   ├── progress-management/        # 进度管理核心
 │   ├── state-management/           # 状态管理
@@ -92,8 +93,7 @@ standards/
 │   ├── project.md                  # 项目配置
 │   ├── AGENTS.md                   # Agent 定义
 │   ├── specs/                      # 稳定规范
-│   ├── changes/                    # 变更中规范
-│   └── archive/                    # 已归档规范
+│   └── templates/                  # 规范模板
 │
 ├── summaries/                      # 摘要文件（Token 优化）
 │   ├── ten-step-cycle-summary.md
@@ -106,6 +106,9 @@ standards/
 ├── templates/                      # 项目模板
 │   ├── prd-template.md             # PRD 模板
 │   ├── user-story-template.md      # User Story 模板
+│   ├── system-architecture-template.md  # 系统架构模板
+│   ├── readme-template.md          # README 模板
+│   ├── requirements-directory-structure.md  # 需求目录结构
 │   ├── ai-task-execution.md        # AI 任务执行模板
 │   └── claude-config/              # CLAUDE.md 配置模板
 │
@@ -117,7 +120,13 @@ standards/
 │   ├── git-commit.md               # Git 提交规范
 │   ├── naming-conventions.md       # 命名规范
 │   ├── document-classification.md  # 文档分类
-│   └── content-integrity.md        # 内容真实性
+│   ├── document-metadata.md        # 文档元数据
+│   ├── content-integrity.md        # 内容真实性
+│   ├── changelog-format.md         # Changelog 格式
+│   ├── contract-driven.md          # 契约驱动开发
+│   ├── field-naming.md             # 字段命名
+│   ├── version-management.md       # 版本管理
+│   └── raci.md                     # RACI 矩阵
 │
 ├── workflow/                       # 工作流指南
 │   ├── branch-management-guide.md
@@ -175,7 +184,7 @@ standards/
 | 文档 | 路径 |
 |------|------|
 | Agent 定义 | [openspec/AGENTS.md](openspec/AGENTS.md) |
-| 归档变更 | [openspec/archive/](openspec/archive/) |
+| 规范模板 | [openspec/templates/](openspec/templates/) |
 
 ### 工作流程
 

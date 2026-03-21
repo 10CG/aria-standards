@@ -79,6 +79,7 @@ standards/
 │   ├── seven-step-cycle/           # Seven-Step Cycle (original)
 │   ├── upm/                        # Unified Progress Management
 │   ├── architecture/               # Architecture documentation methodology
+│   ├── documentation/              # Product doc hierarchy, system architecture spec
 │   ├── design-system/              # Design system standards
 │   ├── progress-management/        # Progress management core
 │   ├── state-management/           # State management
@@ -92,8 +93,7 @@ standards/
 │   ├── project.md                  # Project configuration
 │   ├── AGENTS.md                   # Agent definitions
 │   ├── specs/                      # Stable specs
-│   ├── changes/                    # In-progress specs
-│   └── archive/                    # Archived specs
+│   └── templates/                  # Spec templates
 │
 ├── summaries/                      # Summary files (token-optimized)
 │   ├── ten-step-cycle-summary.md
@@ -106,6 +106,9 @@ standards/
 ├── templates/                      # Project templates
 │   ├── prd-template.md             # PRD template
 │   ├── user-story-template.md      # User Story template
+│   ├── system-architecture-template.md  # System architecture template
+│   ├── readme-template.md          # README template
+│   ├── requirements-directory-structure.md  # Requirements dir structure
 │   ├── ai-task-execution.md        # AI task execution template
 │   └── claude-config/              # CLAUDE.md config templates
 │
@@ -117,7 +120,13 @@ standards/
 │   ├── git-commit.md               # Git commit standards
 │   ├── naming-conventions.md       # Naming conventions
 │   ├── document-classification.md  # Document classification
-│   └── content-integrity.md        # Content integrity
+│   ├── document-metadata.md        # Document metadata
+│   ├── content-integrity.md        # Content integrity
+│   ├── changelog-format.md         # Changelog format
+│   ├── contract-driven.md          # Contract-driven development
+│   ├── field-naming.md             # Field naming
+│   ├── version-management.md       # Version management
+│   └── raci.md                     # RACI matrix
 │
 ├── workflow/                       # Workflow guides
 │   ├── branch-management-guide.md
@@ -175,7 +184,7 @@ standards/
 | Document | Path |
 |----------|------|
 | Agent Definitions | [openspec/AGENTS.md](openspec/AGENTS.md) |
-| Archived Changes | [openspec/archive/](openspec/archive/) |
+| Spec Templates | [openspec/templates/](openspec/templates/) |
 
 ### Workflow
 
