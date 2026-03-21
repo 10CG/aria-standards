@@ -323,4 +323,4 @@ git diff v1.0.0..v1.1.0
 ---
 
 **维护**: 10CG Lab
-**仓库**: https://forgejo.10cg.pub/10CG/Aria
+**仓库**: https://github.com/10CG/Aria

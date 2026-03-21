@@ -67,7 +67,7 @@ Projects include aria-standards as a Git submodule:
 
 ```bash
 # In your project
-git submodule add ssh://forgejo@forgejo.10cg.pub/10CG/aria-standards.git standards
+git submodule add https://github.com/10CG/aria-standards.git standards
 ```
 
 This provides:
@@ -95,7 +95,7 @@ Draft → Review → Approved → Implementing → Implemented
 
 ## Related Resources
 
-- **Aria Methodology**: https://forgejo.10cg.pub/10CG/Aria
+- **Aria Methodology**: https://github.com/10CG/Aria
 - **OpenSpec Validation**: VALIDATION.md
 - **Agent Capabilities**: AGENTS.md
 
@@ -110,4 +110,4 @@ Draft → Review → Approved → Implementing → Implemented
 ---
 
 **Maintained By**: 10CG Lab
-**Repository**: https://forgejo@forgejo.10cg.pub/10CG/aria-standards.git
+**Repository**: https://github.com/10CG/aria-standards
