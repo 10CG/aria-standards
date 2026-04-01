@@ -226,6 +226,10 @@ standards/
 
 **Current Version**: 3.0.0 (Aria Methodology)
 
+## Standalone Usage (Without aria-plugin)
+
+You can use aria-standards independently — no Aria plugin or main project required. See the [Standalone Usage Guide](docs/STANDALONE-USAGE.md) for setup with just the standards.
+
 ## Contributing
 
 Contributions and best practice suggestions are welcome.
