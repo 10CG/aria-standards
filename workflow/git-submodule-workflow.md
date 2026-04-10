@@ -272,6 +272,30 @@ git remote set-url origin <new-url>
     - git push mirror feature/my-feature  # 不推送功能分支到镜像
 ```
 
+### 5.3 子模块多远程同步
+
+子模块作为独立仓库，各自拥有 origin + mirror 双远程。发版或合并到主分支后，
+**必须将子模块推送到所有远程**，否则下游消费者 (如插件市场) 会获取到过期版本。
+
+```yaml
+触发时机:
+  - 子模块 master/main 有新提交合并后
+  - 主项目发版流程中更新子模块指针后
+
+推送顺序 (先 origin 后 mirror):
+  1. git -C <submodule> push origin master
+  2. git -C <submodule> push github master    # mirror
+  3. 主项目: git push origin master && git push github master
+
+检查命令:
+  # 查看子模块是否落后于 mirror
+  git -C <submodule> log --oneline github/master..master
+  # 输出为空 = 已同步; 有输出 = 需要推送
+```
+
+> **教训**: 2026-04-10 aria 插件 v1.11.1 发版后仅推送 Forgejo (origin)，
+> 未推送 GitHub (mirror)，导致 Claude Code 插件市场停留在旧版本。
+
 ---
 
 ## 6. 分支管理
