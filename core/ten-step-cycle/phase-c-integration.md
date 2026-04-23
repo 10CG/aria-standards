@@ -206,6 +206,54 @@ Related Issue: #{issue-number}
 
 ---
 
+## Step 8.5: UPM Milestone Sub-progress Append (Optional)
+
+> **Added**: 2026-04-23 — Fixes Forgejo #22 "multi-PR cycle UPM blind spot".
+
+### Purpose
+
+In multi-PR cycles (e.g., schema expand → migrate → contract, spanning 1-2 weeks), the UPM document stays at `[ ] IN_PROGRESS` with no intermediate visibility. Step 8.5 appends a sub-bullet after each PR merge so progress is visible in real time.
+
+### Trigger Conditions
+
+- Config `upm.milestone_driven: true` (opt-in, default `false`)
+- Current commit references a User Story (`US-XXX` in commit message or spec `change_id`)
+
+### Behavior
+
+```
+Each PR merge (Step 8) → C.2.6 appends one sub-bullet to UPM:
+  - YYYY-MM-DD: {commit_sha} — {short_title} ({PR_URL})
+  Status: [ ] → [~] (in-progress with sub-progress records)
+
+Final Phase D.1 → finalizes:
+  [~] → [x] COMPLETED + spec archive path appended
+```
+
+### Status Markers
+
+| Marker | Meaning | Written By |
+|--------|---------|-----------|
+| `[ ]` | Not started / IN_PROGRESS (no sub-progress) | Initial state |
+| `[~]` | In progress with milestone records | C.2.6 (first append) |
+| `[x]` | COMPLETED | D.1 final pass |
+
+### Configuration
+
+```yaml
+# .aria/config.json
+upm:
+  milestone_driven: false  # default: preserve D.1-only behavior (backward-compatible)
+```
+
+### Backward Compatibility
+
+When `upm.milestone_driven: false` (default), Step 8.5 is entirely skipped. Phase C behavior is identical to prior versions.
+
+**Skill reference**: `phase-c-integrator` C.2.6
+
+---
+
 ## Phase C Checklist
 
 Before proceeding to Phase D, ensure:

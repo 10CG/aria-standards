@@ -116,6 +116,25 @@ sha256("backend-Phase 2 - Development-3-2025-12-13T16:00:00+08:00")
 ### Suggested Skill
 `progress-updater`
 
+### Milestone-driven Mode (Optional)
+
+> **Added**: 2026-04-23 — Fixes Forgejo #22. Enabled by `upm.milestone_driven: true`.
+
+When `upm.milestone_driven: true`, Step 8.5 (Phase C C.2.6) appends sub-bullets to the UPM after each PR merge. In this mode, Step 9 only needs to **finalize** rather than rebuild the full history:
+
+| Mode | Step 9 Work | Mid-cycle Transparency |
+|------|-------------|----------------------|
+| Default (`milestone_driven: false`) | Full single-pass update for all Stories | Low — UPM stays `[ ]` throughout multi-PR cycle |
+| Milestone-driven (`milestone_driven: true`) | Finalize only: `[~]` → `[x]` + spec archive path | High — sub-bullet appended after each PR merge |
+
+**Finalize actions (milestone-driven)**:
+1. Upgrade all `[~]` Story markers to `[x] COMPLETED`
+2. Append `archive: openspec/archive/{spec_id}/` after the last sub-bullet
+3. Update UPMv2-STATE header (`lastUpdateAt`, `stateToken`, `completedTasks`)
+4. Do NOT reconstruct history — sub-bullets were written in real time by C.2.6
+
+**Skill reference**: `phase-d-closer` D.1 Milestone-driven section
+
 ---
 
 ## Step 10: Spec Archive
