@@ -180,6 +180,96 @@ openspec show {feature-name}
 
 📖 **详细文档**: 参考 [OpenSpec Validation Guide](../VALIDATION.md) 了解完整的验证命令使用方法、示例和故障排除指南。
 
+## Change ID 命名约定
+
+Change ID 是 `openspec/changes/` 目录下每个变更的唯一标识，也是文件系统路径的一部分。
+跨仓库积累的实践暴露了多种不一致风格，本节给出统一规范。
+
+### 1. Version 前缀
+
+| 场景 | 是否加前缀 | 格式 |
+|------|-----------|------|
+| 同一仓库存在多个并行 release (e.g. v0.2.0 / v0.2.1 / v0.2.2) | **必须** | `v{major}-{minor}-{patch}-` |
+| 首版或单一 feature-scoped 变更 | **跳过** | 直接从 topic 开始 |
+
+格式要求：使用 kebab-case，不用点。`v0-2-1-` 正确，`v0.2.1-` 错误。
+
+### 2. Topic 串联
+
+- **连接符**: 一律用 dash (`-`)，**不推荐** `and` / `with` 等自然语言连词
+- **数量上限**: 最多 3 个 topic；超过 3 个时应考虑拆分 change
+- **排序原则**: 首 topic = 主要特性，按重要性而非字母序排列
+
+```
+# 正确
+tam-trigger-polish
+
+# 错误 — 使用了 and 连词
+trace-and-sahil
+```
+
+### 3. Descriptor Tail (受控枚举)
+
+Descriptor tail 是紧跟 topic 之后的语义修饰词，为**非必填**字段。
+
+| 枚举值 | 语义 |
+|--------|------|
+| `mvp` | 最小可行实现，功能覆盖面有限 |
+| `warmup` | 预热验证，探索性 / 技术预研 |
+| `polish` | 打磨迭代，在已有实现上提升质量 |
+| `hardening` | 稳健加固，重点在健壮性与容错 |
+| `fix` | 缺陷修复，问题驱动而非功能驱动 |
+| `migration` | 迁移变更，数据或接口兼容性过渡 |
+
+规则：
+
+- 如果使用 descriptor tail，必须从上表枚举中选取
+- **不允许**自由形容词：`improved` / `better` / `new` / `enhanced` 等均不合规
+- 不使用时直接省略，不需要占位符
+
+### 4. Slug 长度
+
+| 限制类型 | 字符上限 | 说明 |
+|---------|---------|------|
+| **硬上限** | 60 字符 | 含 version 前缀；超限必须拆分或精简 |
+| **软推荐** | 40 字符 | 跨 CI / filesystem 友好的安全区间 |
+
+超出软推荐时，优先精简 topic 词，其次考虑拆分 change。
+
+### 5. 多 Feature 聚合
+
+- **默认做法**: 拆分成多个独立 change，便于独立归档与审计
+- **允许合并的例外**: 同一 release 内存在强耦合依赖（e.g. schema 变更与对应 migration 必须同时上线）
+  - 合并时，change ID 的首 topic 应反映核心能力，次要依赖不出现在 ID 中
+
+```
+# 合并示例 — 首 topic 反映核心
+schema-migration-mvp
+
+# 反例 — 两个不相关 feature 塞入同一 ID
+v0-2-2-reflect-carry-forward    (reflect 与 carry-forward 耦合度低，应拆分)
+```
+
+### 正例 / 反例对照
+
+| 风格 | Change ID | 问题 |
+|------|-----------|------|
+| ❌ | `v0-2-warmup-trace-and-sahil` | 使用了 `and` 连词 |
+| ❌ | `v0-2-1-tam-trigger-archival-polish` | 含 3 个 topic (`tam-trigger` / `archival` / `polish`) + descriptor，语义堆叠 |
+| ❌ | `v0-2-2-reflect-carry-forward` | 两个不相关 feature 塞入同一 ID，`and` 被省略但耦合关系隐式存在 |
+| ✅ | `v0-2-2-tam-trigger-polish` | 单 topic + descriptor，< 40 字符，kebab-case 一致 |
+| ✅ | `user-otp-mvp` | 无 version 前缀（首版），topic 清晰，descriptor 合规 |
+| ✅ | `schema-migration-hardening` | 合并场景，首 topic 反映核心，descriptor 语义准确 |
+
+### Why this convention
+
+本约定的目标受众与价值：
+
+- **brainstorm / spec-drafter**: AI 生成 change ID 时有明确枚举可引用，避免自由发挥产生噪声
+- **state-scanner / progress-updater**: ID 作为文件系统键，长度与字符集约束保证跨平台路径安全
+- **跨仓一致性**: 同一组织内多仓库采用相同约定，review 与归档工具无需针对风格差异做特殊处理
+- **可审计性**: descriptor tail 受控枚举使 ID 本身携带语义，无需打开 proposal.md 即可判断变更性质
+
 ## 决策指南
 
 ```yaml
