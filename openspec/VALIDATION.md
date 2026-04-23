@@ -1,104 +1,70 @@
 # OpenSpec Validation Commands Guide
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Created**: 2025-12-20
+> **Updated**: 2026-04-23
 > **Purpose**: Guide for validating OpenSpec dual-layer architecture consistency
+
+---
+
+> **历史注记**: aria OpenSpec 格式早期参考了 Fission-AI OpenSpec CLI 设计，
+> 但从 v2.0 起 aria 选择保留双层任务架构 (proposal.md + tasks.md + detailed-tasks.yaml)，
+> 而 upstream Fission-AI CLI (`@fission-ai/openspec` v1.3.0+) 迁移到了
+> delta-based workflow (`specs/{capability}/spec.md` + delta headers + Scenario blocks)。
+> **两者已结构性不兼容**。aria 不使用也不跟随 upstream CLI。
+>
+> **aria 原生 validator**: `aria:audit-engine` (3-agent 审计编排) — 不依赖 npm。
+> 详见 [project.md - 与 Fission-AI OpenSpec 的关系](project.md#与-fission-ai-openspec-的关系)。
+
+---
 
 ## Overview
 
-OpenSpec provides validation commands to ensure the integrity and consistency of the dual-layer task architecture (tasks.md + detailed-tasks.yaml). These commands help detect and prevent synchronization issues between the human-readable Layer 1 and the AI-executable Layer 2.
+aria OpenSpec 通过 **`aria:audit-engine`** 验证双层任务架构 (tasks.md + detailed-tasks.yaml) 的完整性与一致性。以下文档保留了历史 CLI 子命令描述，供理解 aria 自有验证规则时参考，但这些命令已不适用于任何外部 npm CLI。
 
-## Validation Commands
+## Validation Rules (aria 内部规则参考)
 
-### 1. --sync: Check Dual-Layer Consistency
+> **注意**: 以下章节描述的是 aria OpenSpec 的验证逻辑规则，而非可执行的外部 CLI 命令。
+> 实际验证通过 `aria:audit-engine` 执行，不通过 `openspec` 命令行。
 
-Verifies that tasks.md and detailed-tasks.yaml are properly synchronized.
+### 1. 双层一致性检查 (已不适用 upstream CLI; aria 使用 audit-engine 替代)
 
-```bash
-openspec validate --sync {feature-name}
-```
+验证 tasks.md 与 detailed-tasks.yaml 之间的同步状态。
 
-#### What it checks:
-1. **Parent Reference Validity**
-   - Every TASK-{NNN} has a valid parent reference in tasks.md
-   - Parent format matches pattern: `{phase}.{task}` (e.g., "1.1", "2.3")
+**规则内容:**
+1. **Parent Reference 有效性**
+   - 每个 TASK-{NNN} 必须在 tasks.md 中有对应的 parent 引用
+   - Parent 格式须匹配: `{phase}.{task}` (例如 "1.1", "2.3")
 
-2. **Task Status Synchronization**
-   - Completed tasks in detailed-tasks.yaml have corresponding checkboxes checked in tasks.md
-   - In-progress tasks in detailed-tasks.yaml have unchecked checkboxes in tasks.md
+2. **任务状态同步**
+   - detailed-tasks.yaml 中 completed 的任务，tasks.md 对应 checkbox 须已勾选
+   - detailed-tasks.yaml 中 in_progress 的任务，tasks.md 对应 checkbox 须未勾选
 
-3. **Title Consistency**
-   - Task titles match between layers (with tolerance for minor edits)
-   - Flags significant title mismatches for manual review
+3. **标题一致性**
+   - 两层之间任务标题须匹配 (允许小幅编辑差异)
+   - 重大标题不匹配须人工审阅
 
-4. **Completeness**
-   - All tasks.md items have corresponding detailed-tasks.yaml entries
-   - All detailed-tasks.yaml entries have corresponding tasks.md items
+4. **完整性**
+   - tasks.md 所有条目须在 detailed-tasks.yaml 中有对应项
+   - detailed-tasks.yaml 所有条目须在 tasks.md 中有对应项
 
-#### Example Output:
+### 2. 编号完整性检查 (已不适用 upstream CLI; aria 使用 audit-engine 替代)
 
-```bash
-$ openspec validate --sync user-authentication
+确保 tasks.md 遵循编号约定与不可变性规则。
 
-✅ OpenSpec Validation: user-authentication
+**规则内容:**
+1. **编号格式**
+   - 有效格式: `{phase}.{task}`，其中两部分均为正整数
+   - 同一 Phase 内不得有编号间隙
+   - 不得有重复编号
 
-📊 Summary:
-  Total tasks in tasks.md: 8
-  Total tasks in detailed-tasks.yaml: 8
-  Synchronized tasks: 7
-  Desynchronized tasks: 1
+2. **Phase 组织**
+   - 任务须正确归属于各 Phase 标题下
+   - Phase 编号须连续 (1, 2, 3...)
 
-⚠️  Issues Found:
-  1. TASK-004 status mismatch
-     - detailed-tasks.yaml: completed
-     - tasks.md: [ ] 1.4 (unchecked)
-     - Suggestion: Run 'openspec sync user-authentication' to fix
-
-✅ Parent references: Valid
-⚠️  Title similarity: 87% (acceptable)
-```
-
-### 2. --numbering: Verify Numbering Integrity
-
-Ensures tasks.md follows proper numbering conventions and immutability rules.
-
-```bash
-openspec validate --numbering {feature-name}
-```
-
-#### What it checks:
-1. **Number Format**
-   - Valid format: `{phase}.{task}` where both are positive integers
-   - No gaps in numbering within each phase
-   - No duplicate numbering
-
-2. **Phase Organization**
-   - Tasks are properly grouped under phase headings
-   - Phase numbering is sequential (1, 2, 3...)
-
-3. **Immutability Compliance**
-   - Warns if numbering changes are detected (compared to previous version)
-   - Checks for renumbering that would break parent references
-
-#### Example Output:
-
-```bash
-$ openspec validate --numbering user-authentication
-
-✅ Numbering Validation: user-authentication
-
-📊 Structure Analysis:
-  Phase 1: Database Setup (3 tasks: 1.1 - 1.3)
-  Phase 2: API Implementation (3 tasks: 2.1 - 2.3)
-  Phase 3: Testing (2 tasks: 3.1 - 3.2)
-
-✅ Number format: Valid
-✅ No gaps detected
-✅ No duplicates found
-✅ Sequential phase numbering
-
-📈 Numbering Health Score: 100%
-```
+3. **不可变性**
+   - 编号一旦创建不得修改 (破坏 parent 引用)
+   - audit-engine 会检测编号变化并告警
 
 ### 3. show: Display Complete Overview
 
@@ -171,50 +137,38 @@ done
 
 ### CI/CD Integration
 
-Add to your CI pipeline:
+> **已不适用 upstream CLI**: 以下 CI 配置引用了 `@openspec/cli`，该包对应的是早期设计参考，
+> 实际不存在此 npm 包。aria 不使用 npm CLI 进行验证。
+> **aria 项目的验证通过 `aria:audit-engine` 执行**，不需要 CI YAML 步骤中的 npm 安装。
 
 ```yaml
-# .github/workflows/openspec-validate.yml
-name: OpenSpec Validation
-
-on:
-  push:
-    paths:
-      - 'standards/openspec/changes/**'
-  pull_request:
-    paths:
-      - 'standards/openspec/changes/**'
+# 仅作历史参考 — 此配置在 aria 项目中不适用
+# aria 使用 audit-engine 多轮收敛审计，而非 npm CLI
+# .github/workflows/openspec-validate.yml (DEPRECATED REFERENCE)
+name: OpenSpec Validation (历史参考, 不适用于 aria)
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup OpenSpec CLI
-        run: npm install -g @openspec/cli
-      - name: Validate all active specs
-        run: |
-          for spec in standards/openspec/changes/*/; do
-            if [ -f "$spec/proposal.md" ]; then
-              feature=$(basename "$spec")
-              openspec validate --sync "$feature"
-              openspec validate --numbering "$feature"
-            fi
-          done
+      # 以下步骤不适用: @openspec/cli 不存在, aria 使用 audit-engine
+      # - name: Setup OpenSpec CLI
+      #   run: npm install -g @openspec/cli  # 此包不存在
 ```
 
 ### Automated Fixing
 
-The `--fix` flag can automatically fix common issues:
+> **已不适用 upstream CLI**: `--fix` 标志是历史规则描述，不对应任何可执行命令。
+> aria 的双层同步通过 `aria:progress-updater` skill 处理。
 
-```bash
-# Auto-sync completed tasks
-openspec validate --sync user-authentication --fix
+以下为规则描述 (非可执行命令):
 
-# This will:
-# - Check off completed tasks in tasks.md
-# - Update detailed-tasks.yaml timestamps
-# - Recalculate stateToken
+```
+# aria 双层同步通过 progress-updater skill 处理:
+# - detailed-tasks.yaml: TASK-NNN status → completed
+# - tasks.md: 对应 checkbox → [x]
+# - 冲突检测: audit-engine 多轮收敛审计
 ```
 
 ## Troubleshooting
@@ -290,28 +244,34 @@ Error: Duplicate number "2.1" found in tasks.md
 
 ## Integration with Skills
 
+> **注意**: 以下 skill 集成描述的是 aria 内部验证规则触发逻辑，已不适用 upstream CLI 命令。
+> aria skills 通过 `aria:audit-engine` 执行多轮收敛审计，而非调用 `openspec` CLI。
+
 ### task-planner
 
 ```yaml
-# After generating detailed-tasks.yaml
-task-planner automatically runs:
-  openspec validate --numbering {feature}
+# task-planner 生成 detailed-tasks.yaml 后触发的验证规则:
+# - 检查编号完整性 (Phase.Task 格式、无间隙、无重复)
+# - 验证 parent 引用有效性
+# (已不适用 upstream CLI; aria 使用 audit-engine 替代)
 ```
 
 ### progress-updater
 
 ```yaml
-# After updating task status
-progress-updater automatically runs:
-  openspec validate --sync {feature} --fix
+# progress-updater 更新任务状态后触发的同步规则:
+# - 同步 detailed-tasks.yaml 状态到 tasks.md checkbox
+# - 检测并报告双层不一致
+# (已不适用 upstream CLI; aria 使用 audit-engine 替代)
 ```
 
 ### spec-drafter
 
 ```yaml
-# After creating tasks.md
-spec-drafter automatically runs:
-  openspec validate --numbering {feature}
+# spec-drafter 创建 tasks.md 后触发的验证规则:
+# - 验证编号格式与完整性
+# - 检查 Phase 组织是否合规
+# (已不适用 upstream CLI; aria 使用 audit-engine 替代)
 ```
 
 ## Reference
@@ -339,8 +299,9 @@ validation:
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-12-20
+**Version**: 1.1.0
+**Last Updated**: 2026-04-23
 **Related Documents**:
 - [OpenSpec Templates](templates/README.md)
+- [与 Fission-AI OpenSpec 的关系](project.md#与-fission-ai-openspec-的关系)
 - [Dual-Layer Architecture](changes/optimize-phase-a-with-dual-layer-architecture/proposal.md)

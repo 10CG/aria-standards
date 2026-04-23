@@ -1,12 +1,45 @@
 # OpenSpec - Format Definition
 
-> **Version**: 2.1.0
+> **Version**: 2.2.0
 > **Status**: Active
+> **Updated**: 2026-04-23
 > **Purpose**: OpenSpec Format Specification
 
 ## Purpose
 
 This document defines the **OpenSpec format** - a standardized specification format for AI-driven development projects using the Aria methodology.
+
+---
+
+## 与 Fission-AI OpenSpec 的关系
+
+aria 的 OpenSpec 方法论源于早期对 [Fission-AI OpenSpec](https://github.com/Fission-AI/OpenSpec) 的参考，但从 2026-04 起两者已**结构性分叉**：
+
+| 维度 | aria OpenSpec | Fission-AI OpenSpec (v1.3.0+) |
+|------|---------------|-------------------------------|
+| 变更单元 | `openspec/changes/{change_id}/` 目录 | `specs/{capability}/spec.md` 单文件 |
+| 任务表达 | Level 3: `proposal.md` + `tasks.md` + `detailed-tasks.yaml` (双层) | `## ADDED / MODIFIED / REMOVED Requirements` delta headers |
+| 场景表达 | tasks.md 自由格式 checkbox | `#### Scenario:` block 结构化 |
+| Validator | `aria:audit-engine` 3-agent 多轮收敛审计 | `@fission-ai/openspec` CLI `validate --strict` |
+| 归档 | `openspec/archive/YYYY-MM-DD-{change_id}/` | spec history via Git + capability 累积 |
+| 适用场景 | AI-DDD 协作，保留人类可读 tasks.md | greenfield + artifact-guided LLM workflow |
+
+### 为何 aria 不跟随 upstream
+
+1. **兼容性成本**: aria 项目已有多个 archive (如 `openspec/archive/2026-*`)，迁移破坏性高
+2. **方法论差异**: aria 强调 tasks.md 的人类 checklist 属性 + detailed-tasks.yaml 的机读精度，delta-based 在 AI-DDD 上下文下失去"里程碑可视化"能力
+3. **原生 validator 已成熟**: audit-engine 多轮收敛审计 + change_id 锚点校验 + checkpoint 完整性检查，比单轮 CLI validate 更适合 AI 协作
+4. **包管理独立**: aria 作为 Claude Code plugin 分发，不依赖 npm 生态；Fission-AI CLI 适合 CLI-first 用户
+
+### 使用者行动指南
+
+- **aria 项目内**: 使用 aria 格式 + `/audit-engine` 验证，不安装 npm CLI
+- **已用 Fission-AI 的项目**: 可保留现状，不建议迁移到 aria (两者设计哲学不同)
+- **新项目选型**: 需要 AI 深度协作 + 人类审阅 → aria；需要 greenfield spec generation + capability 演化追踪 → Fission-AI upstream
+
+> **Backward-compat 保证**: 已有 `openspec/changes/*` + `openspec/archive/*` 全部合法，本分叉声明不引入任何破坏性变更。
+
+---
 
 ## 什么是 OpenSpec？
 
@@ -103,6 +136,7 @@ Draft → Review → Approved → Implementing → Implemented
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.0 | 2026-04-23 | 新增"与 Fission-AI OpenSpec 的关系"章节，声明结构性分叉，修复 Issue #25 |
 | 2.1.0 | 2026-01-20 | 明确区分格式定义库和项目工作区；删除 changes/ 和 archive/ 目录 |
 | 2.0.0 | 2026-01-19 | Restructured as methodology definition only |
 | 1.0.0 | 2025-12-17 | Initial version |

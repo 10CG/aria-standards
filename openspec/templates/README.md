@@ -168,17 +168,22 @@ openspec validate --numbering user-otp
 ## 验证命令
 
 ```bash
-# 检查双层一致性
-openspec validate --sync {feature-name}
+# aria 使用 audit-engine 进行验证，不使用外部 npm CLI
+# 以下为规则参考 (非可执行命令):
 
-# 验证编号完整性
-openspec validate --numbering {feature-name}
+# 检查双层一致性规则
+# → 实际执行: aria:audit-engine
+
+# 验证编号完整性规则
+# → 实际执行: aria:audit-engine
 
 # 显示完整概览
-openspec show {feature-name}
+# → 实际执行: aria:aria-dashboard
 ```
 
-📖 **详细文档**: 参考 [OpenSpec Validation Guide](../VALIDATION.md) 了解完整的验证命令使用方法、示例和故障排除指南。
+> 格式结构整体定义见 [project.md](../project.md#与-fission-ai-openspec-的关系) — 注意 aria 与 upstream Fission-AI OpenSpec CLI 已结构性分叉，不使用 `@fission-ai/openspec` validator。
+
+📖 **详细文档**: 参考 [OpenSpec Validation Guide](../VALIDATION.md) 了解完整的验证规则、示例和故障排除指南。
 
 ## Change ID 命名约定
 
