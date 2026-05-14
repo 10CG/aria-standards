@@ -23,7 +23,7 @@
 | `.aria/` | 机器状态 (machine state) | `workflow-state.json`, `audit-reports/`, `cache/`, `state-snapshot.json` | 大部分 ignore |
 | `docs/` | 人类/AI 可读 prose | `requirements/`, `architecture/`, `handoff/`, decision memos | tracked |
 
-Handoff doc 是**人写给下次 session 读的散文叙述** (8+ 段 narrative), 不是机器状态。语义上属于 `docs/handoff/`。
+Handoff doc 是**人写给下次 session 读的散文叙述** (9 段 narrative, §0-§8), 不是机器状态。语义上属于 `docs/handoff/`。
 
 ### 1.2 Forbidden patterns
 
