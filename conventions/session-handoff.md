@@ -2,11 +2,9 @@
 
 > **Version**: 1.0.0
 > **Status**: Active
-> **Source incidents**:
-> - 2026-05-09 (SilkNode US-095 cycle) — `/aria:state-scanner` 跳过 handoff 文档,推荐 "随便挑一个 ready story",用户反问 "你是不是没读交接文档?" 后才补读
-> - 2026-05-13 (Aria self ×3) — 包括: state-scanner 推荐未读 handoff (3 起); Aria 自身 `docs/handoff/` 与 `.aria/handoff/` 双 dir 同时存在 (5 + 5 files), spec 作者本人也漂移
+> **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3)
 > **Forgejo Issue**: [10CG/Aria#92](https://forgejo.10cg.pub/10CG/Aria/issues/92) (triage [#6170](https://forgejo.10cg.pub/10CG/Aria/issues/92#issuecomment-6170))
-> **Origin Spec**: `openspec/archive/2026-05-14-aria-ten-step-session-handoff-stage/` (待 ship)
+> **Origin Spec**: `openspec/archive/{archive-date}-aria-ten-step-session-handoff-stage/` (待 D.2 ship, archive-date 由归档时填入)
 > **Target release**: aria-plugin v1.21.0+
 
 ---
@@ -31,10 +29,6 @@ Handoff doc 是**人写给下次 session 读的散文叙述** (9 段 narrative, 
 - ❌ 在 `.aria/handoff/` 与 `docs/handoff/` 之间分散写入 (drift)
 - ❌ 自定义其他 handoff dir (例如 `notes/`, `sessions/`, `journals/`) — 与跨项目复用 9 段模板的目标冲突
 - ❌ 跳过 `docs/handoff/latest.md` pointer 更新 (导致 stale pointer)
-
-### 1.3 Exception
-
-**零 exception**。与 [secret-hygiene](./secret-hygiene.md) 不同 (后者有隔离环境 debug 用途), handoff 路径选择无 ambiguity 边缘场景。任何 `.aria/handoff/*.md` 写入企图都应 redirect 到 `docs/handoff/`。
 
 ---
 
@@ -75,7 +69,7 @@ docs/handoff/{YYYY-MM-DD}-{slug}.md
 docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 ```
 
-写入后**自动**更新 `docs/handoff/latest.md` pointer。
+写入后**自动**更新 `docs/handoff/latest.md` pointer。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
 
 ---
 
@@ -101,12 +95,12 @@ docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 
 ### 3.2 Layer 2 details
 
-`collectors/handoff.py` 返回 snapshot 顶层 `handoff` 字段 (schema 1.0 additive, 不 bump):
+`collectors/handoff.py` 返回 snapshot 顶层 `handoff` 字段 (schema 1.0 additive, 不 bump per Aria v1.18.0 G2/G3/G4 precedent — additive top-level field 在 schema 1.0 内引入):
 
 ```yaml
 handoff:
   exists: bool                    # docs/handoff/*.md has files?
-  latest_path: str | null         # newest by mtime
+  latest_path: str | null         # newest by mtime (latest.md pointer excluded)
   latest_filename: str | null
   last_modified_iso: str | null   # UTC ISO 8601
   age_hours: float | null         # time.time() - mtime (avoid timezone)
@@ -124,7 +118,15 @@ handoff:
 - Confidence: 95%
 - Auto-execute: No — file move 涉及 git history,需用户 confirm
 
-### 3.4 Layer 5 details
+### 3.4 Layer 4 details (本文档)
+
+本规范是 L4 的具体内容。canonical normative source: §1 (核心条款) + §2 (template) + §4 (Exception) + §5 (Source incidents)。下游工具实施 (L1/L2/L3/L5) 引用本文档作为规则单一真相源。
+
+- 引用位置: aria-plugin (L1 hook 错误消息 / L2 collector docstring / L3 rule rationale / L5 template instructions)
+- 引用位置: 项目 CLAUDE.md (Rule #9 详细规范 ref)
+- 修订流程: 通过 OpenSpec cycle 修订 (e.g. `aria-ten-step-session-handoff-stage` 是 v1.0.0 origin); 微调通过 PR 直接修改本文件,版本号 (header) 同步 bump
+
+### 3.5 Layer 5 details
 
 `phase-d-closer` D.3 step (新增 2026-05-14 by H0 spec, SKILL 1.0.0 → 1.1.0):
 - Template path: `aria/templates/session-handoff.md`
@@ -134,17 +136,38 @@ handoff:
 
 ---
 
-## 4. Migration notes (downstream projects)
+## 4. Exception
+
+**零 exception**。与 [secret-hygiene](./secret-hygiene.md) 不同 (后者有隔离环境 debug 用途), handoff 路径选择无 ambiguity 边缘场景。任何 `.aria/handoff/*.md` 写入企图都应 redirect 到 `docs/handoff/`。
+
+如下游项目有充分理由使用其他 dir (e.g. 历史遗留, 跨项目工具约束), 须通过 OpenSpec cycle 显式 fork 本规范并记录 rationale, 而非临时绕过。
+
+---
+
+## 5. Source incidents
+
+支撑本规范创建的 4 起 dogfood 实证 (对齐 [secret-hygiene](./secret-hygiene.md) §header incident 引用 pattern):
+
+| # | Date | Project | Incident | Root cause |
+|---|------|---------|----------|------------|
+| 1 | 2026-05-09 | SilkNode (US-095 cycle) | `/aria:state-scanner` 推荐 "随便挑一个 ready story", 用户反问 "你是不是没读交接文档?" 后才补读 | session 开始 AI 看不到 handoff 文档作为优先级信号源 |
+| 2 | 2026-05-13 | Aria self (#101 closeout) | 双 dir 共存 — `docs/handoff/` (5 files) + `.aria/handoff/` (5 files), spec 作者本人也漂移到 `.aria/handoff/` | 缺 canonical 决策, 缺主动 enforcement, 缺 L1 写入阻断 |
+| 3 | 2026-05-13 | Aria self (M5 phase-a-b1) | `latest.md` pointer stale, 指 May 13 00:26 而非真正最新 May 13 20:31 | 写新 handoff 时未更新 pointer (L5 模板未硬编码 latest 更新) |
+| 4 | 2026-05-13 | Aria self (H0 spec 起草本 session) | AI 跑完 state-scanner 直接出推荐, 用户问 "有查看 handoff 文档吗?" 才读 latest | 同 #1, 但发生在本 spec 的 dogfood 起草过程中, 是 H0 必须的元论证 |
+
+---
+
+## 6. Migration notes (downstream projects)
 
 升级 aria-plugin 到 v1.21.0+ 后:
 
-### 4.1 已有 `docs/handoff/` 项目 (e.g. SilkNode)
+### 6.1 已有 `docs/handoff/` 项目 (e.g. SilkNode)
 
 - ✅ 无需迁移 — 已是 canonical
 - L2 collector 会自动 surface 给 AI
 - 下次 phase-d-closer 运行时 D.3 step 可用
 
-### 4.2 已有 `.aria/handoff/` 或其他 ad-hoc dir 项目
+### 6.2 已有 `.aria/handoff/` 或其他 ad-hoc dir 项目
 
 如 Aria 自身 (本 spec 实施前):
 
@@ -155,7 +178,7 @@ handoff:
 5. `rmdir .aria/handoff/` (空 dir 由 git 删除)
 6. Commit: `chore(handoff): migrate misplaced files to canonical docs/handoff/`
 
-### 4.3 模板 customization
+### 6.3 模板 customization
 
 `aria/templates/session-handoff.md` 是**起点**, 不是硬约束。下游项目可:
 - ✅ 删除不适用的 §5 维度 (e.g. 无 UPM 时删除该行)
@@ -165,18 +188,19 @@ handoff:
 
 ---
 
-## 5. 与既有规范的关系
+## 7. 与既有规范的关系
 
 | 规范 | 关系 |
 |------|------|
 | [secret-hygiene](./secret-hygiene.md) (Rule #7) | **结构同构**: L1 hook + L4 convention 双层。session-handoff 是第二个采用此 pattern 的 convention |
 | [git-commit](./git-commit.md) | handoff doc 的 §7 提交清单引用 commit hash, 须符合 Conventional Commits |
+| [naming-conventions](./naming-conventions.md) | handoff 文件名 `{YYYY-MM-DD}-{slug}.md` 遵循 kebab-case + ISO date 前缀 |
 | [document-classification](./document-classification.md) | handoff doc 属于 "operational records" 类, 跨 session 复用 |
 | [version-management](./version-management.md) | 引入 D.3 step 触发 phase-d-closer SKILL 版本 bump (1.0.0 → 1.1.0) |
 
 ---
 
-## 6. 在 ten-step cycle 中的位置
+## 8. 在 ten-step cycle 中的位置
 
 ```
 A. 规划 (Spec & Planning)
@@ -197,7 +221,7 @@ D. 收尾 (Closure)
 
 ---
 
-## 7. References
+## 9. References
 
 - Trigger: Forgejo Aria [#92](https://forgejo.10cg.pub/10CG/Aria/issues/92)
 - Triage SOP: [issue-triage convention](./issue-triage.md)
@@ -205,7 +229,7 @@ D. 收尾 (Closure)
   - `docs/handoff/2026-05-13-us025-m5-phase-a-b1-done.md`
   - `docs/handoff/2026-05-10-phase-c-integrator-pre-merge-gate-cycle-done.md`
   - `docs/handoff/2026-05-09-track-a-deploy-done.md`
-- OpenSpec: `openspec/archive/2026-05-14-aria-ten-step-session-handoff-stage/`
+- OpenSpec: `openspec/archive/{archive-date}-aria-ten-step-session-handoff-stage/` (D.2 归档后填具体日期)
 - aria-plugin Skills referenced:
   - state-scanner (Phase 1.15 handoff collector)
   - phase-d-closer (D.3 step)
@@ -213,5 +237,5 @@ D. 收尾 (Closure)
 
 ---
 
-**Last updated**: 2026-05-14
+**Last updated**: 2026-05-15
 **Maintainer**: Aria methodology team
