@@ -100,13 +100,16 @@ docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 ```yaml
 handoff:
   exists: bool                    # docs/handoff/*.md has files?
-  latest_path: str | null         # newest by mtime (latest.md pointer excluded)
+  latest_path: str | null         # pointer-first (latest.md target), mtime fallback
   latest_filename: str | null
   last_modified_iso: str | null   # UTC ISO 8601
   age_hours: float | null         # time.time() - mtime (avoid timezone)
+  latest_source: str | null       # "pointer" | "mtime" | null (H5 transparency)
   misplaced_files: list[str]      # .aria/handoff/*.md paths
   canonical_dir: "docs/handoff/"
 ```
+
+**Latest detection (H5 fix 2026-05-16)**: `latest_path` 优先取 `docs/handoff/latest.md` pointer target (人维护的语义 "Latest"),raw mtime-max 仅 fallback (pointer 缺失/无法解析/指向不存在文件时)。`latest.md` pointer 是语义权威,mtime 是脆弱信号 (predecessor handoff 被 post-hoc 编辑 — closeout/rebase — 会获得最新 mtime 而 shadow 真 latest)。stale pointer → `soft_error("handoff_pointer_target_missing")` + mtime fallback。
 
 ### 3.3 Layer 3 details
 
