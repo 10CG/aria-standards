@@ -4,7 +4,7 @@
 > **Status**: Active
 > **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3)
 > **Forgejo Issue**: [10CG/Aria#92](https://forgejo.10cg.pub/10CG/Aria/issues/92) (triage [#6170](https://forgejo.10cg.pub/10CG/Aria/issues/92#issuecomment-6170))
-> **Origin Spec**: `openspec/archive/{archive-date}-aria-ten-step-session-handoff-stage/` (待 D.2 ship, archive-date 由归档时填入)
+> **Origin Spec**: `openspec/archive/2026-05-15-aria-ten-step-session-handoff-stage/` (archived 2026-05-15)
 > **Target release**: aria-plugin v1.21.0+
 
 ---
@@ -232,7 +232,7 @@ D. 收尾 (Closure)
   - `docs/handoff/2026-05-13-us025-m5-phase-a-b1-done.md`
   - `docs/handoff/2026-05-10-phase-c-integrator-pre-merge-gate-cycle-done.md`
   - `docs/handoff/2026-05-09-track-a-deploy-done.md`
-- OpenSpec: `openspec/archive/{archive-date}-aria-ten-step-session-handoff-stage/` (D.2 归档后填具体日期)
+- OpenSpec: `openspec/archive/2026-05-15-aria-ten-step-session-handoff-stage/`
 - aria-plugin Skills referenced:
   - state-scanner (Phase 1.15 handoff collector)
   - phase-d-closer (D.3 step)
