@@ -1,11 +1,12 @@
 # Session Handoff 规范
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0 (additive: §2.3 机读 frontmatter schema, multi-terminal-coordination v1.21.x+)
 > **Status**: Active
-> **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3)
+> **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3) + §2.3 (1 跨容器 race incident 2026-05-19)
 > **Forgejo Issue**: [10CG/Aria#92](https://forgejo.10cg.pub/10CG/Aria/issues/92) (triage [#6170](https://forgejo.10cg.pub/10CG/Aria/issues/92#issuecomment-6170))
 > **Origin Spec**: `openspec/archive/2026-05-15-aria-ten-step-session-handoff-stage/` (archived 2026-05-15)
-> **Target release**: aria-plugin v1.21.0+
+> **Extension Spec**: `openspec/changes/multi-terminal-coordination/` (Approved 2026-05-19, per [DEC-20260519-001](../../docs/decisions/DEC-20260519-001-multi-terminal-coordination.md))
+> **Target release**: aria-plugin v1.21.0+ (Rule #9 core) / v1.22.x+ (§2.3 frontmatter schema)
 
 ---
 
@@ -69,7 +70,110 @@ docs/handoff/{YYYY-MM-DD}-{slug}.md
 docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 ```
 
-写入后**自动**更新 `docs/handoff/latest.md` pointer。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
+写入后**自动**更新 `docs/handoff/latest.md` pointer(单 track 场景)或 deprecation banner(多 track 场景,见 §2.3 latest.md 派生行为)。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
+
+---
+
+## 2.3 机读 frontmatter schema (multi-terminal-coordination v1.21.x+)
+
+> **Added**: 2026-05-19 by OpenSpec `multi-terminal-coordination` Phase 1.1 (per [DEC-20260519-001](../../docs/decisions/DEC-20260519-001-multi-terminal-coordination.md)).
+> **Purpose**: 让 `state-scanner` Phase 1 跨分支 fetch + 重建多 track 看板 (Layer H — 防接错棒),
+> 消除单写者 `docs/handoff/latest.md` pointer 的 branch-local siloing 问题。
+> **Status**: additive (本 v1.1.0 minor bump,不破坏 v1.0.0 既有 prose 段)。
+
+每个新写出的 session-handoff doc **必须**在文件最顶部加一段 YAML frontmatter,
+在现有 prose §0-§8 之上叠加 (不替换 prose)。
+
+### 2.3.1 Schema 字段
+
+| 字段 | 类型 | 必含 | 语义 | 取值范围 / 示例 |
+|------|------|------|------|----------------|
+| `track-id` | string | ✅ | 确定性派生的工作 ID,与该 handoff 所属的 OpenSpec change / carry-forward 条目 1:1 绑定 | **规范化**: 小写化 → `/._` 替换为 `-` → 最大长度 64 字符 → 超长或含非 ASCII 时 fallback `sha256(原 id)[:16]`。跨容器实现**必须共用**此函数。示例: `multi-terminal-coordination` / `aria-2-0-m5-carryover-layer2-redo-mode-aux` |
+| `owner-container` | string | ✅ | `<owner>/<container-id>` 复合标识,显示该 handoff 由谁在哪个容器写出 | `<owner>` = git `user.email` 的 local-part (`@` 之前部分);`<container-id>` = `~/.aria/container-id` 持久 short-UUID + 可选人类标签,缺省回退 hostname。示例: `creationhikari/devbox-A` / `simonfishgit/laptop` |
+| `phase` | string | ✅ | 该 handoff 写出时该 track 所处的十步循环阶段 | enum: `A` / `A.1` / `A.2` / `A.3` / `B` / `B.1` / `B.2` / `B.3` / `C` / `C.1` / `C.2` / `D` / `D.1` / `D.2` / `D.3`。允许子阶段 progress 形式如 `B 7/9` |
+| `status` | string | ✅ | 该 handoff 写出时该 track 的工作状态 | enum: `active` (在飞,有 carry-forward) / `done` (全 cycle 完成,归档) / `abandoned` (放弃,carry-forward 转他人或废弃) |
+| `updated-at` | string | ✅ | 该 handoff 写出 / 最近修订的 UTC ISO 8601 时间戳 (秒精度) | 示例: `2026-05-19T22:31:13Z` |
+
+### 2.3.2 YAML 示例
+
+```yaml
+---
+track-id: multi-terminal-coordination
+owner-container: creationhikari/devbox-A
+phase: A.2
+status: active
+updated-at: 2026-05-19T22:31:13Z
+---
+
+# Aria — Session Handoff (2026-05-19) — multi-terminal-coordination Phase A complete
+
+> **Status**: Active — Ready for next session
+...
+
+## §0 入口 (新 session 优先读)
+...
+```
+
+frontmatter 必须紧贴文件顶部 (第 1 行 `---` 开始),与现有 §0 入口 / 主标题之间用一个空行隔开。
+
+### 2.3.3 与 prose 段共存规则
+
+| 角色 | 内容 | 受众 | 权威性 |
+|------|------|------|--------|
+| **Frontmatter (本 §2.3)** | 5 字段机读 metadata | 机器 (AI / collector / state-scanner) | 机读 SOT |
+| **Prose §0-§8 (§2)** | 散文 narrative,跨 session 知识传递 | 人类 + AI | 人读 SOT |
+
+两者**不重复、不冲突**:
+- frontmatter 给"是什么 track / 谁在动 / 在哪阶段 / 工作状态 / 何时更新"的**事实**
+- prose 给"做了什么 / 待办 / 教训 / 风险 / 提交清单 / memory entries"的**叙述**
+
+同一信息 (如 `phase`) 在两层都出现时,**以 frontmatter 为机读 SOT**;
+prose 中允许更详细描述 (如 "Phase B 7/9 tasks done with T2-T8 pending") 作为人类可读补充。
+
+### 2.3.4 向后兼容 (existing docs without frontmatter)
+
+`v1.1.0` 升级前已存在的 handoff doc 没有 frontmatter,**不要求批量回填**。
+state-scanner Phase 1 collector (per `multi-terminal-coordination` task 1.4) 按以下
+fallback 处理:
+
+1. **有完整 frontmatter** → 解析为机读 track 行,渲染到多 track 看板
+2. **无 frontmatter / schema 不全** → 标记为 `legacy` track,使用 mtime + filename
+   parsing fallback (对齐 §3.2 `latest_path` H5 mtime fallback 语义),
+   不阻塞看板渲染
+
+这一 fallback 行为与现有 `docs/handoff/latest.md` pointer 语义授权一致 (`latest.md`
+仍为 prose-level navigation pointer;frontmatter 为 machine-level metadata)。
+
+**latest.md 派生行为** (per `multi-terminal-coordination` task 1.6):
+- **单 track 场景** (1 active track in 看板): `latest.md` 写当前 track 指针,向后兼容老 session 读
+- **多 track 场景** (≥2 active tracks): `latest.md` 不写真实指针,仅含 deprecation banner 指引读看板;L2 collector 语义权威仍以 frontmatter 为准
+
+新写出的 handoff doc 由 `aria/templates/session-handoff.md` (L5 template) 硬编码
+frontmatter 段,确保所有 v1.21.x+ session-handoff 输出含完整 schema。
+
+### 2.3.5 多 owner / 多 container 语义 (collision 类型)
+
+`owner-container` 字段在跨容器 / 多人协作场景下需区分两类 collision:
+
+| Collision 类型 | 触发条件 | 看板渲染 | 含义 |
+|----------------|---------|---------|------|
+| **cross-owner** | 同一 track-id 出现 ≥2 个 distinct `<owner>` | 🔴 强提示,需 reconcile 协议确定性裁决 (per `multi-terminal-coordination` Layer L 早 `claimed_at` 胜) | 多人共抢同一工作,真冲突 |
+| **self-multi-container** | 同一 track-id 出现 ≥2 个 distinct `<container-id>` 但同 `<owner>` | 🟡 soft hint,可能是同一人多容器开了多 session,或容器迁移 | 同一人在多环境工作,通常无需 yield |
+
+详见 [Spec proposal.md §Impact "same-owner-multi-container 语义"](../../openspec/changes/multi-terminal-coordination/proposal.md)。
+
+### 2.3.6 与 Layer L claim schema 的区别
+
+> 本 §2.3 是 **Layer H** (handoff doc 自身的机读 frontmatter,人也可读);
+> `multi-terminal-coordination` 还有 **Layer L** claim schema (orphan ref `refs/aria/coordination` 内的 `claims/<container-id>/<session-id>.yaml`,纯机器),两者**目的不同**:
+
+| 维度 | Layer H frontmatter (本 §2.3) | Layer L claim (Spec proposal §What) |
+|------|-------------------------------|--------------------------------------|
+| 位置 | `docs/handoff/{date}-{slug}.md` 顶部 | `refs/aria/coordination` orphan ref 内 |
+| 字段数 | 5 (track-id / owner-container / phase / status / updated-at) | 8+ (含 schema_version / claimed_at / heartbeat_at / superseded_from 等) |
+| 写入频度 | session 结束时一次 (D.3) | 开工前 1 次 + 周期 heartbeat (10min) + phase 切换 + release |
+| 受众 | 人类 + AI 都读 | 仅机器 (state-scanner Phase 1 reader) |
+| 目的 | 防接错棒 (knowledge handoff) | 防重复劳动 (work claim) |
 
 ---
 
@@ -158,6 +262,12 @@ handoff:
 | 3 | 2026-05-13 | Aria self (M5 phase-a-b1) | `latest.md` pointer stale, 指 May 13 00:26 而非真正最新 May 13 20:31 | 写新 handoff 时未更新 pointer (L5 模板未硬编码 latest 更新) |
 | 4 | 2026-05-13 | Aria self (H0 spec 起草本 session) | AI 跑完 state-scanner 直接出推荐, 用户问 "有查看 handoff 文档吗?" 才读 latest | 同 #1, 但发生在本 spec 的 dogfood 起草过程中, 是 H0 必须的元论证 |
 
+**§2.3 frontmatter schema 扩展**支撑的 1 起跨容器 race 实证:
+
+| # | Date | Project | Incident | Root cause |
+|---|------|---------|----------|------------|
+| 5 | 2026-05-19 | Aria self (multi-terminal-coordination spec 起草本 session) | 两终端同期工作 — 本 session 在做 multi-terminal-coordination Phase A,另一终端在 master 上 ship Spec Y T2-T8 + closeout + issue triage,首次 `git push origin master` 被 reject 为 non-fast-forward;`docs/handoff/latest.md` 单 pointer branch-local,master 视角看不到 feature 分支 handoff (`2026-05-17-evening-spec-y-phase-b-core-5-tasks.md` 仅 feature 分支可见) | 单写者 pointer + 无 cross-branch 重建 → 接错棒;无 work-claim 登记 → 重复劳动风险;本规范 §2.3 frontmatter + Layer L claim 共同解决 |
+
 ---
 
 ## 6. Migration notes (downstream projects)
@@ -232,13 +342,14 @@ D. 收尾 (Closure)
   - `docs/handoff/2026-05-13-us025-m5-phase-a-b1-done.md`
   - `docs/handoff/2026-05-10-phase-c-integrator-pre-merge-gate-cycle-done.md`
   - `docs/handoff/2026-05-09-track-a-deploy-done.md`
-- OpenSpec: `openspec/archive/2026-05-15-aria-ten-step-session-handoff-stage/`
+- OpenSpec (Rule #9 origin): `openspec/archive/2026-05-15-aria-ten-step-session-handoff-stage/`
+- OpenSpec (§2.3 frontmatter schema 扩展): `openspec/changes/multi-terminal-coordination/` (Approved 2026-05-19, per [DEC-20260519-001](../../docs/decisions/DEC-20260519-001-multi-terminal-coordination.md))
 - aria-plugin Skills referenced:
-  - state-scanner (Phase 1.15 handoff collector)
+  - state-scanner (Phase 1.15 handoff collector + Phase 1 多 track 看板 per multi-terminal-coordination tasks 1.3-1.5)
   - phase-d-closer (D.3 step)
 - CLAUDE.md Rule #9 (本规范在 Aria 项目 CLAUDE.md 中的硬约束体现)
 
 ---
 
-**Last updated**: 2026-05-15
+**Last updated**: 2026-05-20 (v1.1.0 — §2.3 frontmatter schema additive)
 **Maintainer**: Aria methodology team
