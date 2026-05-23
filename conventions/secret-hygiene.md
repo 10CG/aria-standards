@@ -7,8 +7,8 @@
 > - 2026-05-06 (truffle-hound v0.3.2) — Python `subprocess.run(['nomad','var','put',...])` 默认继承 stdio, 泄露 4 keys
 > - 2026-05-20 (Aria M5 T-deploy Phase B) — `nomad var get -out=json` 8-key Items map 全 dump → 触发 5-key rotation + Layer 2 紧急 cherry-pick
 > **Forgejo Issue**: [10CG/Aria#78](https://forgejo.10cg.pub/10CG/Aria/issues/78), [#84](https://forgejo.10cg.pub/10CG/Aria/issues/84), [#107](https://forgejo.10cg.pub/10CG/Aria/issues/107)
-> **Origin Spec**: `openspec/archive/<date>-aria-secret-hygiene-rule`
-> **Layer 2 Spec**: `openspec/archive/<date>-aria-secret-guard-plugin-default` (v1.1.0 升级来源)
+> **Origin Spec**: `openspec/archive/2026-05-07-aria-secret-hygiene-rule`
+> **Layer 2 Spec**: `openspec/archive/2026-05-23-aria-secret-guard-plugin-default` (v1.1.0 升级来源)
 
 ---
 
@@ -368,4 +368,4 @@ aria-plugin `aria-doctor` skill 提供 `check_secret_guard_install()` function �
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-07 | 初版 (Path 1 doc-only). 含核心条款 + 9 类受限命令 scope + 7 正向 pattern + 4 反例 + Path 3 hook 关系 + 8 历史 incidents. 来源: Forgejo Issue #78 + Aria 自身 2 次 incident memory feedback. |
-| 1.1.0 | 2026-05-23 | **Additive** (Layer 2 ship): 新增 §0 Path↔Layer mapping table (Path 1↔Layer 0 / Path 2↔inline / Path 3↔Layer 2) + §5 重写为 Layer 2 enforcement (含 plugin SOT 路径 / exit semantics / Path 2 inline ack 与 §1.2 三件套互补关系 / Q1 hook orchestrator merge 实证 + 边界声明 / Path 1 与 Layer 2 互补关系含 known-limitation 全集) + 新 §6 local copy + plugin coexist 模式 (5-state aria-doctor pointer + cleanup 策略 + backwards-compat guarantee) + 2026-05-20 incident 追加 + Forgejo issue refs (#84, #107)。零 breaking change,Path 1 教育规范 + §2 scope + §3 正向 pattern + §4 反例全保留。来源: Spec [aria-secret-guard-plugin-default](../../openspec/archive/<date>-aria-secret-guard-plugin-default/) + memory `feedback_claude_code_hook_merge_all_fire` (Q1 实证) + memory `feedback_deterministic_structural_skill_rule6_substitute` (atomicity guard)。 |
+| 1.1.0 | 2026-05-23 | **Additive** (Layer 2 ship): 新增 §0 Path↔Layer mapping table (Path 1↔Layer 0 / Path 2↔inline / Path 3↔Layer 2) + §5 重写为 Layer 2 enforcement (含 plugin SOT 路径 / exit semantics / Path 2 inline ack 与 §1.2 三件套互补关系 / Q1 hook orchestrator merge 实证 + 边界声明 / Path 1 与 Layer 2 互补关系含 known-limitation 全集) + 新 §6 local copy + plugin coexist 模式 (5-state aria-doctor pointer + cleanup 策略 + backwards-compat guarantee) + 2026-05-20 incident 追加 + Forgejo issue refs (#84, #107)。零 breaking change,Path 1 教育规范 + §2 scope + §3 正向 pattern + §4 反例全保留。来源: Spec [aria-secret-guard-plugin-default](../../openspec/archive/2026-05-23-aria-secret-guard-plugin-default/) + memory `feedback_claude_code_hook_merge_all_fire` (Q1 实证) + memory `feedback_deterministic_structural_skill_rule6_substitute` (atomicity guard)。 |
