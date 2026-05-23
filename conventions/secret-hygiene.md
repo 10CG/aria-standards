@@ -1,12 +1,30 @@
 # Secret Hygiene 规范
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Source incidents**:
 > - 2026-05-02 (Aria US-022 T8) — `nomad job inspect` 全量 dump runtime env 泄露 4 keys
 > - 2026-05-06 (truffle-hound v0.3.2) — Python `subprocess.run(['nomad','var','put',...])` 默认继承 stdio, 泄露 4 keys
-> **Forgejo Issue**: [10CG/Aria#78](https://forgejo.10cg.pub/10CG/Aria/issues/78)
+> - 2026-05-20 (Aria M5 T-deploy Phase B) — `nomad var get -out=json` 8-key Items map 全 dump → 触发 5-key rotation + Layer 2 紧急 cherry-pick
+> **Forgejo Issue**: [10CG/Aria#78](https://forgejo.10cg.pub/10CG/Aria/issues/78), [#84](https://forgejo.10cg.pub/10CG/Aria/issues/84), [#107](https://forgejo.10cg.pub/10CG/Aria/issues/107)
 > **Origin Spec**: `openspec/archive/<date>-aria-secret-hygiene-rule`
+> **Layer 2 Spec**: `openspec/archive/<date>-aria-secret-guard-plugin-default` (v1.1.0 升级来源)
+
+---
+
+## 0. Path ↔ Layer mapping
+
+本规范定义 3 条互补的 enforcement path,对应 2 层 defense-in-depth:
+
+| Path | 性质 | Layer | 实施位置 | 触发时机 | 失败模式 |
+|------|------|-------|----------|---------|---------|
+| **Path 1** | Prose convention (本文档) | **Layer 0** (doc-only) | `standards/conventions/secret-hygiene.md` | Onboarding / PR review / human discipline | 取决于人/AI 是否读 + 是否遵守 (soft) |
+| **Path 2** | Inline annotation | (无独立 layer,贯穿 Layer 0/2) | 命令前 `# secret-leak-ok-explicit` 三件套 (理由 + 隔离 + sign-off) | Per-command opt-out / 紧急豁免 | 注释缺失即视同未豁免;Layer 2 hook 同步识别 `# guard:ack:` |
+| **Path 3** | PreToolUse + PostToolUse hook | **Layer 2** (mechanical enforcement) | `aria/hooks/{secret-guard,secret-scan}.sh` (aria-plugin SOT, v1.24.0+) | Claude Code tool 调用前/后, 自动触发 | 失败模式由 hook 自身 audit 覆盖 (251 self-tests + cross-project dogfood) |
+
+> **Path 1 vs Path 3 关系**: Path 1 (Layer 0) 是教育路径与 source-of-truth (§2 受限命令清单是 Path 3 regex matcher 的语义参照);Path 3 (Layer 2) 是机械执行 — 两者**并存且互补**,不互替代。
+
+> **Why no "Layer 1"?**: Layer 1 在 Aria 内部其他语境用于指代 "post-incident rotation" (key 已泄露后立即轮换),与 enforcement 编排无关,故本规范的 enforcement layer 编号跳过 1。
 
 ---
 
@@ -225,24 +243,95 @@ GOT=$(nomad var get nomad/jobs/myapp | jq -r '.Items.KEY')
 
 ---
 
-## 5. 与 Path (3) PreToolUse hook 的关系
+## 5. Layer 2 enforcement (Path 3 PreToolUse + PostToolUse hook)
 
-本规范 (Path 1) 是**教育/mental model 路径**。Aria 计划在后续 Spec 引入 **Path (3) PreToolUse hook 强执行**:
+aria-plugin v1.24.0+ ship **`aria/hooks/secret-guard.sh` + `aria/hooks/secret-scan.sh`** 作为 Layer 2 mechanical enforcement, 自动注册到 `aria/hooks/hooks.json` 的 PreToolUse + PostToolUse,所有装 aria-plugin 的项目默认获保护。
 
-- Hook 在 Claude Code SDK PreToolUse 阶段扫 Bash command pattern
-- 匹配 §2 scope 列表的命令 + 未含 redirect token (`>/dev/null`, `capture_output=True`, `stdout=DEVNULL`) → block + 返回 helpful message
-- Exception 路径: 命令前注释 `# secret-leak-ok-explicit` + 三件套 (理由 + 隔离 + sign-off) → hook skip
+### 5.1 Plugin SOT 路径
 
-Path (3) hook 落地后, 本 Path (1) 文档继续作为:
-- 命令清单 source-of-truth (hook regex matcher 引用本文 §2)
-- 教育路径 (新加入项目时 onboarding 读本文)
-- Exception annotation 规则 source-of-truth
+| 文件 | 角色 | 注册 matcher |
+|------|------|-------------|
+| `aria/hooks/secret-guard.sh` | PreToolUse Bash + Read/Edit/Write/MultiEdit blocker | `Bash` + `Read\|Edit\|Write\|MultiEdit` |
+| `aria/hooks/secret-scan.sh` | PostToolUse output 扫描 + REDACT | `Bash\|Read\|Edit\|Write\|MultiEdit` |
+| `aria/hooks/tests/secret-guard.test.sh` | 208 regression cases (含 `${CLAUDE_PLUGIN_ROOT}` substitution test) | n/a |
+| `aria/hooks/tests/secret-scan.test.sh` | 44 regression cases | n/a |
 
-Path (3) hook tracking: 见 [Forgejo Issue #78](https://forgejo.10cg.pub/10CG/Aria/issues/78) 后续 follow-up Spec。
+> **NotebookEdit 不注册** (v1.24.0 决定): `.ipynb` cell 多用于实验代码,内联 secret 概率低 + ack 路径足够 — 后续 minor 可加。
+
+### 5.2 Exit semantics
+
+- **PreToolUse `secret-guard.sh`**: `exit 2` = block;`exit 0` = allow。Block 时 stderr 显示 helpful 消息(matched pattern + acceptable filters list + ack 模板)。
+- **PostToolUse `secret-scan.sh`**: **`exit 0` always** (warn-only)。Tool 已执行完成,exit 2 不能 retroactively block;stderr 显示 REDACTED summary + tool_response 已被改写(secret value 替换为占位)。
+
+### 5.3 Path 2 exception (inline `# guard:ack:` annotation)
+
+Path 1 §1.2 的 `# secret-leak-ok-explicit` 三件套(理由 + 隔离 + sign-off)在 Layer 0 上**人/AI review-only**。Layer 2 hook 同步识别**简化版** `# guard:ack: <reason ≥ 8 non-whitespace chars>` 作 per-command bypass:
+
+```bash
+# 命令尾加 ack 注释, Layer 2 hook 检测后 skip block + log to ~/.claude/logs/guard-bypass.log
+nomad var get nomad/jobs/X  # guard:ack: M5 R5.3 validator install pre-check, isolated dev env, owner sign-off
+```
+
+> Layer 2 ack 路径**不替代** Path 2 三件套规范 —— 三件套是 Path 1 教育规范要求(commit/PR review-time);ack 注释是 Layer 2 runtime gate 的快速 escape。两者并存:严肃豁免应在 commit 中提供 Path 2 三件套,Layer 2 ack 只是当下 unblock 的便捷快门。
+
+### 5.4 Q1 evidence boundary (hook orchestrator merge 语义)
+
+aria-secret-guard-plugin-default Spec brainstorm 跑过 5-trial instrumented test (project-level + plugin-level hook 各注入 marker + file-toggle exit 2),实证 **Claude Code 同事件多源 hook merge 语义**:
+
+| 维度 | 实证结果 | 设计含义 |
+|------|---------|---------|
+| 同事件多源 hook 触发 | **All-fire** (project + plugin 都跑) | Layer 2 + 项目本地 copy 共存可行,双重防线生效 |
+| 触发顺序 | project → plugin, **~17-34ms gap (sequential)** | overhead 可忽略,不并行 |
+| Exit 2 是否短路后续 hook | **不短路** | 任一 hook exit 2 即整体 block;设计 block 策略不能依赖前置 short-circuit |
+| Block reporting | 仅 stderr 显示触发 block 的那个 hook 路径 | 用 `$CLAUDE_PROJECT_DIR/...` vs `${CLAUDE_PLUGIN_ROOT}/...` 区分 source |
+
+> **实证边界**: 该 5-trial 实验在 **Write event PreToolUse** 上跑(用 `handoff-location-guard.sh` 作 proxy)。**Bash + PostToolUse 推论**: hook orchestrator 是 Claude Code 框架同一组件,merge 语义 by spec 适用于所有 hook event;`secret-guard.sh` 自身行为由 251 self-tests + cross-project dogfood 覆盖。所以 Layer 2 设计可信赖 all-fire + non-short-circuit 在 Bash + PostToolUse 上同样成立,**但严格意义上只直接验证了 Write/PreToolUse**;若未来发现 Bash event merge 异常需 fall back to design,这是预先记录的 known-evidence-gap。memory: `feedback_claude_code_hook_merge_all_fire`。
+
+### 5.5 Path 1 与 Layer 2 互补关系
+
+Layer 2 ship 后,本 Path 1 文档继续作为:
+
+- **命令清单 source-of-truth** — Layer 2 regex matcher 的语义参照(§2 受限命令清单)
+- **教育路径** — 新加入项目 onboarding 必读
+- **Exception annotation 规则 SOT** — `# secret-leak-ok-explicit` 三件套规范
+- **Layer 2 known-limitation 全集** — Path 1 文档显式记录 Layer 2 已知 false-positive + false-negative(见 aria-plugin CHANGELOG [1.24.0]):
+  - (a) `cat <script> && grep .env <script>` conservative regex 误拦(false-positive)
+  - (b) log-file grep 不在 risky_patterns 内的 false-negative(parent DEC §2.6)
+- **追踪 follow-up**: 见 [Forgejo Aria #84](https://forgejo.10cg.pub/10CG/Aria/issues/84) (closed via v1.24.0) + [#107](https://forgejo.10cg.pub/10CG/Aria/issues/107) (closed via v1.24.0)
 
 ---
 
-## 6. 触发该规则的项目角色
+## 6. Local copy + plugin coexist 模式
+
+部分早期项目(Aria self / SilkNode)在 Layer 2 ship 前已 manual cherry-pick secret-guard hook 到 `.claude/scripts/`。Layer 2 ship 后,本地 copy 与 plugin SOT **并存**(per §5.4 Q1 实证: all-fire merge,双重防线)。
+
+aria-plugin `aria-doctor` skill 提供 `check_secret_guard_install()` function 输出 **5 primary states + 2 sub-flags** 协助判断当前项目是否需 cleanup:
+
+| state | 含义 | sub flags |
+|-------|------|-----------|
+| `not_installed` | 既无 `${CLAUDE_PROJECT_DIR}/.claude/scripts/secret-guard.sh` 也无 plugin hook 加载 (异常,不应在 plugin default-on 环境出现) | `plugin_load_failed` |
+| `single_plugin` | 仅 plugin hook 活跃,无项目本地 copy (**新项目预期态**) | (none) |
+| `single_local` | 仅项目本地 copy + `.claude/settings.json` 注册,plugin hook 未加载 (异常,建议查 plugin 状态 OR plugin version < v1.24.0) | (advisory only) |
+| `dual_install` | plugin + 项目本地 copy 并存 (**Layer 2 ship 后 Aria self / SilkNode 预期态**,双重防线 by design) | `stale_local_version` / `divergent_content` |
+| `corrupted_settings` | `.claude/settings.json` 解析失败 / hook 注册条目 malformed | (mutex with above) |
+
+> **Sub flag 检测**: `stale_local_version` 通过本地 `.claude/scripts/secret-guard.sh` 顶部 banner version 解析(v1.2 已有 banner)与 plugin SOT 比较;`divergent_content` 通过 SHA256 对比。
+
+**Cleanup 策略**:
+
+- `dual_install + 无 sub-flag`: **保留** — 双重防线,Layer 2 ship 后**默认推荐保留**至少一个 next minor 周期作 fallback
+- `dual_install + stale_local_version`: owner 决定是 sync 本地到 plugin SOT,还是删本地保 plugin SOT
+- `dual_install + divergent_content`: 必须 investigate 差异(可能 owner 本地有定制 — 应被 upstream 或保留 Path 2 ack);不要盲删
+- `single_local + plugin version >= v1.24.0`: 大概率 plugin 未正确加载 — 跑 `aria-doctor` 详查
+- `single_plugin`: 新项目预期态,无 action
+
+**aria-doctor skill 详细 schema + advisory text**: `aria/skills/aria-doctor/SKILL.md`(v1.24.0+)。
+
+> **Schema backwards-compat guarantee**: 后续 minor 仅可 **append** sub flags,不可重命名 primary state(per memory `feedback_deterministic_structural_skill_rule6_substitute` atomicity guard)。
+
+---
+
+## 7. 触发该规则的项目角色
 
 | 角色 | 触发频率 | 主要场景 |
 |------|----------|----------|
@@ -254,7 +343,7 @@ Path (3) hook tracking: 见 [Forgejo Issue #78](https://forgejo.10cg.pub/10CG/Ar
 
 ---
 
-## 7. 与既有规范的关系
+## 8. 与既有规范的关系
 
 | 规范 | 关系 |
 |------|------|
@@ -265,7 +354,7 @@ Path (3) hook tracking: 见 [Forgejo Issue #78](https://forgejo.10cg.pub/10CG/Ar
 
 ---
 
-## 8. 历史 incidents
+## 9. 历史 incidents
 
 | 日期 | Project | 命令 | 泄露规模 | 修复 |
 |------|---------|------|----------|------|
@@ -274,8 +363,9 @@ Path (3) hook tracking: 见 [Forgejo Issue #78](https://forgejo.10cg.pub/10CG/Ar
 
 ---
 
-## 9. 版本历史
+## 10. 版本历史
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-07 | 初版 (Path 1 doc-only). 含核心条款 + 9 类受限命令 scope + 7 正向 pattern + 4 反例 + Path 3 hook 关系 + 8 历史 incidents. 来源: Forgejo Issue #78 + Aria 自身 2 次 incident memory feedback. |
+| 1.1.0 | 2026-05-23 | **Additive** (Layer 2 ship): 新增 §0 Path↔Layer mapping table (Path 1↔Layer 0 / Path 2↔inline / Path 3↔Layer 2) + §5 重写为 Layer 2 enforcement (含 plugin SOT 路径 / exit semantics / Path 2 inline ack 与 §1.2 三件套互补关系 / Q1 hook orchestrator merge 实证 + 边界声明 / Path 1 与 Layer 2 互补关系含 known-limitation 全集) + 新 §6 local copy + plugin coexist 模式 (5-state aria-doctor pointer + cleanup 策略 + backwards-compat guarantee) + 2026-05-20 incident 追加 + Forgejo issue refs (#84, #107)。零 breaking change,Path 1 教育规范 + §2 scope + §3 正向 pattern + §4 反例全保留。来源: Spec [aria-secret-guard-plugin-default](../../openspec/archive/<date>-aria-secret-guard-plugin-default/) + memory `feedback_claude_code_hook_merge_all_fire` (Q1 实证) + memory `feedback_deterministic_structural_skill_rule6_substitute` (atomicity guard)。 |
