@@ -1,6 +1,6 @@
 # Conventions Summary
 
-> **Version**: 1.1.0
+> **Version**: 1.2.0
 > **Sources**: `standards/conventions/*.md`
 
 ## Git Commit
@@ -51,6 +51,17 @@ TDD Phase: REFACTOR  # Optimize structure
 - Mark examples clearly: "// Example"
 - AI-generated content must be reviewed
 
+## Nomad Docker Registry Auth
+
+**Forbidden**: HCL task-level `config.auth { password = "${TEMPLATE_VAR}" }` + template stanza env injection (时序错位:driver pull 在 template render 前 — Aria M5 v1.11.2 cold-pull 实证)
+**SOT**: 节点级 Nomad `plugin "docker" { config { auth { config = "<docker-config-path>" } } }` + per-node `<docker-config-path>` 文件 (推荐 `/root/.docker/config.json`)
+**Cred file schema**: `{"auths":{"<registry>":{"auth":"<base64(user:pass) via base64 -w0>"}}}` — 无 email 字段, 无 line-wrap
+**Reload**: Nomad driver per-alloc 读, 不需 `systemctl restart nomad`;仅 client.hcl 路径变更才需 restart
+**PAT rotation**: atomic 多节点 sync (staging file → scp → fingerprint verify → atomic mv → round-trip verify);docker login 安全 pattern 见 [secret-hygiene §2.4 + §3.6](../conventions/secret-hygiene.md)
+**Observed contradiction**: Aether 2026-04-23 spike GO (Nomad < v1.11.2) vs Aria 2026-05-23 M5 FAIL (Nomad v1.11.2) — 同 cluster 30 天前 GO/现在 FAIL, 当前取严格立场禁 task auth block
+**Scope**: 适用 task `template { env = true }` + HCL `config.auth.${VAR}` 模式;envsubst 模式 (e.g. `__REGISTRY_TOKEN__`) 不在本 convention scope (见 secret-hygiene)
+**Details**: [conventions/nomad-docker-registry-auth.md](../conventions/nomad-docker-registry-auth.md) + Aria DEC-20260523-001
+
 ---
 *For details: `standards/conventions/`*
-**Updated**: 2026-01-20
+**Updated**: 2026-05-23 (v1.2.0 — added Nomad Docker Registry Auth)
