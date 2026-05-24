@@ -170,7 +170,7 @@ printf '%s' '<bot-username>:<bot-pat>' | base64 -w0
 ## §5 PAT rotation playbook (Nomad-specific only)
 
 > 本段只覆盖 Nomad-specific 部分 (atomic 多节点 sync + round-trip verify)。
-> **`docker login` 安全 pattern + chat-leak 防护**: 见 [`secret-hygiene.md §2.4 + §3.6`](./secret-hygiene.md#26-container-registry-login) (单向 reference, 不重复)。
+> **`docker login` 安全 pattern + chat-leak 防护**: 见 [`secret-hygiene.md §2.4 + §3.6`](./secret-hygiene.md#24-container-registry-login) (单向 reference, 不重复)。
 
 ### 5.1 Atomic multi-node sync 顺序
 
