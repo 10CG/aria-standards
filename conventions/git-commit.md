@@ -205,6 +205,27 @@ BREAKING CHANGE: API响应格式变更
 新格式: { success: true, data: {...} }
 ```
 
+### 6.4 Emergency Hotfix — `Prod-Validated:` trailer (#58, v1.35.0)
+
+prod 紧急修复 (emergency_hotfix lane) 走 lighter lane (跳 Phase A.1-A.3)。当 ops/config 改动 (无业务逻辑可单测) 用 **manual prod validation 替代 B.2 单测**时, commit message **必须**含根因块 + `Prod-Validated:` trailer:
+
+```
+hotfix(deploy): curl → wget for cron upload scripts
+
+根因: curl 7.x 在该镜像缺失, cron 静默 silent-fail 5 天
+Prod-Validated: cron 恢复 2026-04-28; 9 jobs uploaded; run #3162
+```
+
+| 要素 | 规范 |
+|------|------|
+| Subject | `hotfix(scope): <summary>` (emergency lane 专用 type) |
+| 根因块 | body 内, `根因:` 起头, 说明 silent-fail / 退化的根本原因 |
+| `Prod-Validated:` trailer | **单行** (evidence 换行用分号 `;` 替代); 内容 = prod 实测验证证据 (恢复时刻 / 影响范围 / run/PR# 等) |
+
+**机检 gate** (phase-b-developer): hotfix 分支 + 跳单测时机械 grep `^Prod-Validated:` 存在性 —— 有 → 允许替代单测; **无 → block, 回标准 lane**。trailer **存在性**机检 (防"忘记留证"); **内容真实性**靠 owner PR review + audit trail 事后追溯 (不事前防伪)。
+
+> trailer 先例: `Co-Authored-By:` (本规范 §Body) / `Submodule-Rollback:` (CLAUDE.md Rule #8)。`Prod-Validated:` 同属机械可 grep 的单行 footer trailer。
+
 ---
 
 ## 7. Skill 选择指南
