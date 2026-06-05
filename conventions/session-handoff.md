@@ -72,6 +72,20 @@ docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 
 写入后**自动**更新 `docs/handoff/latest.md` pointer(单 track 场景)或 deprecation banner(多 track 场景,见 §2.3 latest.md 派生行为)。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
 
+### 2.2.1 按需收尾 + context 压力触发 (session-closeout-internalization, aria-plugin v1.40.0+)
+
+§2.1 的 4-level fallback 由 phase-d-closer D.3 在**走完十步循环**(D.2 archive)后触发。**按需收尾**补充一条独立路径:任意对话(含未 ship 完 Spec 的探索/调试 session)可由 `session-closeout` skill 随时触发,委托 phase-d-closer 的 `closeout_only=true` 引擎(跳过 D.1/D.2,只跑 D.3 handoff-write)。
+
+**机械化采集**(从手填 prose → 自动回填,根除遗漏):
+- §7 ← `snapshot.sync_status[.multi_remote]`(ahead/parity,不同步告警)
+- §2 ← `upm.followups[]` + `openspec.carry_forward_inventory` + active `tasks.md` 原始 `- [ ]` + `.claude/subagent-state`("对话上下文" best-effort,不计入机械验证)
+- §5 四维一致性 advisory 校验(UPM↔archive / active↔UPM / 高优 US↔§2 / PRD broken ref)
+- §8 枚举本 session 新 memory(mtime > started_at)
+
+**context 压力 advisory 触发**:phase-b-developer / phase-c-integrator 在 context-monitor 消费点调 `closeout_trigger`,占用 ≥ 阈值(默认 85%)**且**有未交接成果时 **advise** 现在收尾 —— 赶在 compaction 静默丢早期轮次、handoff 失真之前。**advisory-only,永不自动执行**(承 aria-context-monitor "只给数据不中断" DEC #104);口径不混用(relay→`used_percentage` / transcript→`used_percentage_proxy`)。
+
+幂等写入:仅写未替换 placeholder 段,owner 已手填则跳过。并发安全:多终端并发 closeout 遵 [concurrent-session-write-safety](./concurrent-session-write-safety.md) slug 唯一性。
+
 ---
 
 ## 2.3 机读 frontmatter schema (multi-terminal-coordination v1.21.x+)
