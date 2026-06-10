@@ -177,6 +177,19 @@ frontmatter 段,确保所有 v1.21.x+ session-handoff 输出含完整 schema。
 
 ---
 
+### 2.3.7 Frontmatter content enforcement (#137, aria-plugin v1.43.0+)
+
+> 本小节是 **content enforcement** (frontmatter 内容存在性), 独立于既有 5 层 **location enforcement** 矩阵 (那 5 层只管 handoff 写到哪, 不管内容)。
+
+注入机制 (模板 + 派生规则, §2.3.1) v1.22.x+ 即存在, 但 SilkNode 2026-05-31 实证: 不经模板的 ad-hoc handoff 静默落 legacy (`owner-container=unknown`), 多 track 看板失去识别能力且无人知道。两层 content enforcement (互补分工):
+
+| 层 | 机制 | 覆盖路径 |
+|----|------|----------|
+| **E1 D.3 写后自校验** | phase-d-closer D.3 子步 2b: `head -8 <doc> \| grep -cE '^(track-id\|owner-container\|phase\|status\|updated-at):'` 须 ==5, 不足补齐重验 (warn-then-fix 非硬 abort) | 经 phase-d-closer 的 handoff |
+| **E2 scanner soft warning** | state-scanner Phase 1.15 对 **resolved latest doc** (pointer 与 mtime fallback 双路径) 缺 frontmatter 时发 `handoff_frontmatter_missing` soft warning + snapshot 字段 `handoff.latest_frontmatter_missing` | **ad-hoc handoff 兜底** (仅 latest, 历史 legacy 不刷屏) |
+
+advisory-over-hardlock (DEC-20260519-001): 两层均不硬阻断; legacy fallback 行为不变, 仅加可见性。
+
 ## 3. Enforcement matrix (5-layer defense-in-depth)
 
 源自 OpenSpec `aria-ten-step-session-handoff-stage` proposal §Layered defense matrix。
