@@ -264,7 +264,7 @@ Phase C - Integration (集成):
 
 Phase D - Closure (收尾):
   D.1: Update UPM → progress-updater → stateToken, kpiSnapshot, progress history
-  D.2: Archive Spec → openspec:archive → standards/openspec/archive/{feature}/
+  D.2: Archive Spec → openspec:archive → standards/openspec/archive/{feature}/ (requires implementation verified, not Approved-only)
 ```
 
 ## Execution Modes

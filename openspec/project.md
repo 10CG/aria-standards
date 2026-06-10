@@ -121,10 +121,21 @@ This provides:
 
 ```
 Draft → Review → Approved → Implementing → Implemented
-                                                           ↓
-                                              Move to openspec/archive/
-                                              命名格式: {YYYY-MM-DD}-{feature}/
+                    │                          │
+                    │                          ▼
+                    │     [archive 前置条件: tasks.md 全[x] ∨ Status==done]
+                    │                          │
+                    │                          ▼
+                    │              Move to openspec/archive/
+                    │              命名格式: {YYYY-MM-DD}-{feature}/
+                    │
+                    └──[design-only]──▶ archive (archive_type: implementation-deferred)
+                        须 --archive-design-only + reason (frontmatter 留标记)
+
+DEPRECATED (#134): 旧"直接 Approved → archive"(无标记、无 reason) 路径已废弃
 ```
+
+> 归档=功能完成; 设计定稿是 in_progress milestone 非归档理由; 确需归档未实施设计稿走 --archive-design-only + reason (留 implementation-deferred 标记)
 
 ## Related Resources
 

@@ -143,7 +143,10 @@ When `upm.milestone_driven: true`, Step 8.5 (Phase C C.2.6) appends sub-bullets 
 Complete the Spec lifecycle by archiving implemented Specs.
 
 ### Trigger Conditions
-- Step 9 progress update completed
+- Step 9 progress update completed (时序触发 only)
+
+> **Note (#134)**: Trigger 仅为时序条件。"是否可归档"的完成判定**不是** trigger,
+> 而是 Execution 第 1 步 "Verify All Acceptance Criteria Met" 中的硬性 gate。
 
 ### Input
 - Implemented Spec file
@@ -170,7 +173,7 @@ The junction/symlink is already in `.gitignore`.
 
 ### Execution
 
-1. **Verify All Acceptance Criteria Met**
+1. **Verify All Acceptance Criteria Met (完成判定 gate, #134)**
    ```yaml
    Acceptance Criteria:
      - [x] Criterion 1: Verified
@@ -178,14 +181,20 @@ The junction/symlink is already in `.gitignore`.
      - [x] Criterion 3: Verified
    ```
 
-2. **Update Spec Status**
-   ```markdown
-   ## Status
-   - [x] Draft
-   - [x] Reviewed
-   - [x] Implemented
-   - [x] Archived
-   ```
+   完成判定在此步执行 (单一可执行 SOT: aria-plugin `state-scanner/scripts/lib/spec_complete.py`,
+   gate 入口经 Bash 调同一脚本, 不再由 AI 解释 prose):
+   - **Level 3** (有 `tasks.md`): `tasks.md` 全 `[x]` **且**无 inline carry-forward/defer 注释 → 可归档
+   - **Level 2** (无 `tasks.md`): `Status` normalized == `done` → 可归档
+   - **Approved-only** (仅设计定稿、实施未做): **不可**按常规归档, 须 `--archive-design-only` + reason
+     (归档时 frontmatter 写 `archive_type: implementation-deferred` 标记)
+
+   > 归档=功能完成; 设计定稿是 in_progress milestone 非归档理由; 确需归档未实施设计稿走 --archive-design-only + reason (留 implementation-deferred 标记)
+
+2. **Update Spec Status (按 Level 分支条件判定, 非 checkbox 序列, #134)**
+   - **Level 3** (有 `tasks.md`): 若 `tasks.md` 全 `[x]` 且无 inline carry-forward/defer 注释 → 可归档
+   - **Level 2** (无 `tasks.md`): 若 `Status` normalized == `done` → 可归档
+   - **Approved-only** (设计定稿未实施): 需 `--archive-design-only` + reason →
+     归档时 frontmatter 留 `archive_type: implementation-deferred` 标记 (不改 Status)
 
 3. **Archive Using OpenSpec CLI**
    ```bash
@@ -195,7 +204,8 @@ The junction/symlink is already in `.gitignore`.
    # Archive without confirmation prompt
    openspec archive {change-name} --yes
 
-   # Archive without validation
+   # Archive without validation — DEPRECATED (#134): 勿用本 flag 绕过完成度 gate;
+   # 归档未实施设计稿请改用 --archive-design-only + reason (留 implementation-deferred 标记)
    openspec archive {change-name} --no-validate
    ```
 
@@ -267,6 +277,7 @@ After completing Phase D:
 - [ ] Progress history recorded
 - [ ] Next cycle candidates identified
 - [ ] Spec acceptance criteria verified
+- [ ] 归档完成度 gate 通过 (L3: `tasks.md` 全 `[x]` 且无 carry-forward/defer 注释; L2: `Status` normalized == `done`; Approved-only 须 `--archive-design-only` + reason)
 - [ ] Spec moved to archive
 - [ ] Archive index updated
 
