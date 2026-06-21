@@ -77,8 +77,8 @@ The gate enforces forward-only bumps mechanically. Following this sequence elimi
 
 aria-plugin v1.28.0+ ships a pre-merge gate at `aria/skills/phase-c-integrator/SKILL.md §C.2.4.5`:
 
-- **v1.28.0** (warn-only mode): logs `WOULD-BLOCK` for any regression/divergence detected; does NOT refuse merge. 14-day observation window for ecosystem false-positive feedback.
-- **v1.29.0+** (block mode): refuses merge with exit 1 unless override (trailer or label) present.
+- **v1.28.0** (history, warn-only mode): logged `WOULD-BLOCK` for any regression/divergence detected; did NOT refuse merge. (Observation window elapsed; flipped to block in v1.49.0.)
+- **v1.49.0+** (current, block mode default): refuses merge with exit 1 unless override (trailer or label) present. Flipped from warn per Two-phase rollout (Trigger B: ≥3 gate executions + tripwire green + FP 0% + owner risk-accept 2026-06-21). `mode="warn"` legacy opt-out / `mode="off"` bypass / env override retained.
 
 Telemetry written to `aria/metrics/submodule-gate-warns.jsonl` (warn mode) / `submodule-gate-blocks.jsonl` (block mode) / `submodule-gate-overrides.jsonl` (override usage) / `submodule-gate-misses.jsonl` (post-merge tripwire detection).
 
