@@ -1,6 +1,6 @@
 # Session Handoff 规范
 
-> **Version**: 1.1.0 (additive: §2.3 机读 frontmatter schema, multi-terminal-coordination v1.21.x+)
+> **Version**: 1.2.0 (additive: §1.3 周期收尾 vs 会话收尾 消歧 + 消歧矩阵, session-closer-synthesis aria-plugin v1.50.0+; 1.1.0: §2.3 机读 frontmatter schema, multi-terminal-coordination v1.21.x+)
 > **Status**: Active
 > **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3) + §2.3 (1 跨容器 race incident 2026-05-19)
 > **Forgejo Issue**: [10CG/Aria#92](https://forgejo.10cg.pub/10CG/Aria/issues/92) (triage [#6170](https://forgejo.10cg.pub/10CG/Aria/issues/92#issuecomment-6170))
@@ -31,6 +31,28 @@ Handoff doc 是**人写给下次 session 读的散文叙述** (9 段 narrative, 
 - ❌ 自定义其他 handoff dir (例如 `notes/`, `sessions/`, `journals/`) — 与跨项目复用 9 段模板的目标冲突
 - ❌ 跳过 `docs/handoff/latest.md` pointer 更新 (导致 stale pointer)
 
+### 1.3 两种收尾: 周期收尾 (Phase D) vs 会话收尾 (session-closer)
+
+(session-closer-synthesis, aria-plugin v1.50.0+) handoff 由**两个正交的收尾入口**写出, 二者**共享本规范 + 同一 handoff-write 机制 SOT** (`phase-d-closer/references/handoff-mechanics.md`), 但**工作单元不同**, 不应混淆:
+
+| 维度 | **周期收尾 (phase-d-closer)** | **会话收尾 (session-closer)** |
+|------|------------------------------|------------------------------|
+| 工作单元 | 一个开发 **cycle** (A→B→C 走完) | 一次**对话 / session** (可含 0..N cycle + 探索/调试/讨论) |
+| 入口 | 十步循环 Phase D (D.1 进度 + D.2 归档 + D.3 handoff) | leaf skill, owner 任意时刻直接调 |
+| 触发词 | "Phase D" / "周期收尾" / "归档 Spec" / "更新 cycle 进度" | "对话收尾" / "会话收尾" / "session closeout" / "写交接" / "收工" |
+| 输入域 | repo / spec 状态 | **对话内容** (AI 内省) + snapshot 机械兜底 |
+| 是否拖入十步循环 | 是 (它**是**十步循环的一步) | 否 (**leaf**, 写完 handoff 即终结, 不调 phase-a/b/c/d) |
+
+**消歧矩阵** (易混触发词的期望命中):
+
+| 触发词 | 期望命中 | 理由 |
+|--------|---------|------|
+| "对话收尾" / "执行对话收尾" / "会话收尾" / "收工" | session-closer | 纯会话语义 |
+| "Phase D" / "归档 Spec" / "周期收尾" / "收尾阶段" | phase-d-closer | cycle 语义 |
+| "写交接" / "写 handoff" | **session-closer (默认)** | cycle 内 handoff 由 phase-d D.3 **自动**承担 (用户不显式调); 用户显式说"写交接"多指会话维度 |
+
+> **第三方 load-bearing**: 本消歧节 + 两 skill 的 `description` 是跨项目生效的消歧依据 (第三方加载 plugin + standards, 不加载 Aria 自身 CLAUDE.md)。
+
 ---
 
 ## 2. Template structure (9-section skeleton)
@@ -49,7 +71,9 @@ Handoff doc 是**人写给下次 session 读的散文叙述** (9 段 narrative, 
 | §7 | 提交清单 (commit hash + multi-remote parity) | ✅ |
 | §8 | **Memory entries this session** (auto-memory 新增列表) | ✅ |
 
-### 2.1 触发条件 (任一满足即由 phase-d-closer D.3 prompt)
+### 2.1 触发条件 (周期收尾路径: 任一满足即由 phase-d-closer D.3 prompt)
+
+> 这是**周期收尾**的触发条件 (§1.3)。**会话收尾** (session-closer) 由 owner 直接调用触发, 不走下述 fallback; 另有 context 压力 advisory nudge (occupancy ≥ 阈值 + 未交接成果) 由 phase-b/c context-monitor step 提示。
 
 按 fallback 优先级 (机械信号 → 启发式 → user prompt):
 
