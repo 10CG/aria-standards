@@ -11,7 +11,7 @@
 
 Windows native jq builds 在**每行输出**追加 CRLF。bash 消费时只 strip `\n` 不 strip `\r`:`readarray -t` 让每个字段带尾 `\r`,`$(…)` 让单值带尾 `\r`。**进入 shell 条件判断 / 字符串比较的值必须剥 CR;数据正文与 jq 构造器输出不动。**
 
-后果实证 (#132):`tool_type="string\r"` 通不过 `[[ "$tool_type" != "string" ]]` → PreToolUse hook fail-closed 阻断 Windows session 全部工具。姊妹 (secret-scan):同样 gate → 静默跳过 redaction = secret 泄漏。
+后果实证 (#132):`tool_type="string\r"` 通不过 `[[ "$tool_type" != "string" ]]` → PreToolUse hook fail-closed 阻断 Windows session 全部工具。姊妹 (secret-scan):同样 gate → 静默跳过 secret 检测 = 泄漏未被告警。
 
 ---
 
