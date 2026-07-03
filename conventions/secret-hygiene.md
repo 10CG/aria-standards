@@ -252,16 +252,16 @@ aria-plugin v1.24.0+ ship **`aria/hooks/secret-guard.sh` + `aria/hooks/secret-sc
 | 文件 | 角色 | 注册 matcher |
 |------|------|-------------|
 | `aria/hooks/secret-guard.sh` | PreToolUse Bash + Read/Edit/Write/MultiEdit blocker | `Bash` + `Read\|Edit\|Write\|MultiEdit` |
-| `aria/hooks/secret-scan.sh` | PostToolUse output 扫描 + REDACT | `Bash\|Read\|Edit\|Write\|MultiEdit` |
+| `aria/hooks/secret-scan.sh` | PostToolUse output 扫描 + 告警 (detect-only, 非 redaction) | `Bash\|Read\|Edit\|Write\|MultiEdit` |
 | `aria/hooks/tests/secret-guard.test.sh` | 208 regression cases (含 `${CLAUDE_PLUGIN_ROOT}` substitution test) | n/a |
-| `aria/hooks/tests/secret-scan.test.sh` | 44 regression cases | n/a |
+| `aria/hooks/tests/secret-scan.test.sh` | 49 regression cases | n/a |
 
 > **NotebookEdit 不注册** (v1.24.0 决定): `.ipynb` cell 多用于实验代码,内联 secret 概率低 + ack 路径足够 — 后续 minor 可加。
 
 ### 5.2 Exit semantics
 
 - **PreToolUse `secret-guard.sh`**: `exit 2` = block;`exit 0` = allow。Block 时 stderr 显示 helpful 消息(matched pattern + acceptable filters list + ack 模板)。
-- **PostToolUse `secret-scan.sh`**: **`exit 0` always** (warn-only)。Tool 已执行完成,exit 2 不能 retroactively block;stderr 显示 REDACTED summary + tool_response 已被改写(secret value 替换为占位)。
+- **PostToolUse `secret-scan.sh`**: **`exit 0` always** (warn-only, **detect-only 非 redaction**)。Tool 已执行完成,exit 2 不能 retroactively block;命中时 stderr 显示 **DETECTED** summary + 发 `additionalContext`(告知 Claude 按已泄露处理、勿复述)/ `systemMessage`(提醒 operator 轮换)。**不改写 tool_response** —— PostToolUse 架构上无法重写已产生的 tool 结果 (官方 hooks-guide line 891),故第二层是**检测+告警**而非兜底。**唯一可靠防线 = PreToolUse `secret-guard`**(事前 block)。
 
 ### 5.3 Path 2 exception (inline `# guard:ack:` annotation)
 
