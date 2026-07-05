@@ -1,8 +1,8 @@
 # OpenSpec - Format Definition
 
-> **Version**: 2.2.0
+> **Version**: 2.2.1
 > **Status**: Active
-> **Updated**: 2026-04-23
+> **Updated**: 2026-07-05
 > **Purpose**: OpenSpec Format Specification
 
 ## Purpose
@@ -137,6 +137,8 @@ DEPRECATED (#134): 旧"直接 Approved → archive"(无标记、无 reason) 路�
 
 > 归档=功能完成; 设计定稿是 in_progress milestone 非归档理由; 确需归档未实施设计稿走 --archive-design-only + reason (留 implementation-deferred 标记)
 
+> 完成的**真实性**: "完成"须是**可核实完成** (有 call-site / 产物支撑),非仅任务清单勾选存在——勾选只反映声称,不代表声称属实。enforcement 侧的一个实例见 aria-plugin 归档完成度证据闸 (aria-plugin#95),本约定独立于具体实现,适用于任何检验归档完成度的机制。
+
 ## Related Resources
 
 - **Aria Methodology**: https://github.com/10CG/Aria
@@ -147,6 +149,7 @@ DEPRECATED (#134): 旧"直接 Approved → archive"(无标记、无 reason) 路�
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.1 | 2026-07-05 | 归档惯例补"完成的真实性" (可核实完成: call-site/产物支撑, 非仅勾选); 呼应 #95 archive-completeness-gate 证据闸, 与 #134 D4 惯例衔接不冲突 |
 | 2.2.0 | 2026-04-23 | 新增"与 Fission-AI OpenSpec 的关系"章节，声明结构性分叉，修复 Issue #25 |
 | 2.1.0 | 2026-01-20 | 明确区分格式定义库和项目工作区；删除 changes/ 和 archive/ 目录 |
 | 2.0.0 | 2026-01-19 | Restructured as methodology definition only |
