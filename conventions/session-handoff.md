@@ -1,12 +1,12 @@
 # Session Handoff 规范
 
-> **Version**: 1.2.0 (additive: §1.3 周期收尾 vs 会话收尾 消歧 + 消歧矩阵, session-closer-synthesis aria-plugin v1.50.0+; 1.1.0: §2.3 机读 frontmatter schema, multi-terminal-coordination v1.21.x+)
+> **Version**: 1.3.0 (additive: §2.3.8 结构化 carry-id schema — §6 prose 层, `interactive-session-dedup-coordination` DEC-20260704-002; 1.2.0: §1.3 周期收尾 vs 会话收尾 消歧 + 消歧矩阵, session-closer-synthesis aria-plugin v1.50.0+; 1.1.0: §2.3 机读 frontmatter schema, multi-terminal-coordination v1.21.x+)
 > **Status**: Active
-> **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3) + §2.3 (1 跨容器 race incident 2026-05-19)
-> **Forgejo Issue**: [10CG/Aria#92](https://forgejo.10cg.pub/10CG/Aria/issues/92) (triage [#6170](https://forgejo.10cg.pub/10CG/Aria/issues/92#issuecomment-6170))
+> **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3) + §2.3 (1 跨容器 race incident 2026-05-19) + §2.3.8 (双子星重复劳动, 2026-07-03/04, [DEC-20260704-002](../../docs/decisions/DEC-20260704-002-interactive-session-duplicate-prevention.md))
+> **Forgejo Issue**: [10CG/Aria#92](https://forgejo.10cg.pub/10CG/Aria/issues/92) (triage [#6170](https://forgejo.10cg.pub/10CG/Aria/issues/92#issuecomment-6170)) / [10CG/aria-plugin#94](https://forgejo.10cg.pub/10CG/aria-plugin/issues/94) (双子星防重复, §2.3.8)
 > **Origin Spec**: `openspec/archive/2026-05-15-aria-ten-step-session-handoff-stage/` (archived 2026-05-15)
-> **Extension Spec**: `openspec/changes/multi-terminal-coordination/` (Approved 2026-05-19, per [DEC-20260519-001](../../docs/decisions/DEC-20260519-001-multi-terminal-coordination.md))
-> **Target release**: aria-plugin v1.21.0+ (Rule #9 core) / v1.22.x+ (§2.3 frontmatter schema)
+> **Extension Spec**: `openspec/changes/multi-terminal-coordination/` (Approved 2026-05-19, per [DEC-20260519-001](../../docs/decisions/DEC-20260519-001-multi-terminal-coordination.md)) / `openspec/changes/interactive-session-dedup-coordination/` (Approved 2026-07-04, per [DEC-20260704-002](../../docs/decisions/DEC-20260704-002-interactive-session-duplicate-prevention.md); Phase A CONVERGED, Phase B pending — §2.3.8 carry-id schema)
+> **Target release**: aria-plugin v1.21.0+ (Rule #9 core) / v1.22.x+ (§2.3 frontmatter schema) / pending (§2.3.8 carry-id schema, Phase B 未 ship — 版本号待 `interactive-session-dedup-coordination` Phase D 归档时回填)
 
 ---
 
@@ -63,11 +63,11 @@ Handoff doc 是**人写给下次 session 读的散文叙述** (9 段 narrative, 
 |---|------|------|
 | §0 | 入口 (强调下次 session 用 state-scanner 进入) | ✅ |
 | §1 | 已完成 (按时间顺序, 含 commit hash + PR/issue 链接) | ✅ |
-| §2 | 未完成 / Carry-forward 清单 (H1/H2/H3 高优 + M1/M2 中优 + low cleanup) | ✅ |
+| §2 | 未完成 / Carry-forward 清单 (H1/H2/H3 高优 + M1/M2 中优 + low cleanup)。机读通道 `carry_forward_inventory` 自动汇入 (id 化留 #95, 见 §2.3.8.5) | ✅ |
 | §3 | 关键风险 / 已知陷阱 | ✅ |
 | §4 | 实战教训 (memory 沉淀来源) | ✅ |
 | §5 | 多维度同步状态 (UPM/Story/OpenSpec/PRD/Standards/Skill/Memory/Decision/Audit/CHANGELOG) | ✅ |
-| §6 | Next session 入口 + 优先级建议 | ✅ |
+| §6 | Next session 入口 + 优先级建议;每条 carry-forward 结构化为 `{id, desc}`(§2.3.8) | ✅ |
 | §7 | 提交清单 (commit hash + multi-remote parity) | ✅ |
 | §8 | **Memory entries this session** (auto-memory 新增列表) | ✅ |
 
@@ -213,6 +213,49 @@ frontmatter 段,确保所有 v1.21.x+ session-handoff 输出含完整 schema。
 | **E2 scanner soft warning** | state-scanner Phase 1.15 对 **resolved latest doc** (pointer 与 mtime fallback 双路径) 缺 frontmatter 时发 `handoff_frontmatter_missing` soft warning + snapshot 字段 `handoff.latest_frontmatter_missing` | **ad-hoc handoff 兜底** (仅 latest, 历史 legacy 不刷屏) |
 
 advisory-over-hardlock (DEC-20260519-001): 两层均不硬阻断; legacy fallback 行为不变, 仅加可见性。
+
+### 2.3.8 结构化 Carry-id schema (§6 prose 层, 非 frontmatter, `interactive-session-dedup-coordination` DEC-20260704-002)
+
+> **Added**: 2026-07 by OpenSpec `interactive-session-dedup-coordination` (per [DEC-20260704-002](../../docs/decisions/DEC-20260704-002-interactive-session-duplicate-prevention.md))。
+> **Purpose**: §6 "Next session 入口 + 优先级建议" 的每条 carry-forward 此前是**无稳定 id 的自由文本**——两个并行交互 session (双子星) 读同一份 handoff §6, 各自独立解读并重复劳动数小时后才在 git push 时发现 (源事故见上 §5)。加稳定 `id` 后, 两 session 读同一 handoff = 同一 id, 喂给 Layer L 认领闸门 (`phase1_gate.run_gate`) 必撞, 从而可见化 + 可对账。
+> **Status**: additive, 本 v1.3.0 minor bump, 不破坏既有 §6 纯 prose 写法 (§2.3.8.4 向后兼容)。
+
+#### 2.3.8.1 Schema
+
+§6 每条优先级 carry-forward 从自由文本升级为结构化 `{id, desc}`, 挂载于各优先级条目 (⭐/H1/H2/M1 等既有优先级标记不变, id 是**追加**字段):
+
+| 字段 | 类型 | 必含 | 语义 | 约定 |
+|------|------|------|------|------|
+| `id` | string | ✅ (新 carry-forward 条目) | 稳定 slug, 喂 Layer L 认领闸门的 `raw_track_id` | kebab-case, 约定前缀 `carry-<slug>` (如 `carry-m6-blocker3-spec`)。**禁止使用 `:`** —— `derive_track_id` 替换表 (`aria/skills/state-scanner/lib/track_id.py:28`) 只译 `/`、`.`、`_` → `-`, 不译 `:`, 冒号会被原样保留导致归一不彻底 |
+| `desc` | string | ✅ | 人类可读描述 (即原自由文本内容) | 无格式约束 |
+
+#### 2.3.8.2 与 frontmatter `track-id` (§2.3.1) 的关系
+
+当某条 §6 carry-id 与本 handoff **doc-level frontmatter `track-id`** (§2.3.1) 指向**同一份工作**时, 两者取**相同原始串** (推荐直接复用 frontmatter `track-id` 作该条目的 carry-id, 而非另起新串) —— 否则同一份工作被算成两条不相关 track, 削弱"认领必撞"的效果。
+
+**复用时的例外**: 复用 `track-id` 作 carry-id 时**不强制 `carry-` 前缀** (`track-id` 本身可能无前缀, 如 `multi-terminal-coordination`); `carry-` 前缀仅是**新起** carry-id 时的可读性约定, `derive_track_id` 对两种形式都能确定性归一。
+
+#### 2.3.8.3 层归属: 留 §6 prose, 不进 frontmatter (硬约束)
+
+carry-id **必须**以 markdown prose 形式留在 §6 body 内, **禁止**作为新增 frontmatter 字段。原因: handoff frontmatter 用 stdlib flat-only 解析器 (`handoff.py:206-209`), 只认扁平 `key: string` 结构; 嵌套/list 结构 (如 `{id, desc}`) 会解析失败返回 `None`, 导致**整份文档退化为 legacy** (`owner-container=unknown` 等), 重演 §2.3.7 记录的漂移问题。以 prose 形式加入 §6 body 零风险 —— collector 只读文件顶部 frontmatter 5 字段 (§2.3.1), 不解析 body。
+
+同理, 本次变更**不涉及** #137 frontmatter content enforcement (§2.3.7) 的 `grep -cE ... ==5` 不变式——carry-id 不是新增 frontmatter 字段, 该断言不受影响。
+
+#### 2.3.8.4 消费路径 (human-in-the-loop, 无自动解析)
+
+开工时人 / AI 读 §6 选定某条 carry-id, 将其**原始串**作为 `raw_track_id` 传给 `phase1_gate.run_gate()`; 归一化职责在 `run_gate` **内部**完成 (调用 `derive_track_id(raw_track_id)`), **调用方不预先归一**, 避免消费端各自重复实现归一逻辑。无 collector 自动解析 §6 body——符合 advisory 哲学 (决策前必经人工确认, 非自动拦截)。
+
+#### 2.3.8.5 显式划界: §6 human-curated vs §2 机读 carry-forward 通道
+
+本 schema **只覆盖 §6** ("Next session 入口 + 优先级建议", human-curated 的最高优先级条目)。项目另有一条**机读**的 carry-forward 通道: 各 active `openspec/changes/*/tasks.md` 的 inline 注解经 collector (`collectors/openspec.py`) 自动提取汇入 `carry_forward_inventory`, 再由 `handoff_autofill.py` 自动写入 §2 "未完成 / Carry-forward 清单"。
+
+这条**机读通道体量更大** (覆盖全部 in-flight OpenSpec 的未完成任务, 非仅 §6 人工精选的最高优先级项), 但其条目**尚未 id 化** ——本 Spec 不处理, **显式留作 [aria-plugin#95](https://forgejo.10cg.pub/10CG/aria-plugin/issues/95) 或独立 follow-up**。这一划界是刻意的: 防止误以为"加了 §6 carry-id 就已根治重复劳动病根", 实际只覆盖了病根的一部分 (触发本次 DEC-20260704-002 的实际事故场景恰好落在 §6, 但不代表 §2 通道天然免疫同样问题)。
+
+#### 2.3.8.6 向后兼容
+
+- 旧 (v1.3.0 前) §6 纯自由文本行**不受影响**, 不强制批量回填 id。
+- 未打标 (无 `id` 字段) 的 §6 行**不触发** Layer L 认领闸门消费——二选一明确: 未打标行 = 不喂 `run_gate`, 不把整行自由文本当隐式 carry-id (避免保留"无稳定 id"病根)。
+- §6 加 carry-id 后, frontmatter 解析仍只取 §2.3.1 的 5 个顶层字段, 文档不因 body 内出现 `{id, desc}` 结构而退化 legacy。
 
 ## 3. Enforcement matrix (5-layer defense-in-depth)
 
@@ -381,12 +424,14 @@ D. 收尾 (Closure)
   - `docs/handoff/2026-05-09-track-a-deploy-done.md`
 - OpenSpec (Rule #9 origin): `openspec/archive/2026-05-15-aria-ten-step-session-handoff-stage/`
 - OpenSpec (§2.3 frontmatter schema 扩展): `openspec/changes/multi-terminal-coordination/` (Approved 2026-05-19, per [DEC-20260519-001](../../docs/decisions/DEC-20260519-001-multi-terminal-coordination.md))
+- OpenSpec (§2.3.8 结构化 carry-id schema 扩展): `openspec/changes/interactive-session-dedup-coordination/` (Approved 2026-07-04, per [DEC-20260704-002](../../docs/decisions/DEC-20260704-002-interactive-session-duplicate-prevention.md); Phase A CONVERGED, Phase B pending)
 - aria-plugin Skills referenced:
-  - state-scanner (Phase 1.15 handoff collector + Phase 1 多 track 看板 per multi-terminal-coordination tasks 1.3-1.5)
+  - state-scanner (Phase 1.15 handoff collector + Phase 1 多 track 看板 per multi-terminal-coordination tasks 1.3-1.5; §2.3.8 carry-id 消费路径 per interactive-session-dedup-coordination)
   - phase-d-closer (D.3 step)
-- CLAUDE.md Rule #9 (本规范在 Aria 项目 CLAUDE.md 中的硬约束体现)
+  - `aria/skills/state-scanner/scripts/phase1_gate.py` (Layer L 认领闸门, §2.3.8 carry-id 的 `raw_track_id` 消费方)
+- CLAUDE.md Rule #9 (本规范在 Aria 项目 CLAUDE.md 中的硬约束体现; Rule #9 Extension 段记录 Layer L 接活状态)
 
 ---
 
-**Last updated**: 2026-05-20 (v1.1.0 — §2.3 frontmatter schema additive)
+**Last updated**: 2026-07-04 (v1.3.0 — §2.3.8 结构化 carry-id schema additive, `interactive-session-dedup-coordination` DEC-20260704-002)
 **Maintainer**: Aria methodology team
