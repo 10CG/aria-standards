@@ -1,8 +1,8 @@
 # OpenSpec - Format Definition
 
-> **Version**: 2.2.1
+> **Version**: 2.2.2
 > **Status**: Active
-> **Updated**: 2026-07-05
+> **Updated**: 2026-07-08
 > **Purpose**: OpenSpec Format Specification
 
 ## Purpose
@@ -137,7 +137,7 @@ DEPRECATED (#134): 旧"直接 Approved → archive"(无标记、无 reason) 路�
 
 > 归档=功能完成; 设计定稿是 in_progress milestone 非归档理由; 确需归档未实施设计稿走 --archive-design-only + reason (留 implementation-deferred 标记)
 
-> 完成的**真实性**: "完成"须是**可核实完成** (有 call-site / 产物支撑),非仅任务清单勾选存在——勾选只反映声称,不代表声称属实。enforcement 侧的一个实例见 aria-plugin 归档完成度证据闸 (aria-plugin#95),本约定独立于具体实现,适用于任何检验归档完成度的机制。
+> 完成的**真实性**: "完成"须是**可核实完成** (有 call-site / 产物支撑),非仅任务清单勾选存在——勾选只反映声称,不代表声称属实。enforcement 侧的一个实例见 aria-plugin 归档完成度证据闸 (aria-plugin#95),本约定独立于具体实现,适用于任何检验归档完成度的机制。可核实的证据不限于静态引用——**是否最近被真实调用过(运行时证据)是另一个可选的核验维度**,一个具体机制示例见 aria-plugin 归档门声明式运行时探针 (aria-plugin#95 follow-up A: runtime-probe-archive-gate-integration),spec 可选择性在 proposal.md frontmatter 声明探针供归档时核验,未声明的 spec 行为不受影响。
 
 ## Related Resources
 
@@ -149,6 +149,7 @@ DEPRECATED (#134): 旧"直接 Approved → archive"(无标记、无 reason) 路�
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.2.2 | 2026-07-08 | "完成的真实性"补运行时证据可选维度 (可核实性不限静态引用, 亦可延伸到"最近是否真被调用过"); 呼应 aria-plugin#95 follow-up A (runtime-probe-archive-gate-integration) 声明式运行时探针折入归档门, 与既有惯例衔接不冲突 |
 | 2.2.1 | 2026-07-05 | 归档惯例补"完成的真实性" (可核实完成: call-site/产物支撑, 非仅勾选); 呼应 #95 archive-completeness-gate 证据闸, 与 #134 D4 惯例衔接不冲突 |
 | 2.2.0 | 2026-04-23 | 新增"与 Fission-AI OpenSpec 的关系"章节，声明结构性分叉，修复 Issue #25 |
 | 2.1.0 | 2026-01-20 | 明确区分格式定义库和项目工作区；删除 changes/ 和 archive/ 目录 |
