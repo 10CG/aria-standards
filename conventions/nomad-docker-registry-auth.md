@@ -1,268 +1,242 @@
 # Nomad Docker Registry Auth
 
-> **Version**: 1.0.0
+> **Version**: 2.0.0
 > **Created**: 2026-05-23
+> **Revised**: 2026-07-12 (**v1.0.0 的禁令被实证推翻并撤销** — 见 §0)
 > **Status**: Active
-> **Source**: Aria DEC-20260523-001 + M5 Phase C O3 cold-pull empirical evidence
+> **Source**: 2026-07-12 判别式实测 (Nomad v1.11.2) + [Aether #234](https://forgejo.10cg.pub/10CG/Aether/issues/234) / [Aether #46](https://forgejo.10cg.pub/10CG/Aether/issues/46)
+> **Supersedes**: v1.0.0 (Aria DEC-20260523-001 — 禁用 task-level auth, 节点级 auth.config 为 SOT)
 
 ---
 
-## §0 Rationale + Observed contradiction
+## §0 v1.0.0 发生了什么 (必读)
 
-Nomad docker driver 从 private registry pull image 时,**task-level `config { auth { ... } }` block + template-stanza-injected env var (e.g. `${REGISTRY_TOKEN}`) 的组合不可靠**。本 convention 强制改用**节点级 `plugin "docker" { config { auth { config = "<docker-config-path>" } } }`** 作为 SOT,task HCL 禁止内联 `auth { ... }` block。
+**v1.0.0 (2026-05-23) 禁止 task-level `config.auth` + `template{env=true}` 组合**, 理由是一个**时序断言**:
 
-### Observed empirical contradiction (must surface)
+> docker driver image pull 发生在 template render **之前** → `${VAR}` 在 pull 时仍是 unresolved literal 或空 → registry 收到空 password → 401
 
-| Date | Context | Nomad ver | Result | Evidence path |
-|------|---------|-----------|--------|---------------|
-| 2026-04-23 | Aether spike (controlled, 11.5MB private image, cache pre-cleared) | < v1.11.2 | **GO** — template `${VAR}` + task auth block 正常工作 | Aether `openspec/archive/2026-04-22-fix-hardcoded-docker-auth/` |
-| 2026-05-23 | Aria M5 Phase C O3 (cold-pull live, large image) | **v1.11.2** + Forgejo registry 11.0.6 | **FAIL** — `${VAR}` interp 在 docker driver invocation 前未 resolve, 401 | Aria M5 handoff §3 R2 |
+并据此把**节点级 `plugin "docker" { auth { config = ... } }` 定为 SOT**。
 
-两次实测**同 cluster 30 天前 GO / 现在 FAIL**。本 convention **不假装能解释根因**(可能因素: Nomad 版本升级 / image 大小 / `force_pull` flag / registry 升级),但**取严格立场** — 当前 Aria 实测为 ground truth SOT,禁用 task-level `auth { ${VAR} }` 模式。
+**2026-07-12 实测: 该时序断言为假。** 在**同一集群、同一 Nomad 版本 (v1.11.2, 未升级)**、并且复刻了 Aria 自己的 job 形态之后, task-level auth + template env **工作正常**。禁令**撤销**, SOT **反转** (见 §3)。
 
-适用条件: **Nomad task 使用 `template { env = true }` stanza 注入 env + HCL `config.auth` 块组合**。其他注入模式(envsubst / deploy-time substitution, e.g. `__REGISTRY_TOKEN__`)**不在本 convention scope**(见 §3 + §8)。
+### 为什么这不是"两次实测各说各话"
 
----
+关键在于**验证方法**, 不在于跑了几次。节点级凭据当时是**健康**的 —— 所以"拉得动镜像"**不构成任何证据** (可能是 job auth 生效, 也可能是 driver 回退用了节点凭据, 两者观感完全一样)。必须做**判别式实验**: 给 job 级凭据注入**错误值**, 要求它**硬失败**。
 
-## §1 Problem statement
+| 实验 (均为 Nomad v1.11.2 + `force_pull = true` 强制真实冷拉) | 正确凭据 | **故意写错**的凭据 |
+|---|---|---|
+| 普通 batch job + 静态 tag | ✅ `Driver: Downloading image` → Exit 0 | ❌ `401 Unauthorized` |
+| **parameterized (dispatch) + `image = repo@sha256:${NOMAD_META_IMAGE_SHA}`** ← **v1.0.0 失败时的形态** | ✅ `Downloading image` → Exit 0 | ❌ `401 Unauthorized` |
 
-### Symptom
+两行合起来是**闭合**的:
 
-`nomad alloc status <id>` 显示 `Recent Events: Driver failure ... docker pull failed: 401 unauthorized` 或等价 registry auth 错误。
+- **错误凭据 → 401** ⇒ docker driver **确实在消费 auth block**, 且其失败时**不会**回退到节点 `/root/.docker/config.json` (当时节点凭据完全健康)。
+- **正确凭据 → 拉取成功** ⇒ 既然不存在回退路径, 成功**只可能**来自 auth block 里**已经正确 resolve 的模板值** ⇒ **template 注入的 env 在 image pull 时已经就位**。
 
-### Conditions reproducing the failure
+即: `config.auth` **一旦存在就是权威的**; template env 在 pull 时**可用**。v1.0.0 §2 的生命周期图是错的 (修正见 §2)。
 
-1. HCL task 含:
-   ```hcl
-   task "X" {
-     driver = "docker"
-     config {
-       image = "<registry>/<image>:<tag>"
-       auth {
-         username = "<bot-username>"
-         password = "${<TEMPLATE_VAR>}"
-       }
-     }
-     template {
-       data = "<TEMPLATE_VAR>={{ .Data.data.<key> }}"
-       env  = true
-     }
-   }
-   ```
-2. Nomad client docker plugin 未 wire 节点级 `auth.config`, 或已 wire 但 task-level block 在 override。
-3. 触发条件: cold-pull (image 不在 node cache) — registry GC / image_delay 过期 / 新节点。
+### 那 2026-05-23 的 401 到底是什么？
 
-### Root cause
+**不知道, 且不编。** 但有一个不需要新假设的解释: 彼时用的 `FORGEJO_BOT_PAT` 属于 `ca32267` 那一代 token —— 后 (2026-07-01) 被查明**泄露 + 过度授权**并已 revoke; 同期 AD-M1-8 记录的 PAT rotation 实测也正是 "partial 4-scope **FAIL** → full 7-scope **PASS**"。**一个 scope 不足/无效的 token 同样得到 401**, 而当年把 401 归因为"插值时序"时**没有做判别式实验** (没有验证渲染出来的值究竟是不是空)。
 
-- `${<TEMPLATE_VAR>}` 在 **template stanza runtime** 渲染 (consul-template) 写入 `/secrets/*.env` 文件 → source 到 task **process env**
-- 但 **docker driver image pull 发生在 task process 启动之前** (Nomad alloc lifecycle: alloc placement → image pull → container create → process start → template render → task start)
-- 因此 docker driver 处理 `config.auth { password = "${<TEMPLATE_VAR>}" }` 时, `${<TEMPLATE_VAR>}` 仍是 unresolved literal (或空字符串, Nomad 版本依赖)
-- registry 收到空/literal password → 401
+v1.0.0 自己诚实写过 "本 convention 不假装能解释根因" —— 这份诚实是对的, 但"取严格立场"的代价是把 job 锁死在了单点凭据上 (见 §4)。
 
-对比: `${NOMAD_META_*}` 是 **Nomad native interpolation**, 在 driver invocation **之前**解析,工作正常 (e.g. `image = "<registry>/<image>@sha256:${NOMAD_META_IMAGE_SHA}"` 同 task 同 config 块内 work)。
+### 附带实测发现: Forgejo registry 忽略 username
+
+`https://forgejo.10cg.pub/v2/token` 用 **token (password) 认证, 完全忽略 username**: 用 `10cg-ci-bot` / 已改名的旧名 `aria-runner-bot` / 甚至 `WRONG-USER-XYZ` 请求, 都能签出 token 并成功 GET manifest (HTTP 200); 只有 **token 错误**才 401。
+
+推论: `auth { username = ... }` 的值对 Forgejo 拉取**不影响成败** (仍应填对, 便于审计与其他 registry 兼容); **401 只能由 token 引起**。
 
 ---
 
-## §2 Mechanism — Why task-level `auth` block fails
-
-Nomad alloc lifecycle (相关阶段):
-
-```
-1. alloc placement (scheduler picks node)
-2. Nomad native interpolation (${NOMAD_*} resolved, including ${NOMAD_META_*})
-3. ── docker driver image pull ──   ← config.auth { } read here
-4. container create
-5. template render (consul-template → /secrets/*.env)
-6. task process start (env 注入 from /secrets/*.env)
-```
-
-→ `config.auth { password = "${<TEMPLATE_VAR>}" }` 在阶段 3 被读, 但 `<TEMPLATE_VAR>` 在阶段 5 才 resolve。**时序错位**。
-
-唯一可靠路径: cred 在阶段 3 **之前**就已经 ready, 不通过 task config 携带:
-- **节点级 plugin auth.config 文件** — Nomad docker driver init 时读, 阶段 3 已 available
-- **`auth_helper` 命令** — driver invoke 外部 cred helper, 阶段 3 同步 available
-- **Vault `vault {}` stanza** — 与 template 同时机 (阶段 5), 不解决问题
-
-本 convention 推荐 **节点级 plugin auth.config**。
-
----
-
-## §3 Forbidden pattern
-
-### ❌ DO NOT use
+## §1 SOT — task-level auth + Nomad Variable (推荐)
 
 ```hcl
-task "X" {
+task "server" {
   driver = "docker"
-  config {
-    image = "<registry>/<image>:<tag>"
-    auth {
-      username = "<bot-username>"
-      password = "${<TEMPLATE_VAR>}"   # ❌ template env not ready at pull time
-    }
-  }
+
   template {
-    data = "<TEMPLATE_VAR>={{ .Data.data.<key> }}"
-    env  = true
+    destination = "${NOMAD_SECRETS_DIR}/docker-auth.env"
+    env         = true
+    change_mode = "noop"   # auth 只在 alloc 创建时的 image pull 用到
+    data        = <<-EOT
+      {{- with nomadVar "nomad/jobs/<jobname>" -}}
+      DOCKER_AUTH_USER={{ .docker_auth_user }}
+      DOCKER_AUTH_PASSWORD={{ .docker_auth_password }}
+      {{- end -}}
+    EOT
+  }
+
+  config {
+    image = "forgejo.10cg.pub/10cg/<image>:<tag>"
+    auth {
+      username = "${DOCKER_AUTH_USER}"
+      password = "${DOCKER_AUTH_PASSWORD}"
+    }
   }
 }
 ```
 
-### Scope boundary
+**为什么这是 SOT**:
 
-本 convention 适用:
-- ✅ Task-level `config.auth` block 配合 `template { env = true }` stanza 注入 `${VAR}` 模式
+- **凭据随 job 走, 不随节点走** —— 节点凭据文件漂移不再能打掉这个 job (§0 实证: job auth 是权威的)。
+- 凭据在 Nomad Variables (ACL scope) 内, 不在 HCL 明文, 不进 git / CI log / backup。
+- 与 Lab 其余项目一致: 集群内 Aether / SilkNode / Kairos / Kino / shenquant / nexus / todo-web / wecom-relay 等**一直**在用此模式且工作正常 —— v1.0.0 的禁令与 Lab 现实**从一开始就是背离的** (若真按 v1.0.0 §7/§8 全 Lab 执行, 等于把能用的 auth block 删掉、集体退回节点单点)。
 
-本 convention **不适用**:
-- ❌ `envsubst` / deploy-time substitution 模式 (e.g. `__REGISTRY_TOKEN__` placeholder 由 CI/ops 在 `nomad job run` 前 substitute, Nomad 看到的是 literal cred) — 这种模式不撞时序问题但仍违反 secret-hygiene Rule #7 (cred 在 file 中明文), 由 `secret-hygiene.md` 治理
-- ❌ Vault `vault {}` stanza 模式 — Aether #32 Workload Identity 范畴, 独立架构演进
+**Key 名契约 (硬约束)**: var key **必须**是 snake_case `docker_auth_user` / `docker_auth_password`。Aether 的轮换工具 (`aether registry-auth rotate`) 与 drift 检查 (`aether doctor pat_inventory_drift`) 按此 key 名寻址; 用别的名字 → 该路径被轮换**跳过** → 下次轮换该 job 静默 401。
+
+**ACL 路径约束**: Variable 路径用 `nomad/jobs/<jobname>` (或 `<jobname>/<group>/<task>`) —— 这几条由 workload identity 默认 implicit policy 授读权。(本集群当前 ACL disabled, 任意路径可读, 但别依赖这个。)
+
+**部署顺序 (硬约束)**: **先预置 Variable → 再部署 job**。因为 job auth 是权威的, var 缺失 → 模板渲染出空凭据 → **硬 401**, 而**不会**退回原先能工作的节点凭据。
 
 ---
 
-## §4 SOT pattern — 节点级 plugin auth.config
+## §2 修正: Nomad alloc 生命周期
 
-### 4.1 Nomad client config (HCL)
+v1.0.0 §2 声称 template render 在 image pull **之后**。**这是错的** —— template 是 **prestart hook**, 在 driver 启动 task (即 image pull) **之前**完成:
 
-每节点 Nomad client config (e.g. `/opt/nomad/config/client.hcl`) 含:
+```
+1. alloc placement (scheduler picks node)
+2. Nomad native interpolation (${NOMAD_*} / ${NOMAD_META_*})
+3. prestart hooks — 含 template render (consul-template → /secrets/*.env, env=true 注入 task env)
+4. ── driver.StartTask → docker image pull ──   ← config.auth {} 在此被读, 此时 (3) 的 env 已就位
+5. container create → task process start
+```
+
+(注: `artifact` hook 更早于 template —— 需要认证的 artifact 下载拿不到 template 注入的 token, 那是另一个坑, 与本文无关。)
+
+---
+
+## §3 节点级 plugin auth.config — 降级为 fallback, 并明示其故障模式
+
+`plugin "docker" { config { auth { config = "/root/.docker/config.json" } } }` **仍然有效**, 但**不再是 Nomad task 的推荐路径**:
+
+> ⚠️ `/root/.docker/config.json` 是**无 IaC、无模板、纯手工维护的单点凭据文件**。
+> **2026-07-08 它在 heavy-3 上被清空** (Aether #234 字节级取证: 空文件 = `docker logout` 对空 auths 的序列化, 16B), 导致所有依赖它的 job 拉私有镜像 401、alloc 卡 pending 反复退避。同族漂移已复发多次 (Aether #200 / #225 / #232 / #234)。
+> **无 auth block 的 task = 把可用性押在这个文件上。**
+
+**仍然需要节点级凭据的场景** (不受本 convention 反转影响):
+- **宿主 docker build/push** (e.g. Aether `aether-build-container`) —— 那是 docker CLI 在宿主上直接跑, 不经 Nomad task config。
+- 过渡期尚未迁移的 job (迁移路径见 §5)。
+
+节点级凭据文件的 schema / base64 规范 / 多节点 atomic sync + fingerprint verify 轮换流程, 保留在 §6 (内容未变, 仅适用范围收窄)。
+
+**检测**: Aether 侧有 `aether doctor node_docker_auth_parity` (per-node 探测 forgejo auth 条目存在性, 区分 empty `{}` / missing entry / unreadable) 做 interim 早警。
+
+---
+
+## §4 Forbidden pattern (v2.0.0)
+
+### ❌ 凭据明文写进 HCL
+
+```hcl
+auth {
+  username = "simonfish"
+  password = "0123456789abcdef..."   # ❌ 进 git / nomad job inspect / Raft log / backup
+}
+```
+→ 走 §1 (Nomad Variable + template)。检测: `aether doctor hardcoded_docker_auth`。
+
+### ❌ 拉私有镜像但完全不写 auth block (依赖节点凭据)
+
+→ 这正是 Aether #234 prong b 要消灭的形态; 走 §5 迁移。
+
+---
+
+## §5 Migration path — 从"依赖节点凭据"迁到 job 级 auth
+
+> 与 v1.0.0 §8 **方向相反**: v1.0.0 教人删 auth block, v2.0.0 教人加回来。
+
+### Phase 1 — Audit
+
+```bash
+# 找出所有"拉私有镜像但无 config.auth"的 task (集群实拉, 别信 HCL —— 运行中的 job 可能来自老 commit)
+# 口径: driver=docker 且 image 含 <registry-host> 且 config 无 auth
+curl -s "$NOMAD_ADDR/v1/jobs" | ...   # 逐 job GET /v1/job/<id>, 检查 TaskGroups[].Tasks[].Config.auth
+```
+
+### Phase 2 — 预置凭据 (先于部署)
+
+```bash
+aether env set --job <jobname> docker_auth_user 10cg-ci-bot
+aether env set --sensitive --job <jobname> docker_auth_password --from-file <token-file>
+```
+`aether env set` 是 Get→merge→SetCAS 原子合并, 不会清掉该 var 里其他 key。**裸 PUT /v1/var 会整体替换 Items** —— 会清掉同 var 里的 app secret, 别用。
+
+新 Variable 路径**必须**登记进 Aether `.aether/pat-inventory.yaml` 的对应 PAT entry, 否则 `doctor pat_inventory_drift` 报 `untracked_nomad_var` 且 Tier 1 轮换跳过该路径。
+
+### Phase 3 — HCL edits
+
+加 template 两行 + `config.auth` block (§1)。若 task 原本无 template (无 app secret), 新增一个**只注入 registry 凭据**的 template。
+
+### Phase 4 — Verify (判别式, 不可省)
+
+**镜像已缓存在节点时 pull 会被跳过, auth 路径根本不走 —— 不强制冷拉的验证是假绿。**
+
+1. 一次性 probe job (跑完即 purge), `force_pull = true`, 复刻目标 job 的关键形态 (parameterized / meta 插值镜像等)。
+2. **正反双向**:
+   - 故意写错的凭据 → **必须** `401 Unauthorized` 硬失败 (证明 auth block 被消费, 且无节点回退)
+   - 正确凭据 → `Driver: Downloading image` → Exit 0
+3. 真实 job 部署后, 核对集群侧 job spec: `config.auth` 存在 + template 含两行 + `nomadVar` 路径真实存在且含那两个 key (三者对齐; 只 grep HCL 会漏掉"部署的是老 commit"的情况)。
+
+---
+
+## §6 节点级凭据文件 — schema + 轮换 (适用范围: 宿主 build / 未迁移 job)
+
+### 6.1 Nomad client config
 
 ```hcl
 plugin "docker" {
   config {
     auth {
-      config = "<docker-config-path>"   # 推荐: /root/.docker/config.json
+      config = "/root/.docker/config.json"
     }
-    # other docker driver config (volumes / allow_privileged / etc.)
   }
 }
 ```
 
-`<docker-config-path>` 路径推荐 `/root/.docker/config.json` (与 docker daemon 默认对齐), 但任意 root-readable path 均可 (e.g. `/etc/nomad/docker-auth.json`)。Lab 内统一选 path 防 cross-project drift。
-
-### 4.2 Auth file schema
-
-`<docker-config-path>` 文件内容:
+### 6.2 Auth file schema
 
 ```json
-{
-  "auths": {
-    "<registry-host>": {
-      "auth": "<base64(<bot-username>:<bot-pat>)>"
-    }
-  }
-}
+{ "auths": { "<registry-host>": { "auth": "<base64(<username>:<pat>)>" } } }
 ```
 
-**Schema 规范**:
-- `email` 字段**不需要** (Nomad docker driver 读 `auth` 字段, 忽略 email)
-- `auth` 值必须是标准 base64 of `username:password`, **无 URL-safe variant / 无 line breaks / 无 padding 变体**
-- Nomad driver per-alloc 读此文件 (filesystem read per dispatch), **不需要重启 Nomad client**;仅当 client.hcl 中 `auth.config` **路径**变更才需 `systemctl restart nomad`
+- `email` 字段不需要
+- `auth` 必须是标准 base64 of `username:password` (无 URL-safe variant / 无 line break)
+- Nomad driver per-alloc 读此文件; 仅当 `auth.config` **路径**变更才需 `systemctl restart nomad`
 
-### 4.3 base64 encoding 规范
+### 6.3 base64
 
 ```bash
-printf '%s' '<bot-username>:<bot-pat>' | base64 -w0
+printf '%s' '<username>:<pat>' | base64 -w0    # -w0 必须, 防 76-char line-wrap
 ```
 
-`-w0` flag **必须** — 防 76-char line-wrap, 某些平台 (e.g. macOS BSD base64) decode 会因 line break 失败。
+### 6.4 多节点 atomic sync (轮换)
+
+切忌"半部署"状态 (部分节点新 cred、部分旧) —— cold-pull 部分节点 401, 难诊断:
+
+1. 本机准备 `<path>.new` (含新 cred), cred 字面值不出现在 chat
+2. scp 到所有节点 `/tmp/...new` (并行)
+3. **fingerprint verify** 每节点: `sha256(auth 值)[:12]` 全节点一致
+4. atomic rename `mv -f` (并行)
+5. round-trip verify (docker login --password-stdin, HTTP 200; cred 不进 process args)
+
+### 6.5 No chat-leak invariant
+
+- cred 字面值**永不**出现在 chat / log / ssh stdout / process args
+- fingerprint (SHA prefix) 是 chat-safe 的唯一证据; round-trip 200 是 cred valid 的唯一证据
 
 ---
 
-## §5 PAT rotation playbook (Nomad-specific only)
+## §7 References
 
-> 本段只覆盖 Nomad-specific 部分 (atomic 多节点 sync + round-trip verify)。
-> **`docker login` 安全 pattern + chat-leak 防护**: 见 [`secret-hygiene.md §2.4 + §3.6`](./secret-hygiene.md#24-container-registry-login) (单向 reference, 不重复)。
-
-### 5.1 Atomic multi-node sync 顺序
-
-切忌"半部署"状态 (some nodes have new cred, others have old) — 会导致 cold-pull 部分节点 401, 难诊断:
-
-1. **本机准备** `<docker-config-path>.new` 文件 (含新 cred), 不在 chat 出现 cred 字面值
-2. **scp atomic** 到所有节点 `/tmp/<docker-config-path-basename>.new` (并行)
-3. **fingerprint verify** 每节点新文件:
-   ```bash
-   ssh <node-N> "python3 -c 'import json,hashlib; d=json.load(open(\"/tmp/<docker-config-path-basename>.new\")); print(hashlib.sha256(d[\"auths\"][\"<registry-host>\"][\"auth\"].encode()).hexdigest()[:12])'"
-   ```
-   全节点输出同 12-char SHA prefix ⇒ 同步一致
-4. **atomic rename** 每节点 `mv -f /tmp/<docker-config-path-basename>.new <docker-config-path>` (并行, fail-safe)
-5. **round-trip verify** 每节点新 cred 有效 (per `secret-hygiene.md §3.6` docker login --password-stdin pattern, 返回 HTTP 200 即可, cred 不出现在 process args)
-
-### 5.2 No chat-leak invariant
-
-- Cred 字面值 **永不**在 chat / log / ssh stdout / process args 出现
-- fingerprint = SHA prefix (12 char) 是 chat-safe 唯一证据
-- round-trip HTTP 200 是 cred valid 唯一证据 — 不要让 curl 把 cred 字面 echo
+- **2026-07-12 判别式实测 + 反转**: [Aether #234](https://forgejo.10cg.pub/10CG/Aether/issues/234) prong b · [Aria #161](https://forgejo.10cg.pub/10CG/Aria/issues/161)
+- **task-level auth pattern (canonical)**: Aether `docs/guides/nomad-variables-docker-auth.md` ([Aether #46](https://forgejo.10cg.pub/10CG/Aether/issues/46))
+- **节点凭据单点故障 (为什么反转)**: Aether #234 (heavy-3 `/root/.docker/config.json` 2026-07-08 被清空, 字节级取证)
+- **v1.0.0 历史记录 (已推翻的时序归因)**: Aria `.aria/decisions/2026-05-23-layer2-docker-auth-cold-pull-fix.md` + `openspec/archive/2026-05-23-aria-layer2-docker-auth-cold-pull-fix/` (保留作历史; 其**结论**已撤销, 其**记录**不改写)
+- **Cross-ref**: [`secret-hygiene.md`](./secret-hygiene.md) (Rule #7 SOT; §2.4 + §3.6 docker login 安全 pattern)
 
 ---
 
-## §6 References
-
-- **M5 Phase C O3 实证**: Aria `docs/handoff/2026-05-23-m5-phase-c-o3-done-d2-close.md` §3 R2 + §4 实战教训
-- **Aether spike GO (历史)**: Aether `openspec/archive/2026-04-22-fix-hardcoded-docker-auth/proposal.md` (alloc d360435e, 2026-04-23)
-- **Aria Spec (本 convention 来源)**: `openspec/archive/2026-05-23-aria-layer2-docker-auth-cold-pull-fix/` (post-archive path)
-- **Aria DEC**: `.aria/decisions/2026-05-23-layer2-docker-auth-cold-pull-fix.md`
-- **Aether follow-up Spec slot** (待补): `Aether openspec/changes/fix-hardcoded-docker-auth-node-login/` (per Aether Issue #45)
-- **Cross-ref**: [`secret-hygiene.md`](./secret-hygiene.md) (Rule #7 SOT;§2.4 + §3.6 docker login 安全 pattern)
-
----
-
-## §7 Verification checklist (for existing Nomad HCL projects)
-
-适用 Lab 内任何使用 Nomad docker driver 的项目 self-audit:
-
-```bash
-# §7.1 找所有 task-level auth block
-grep -rcE '^\s*auth\s*\{' <project-root>/nomad/jobs/ <project-root>/deploy/
-
-# §7.2 找 template-stanza-injected env var 在 config.auth.password 引用
-grep -rnE 'password\s*=\s*"\$\{' <project-root>/nomad/jobs/ <project-root>/deploy/
-
-# §7.3 verify 节点级 plugin auth.config 已 wire (每节点)
-ssh <node-N> 'grep -A 3 "plugin \"docker\"" /opt/nomad/config/client.hcl 2>/dev/null | grep -c "auth.config"'
-
-# §7.4 verify <docker-config-path> 文件存在 + 含目标 registry
-ssh <node-N> 'python3 -c "import json; d=json.load(open(\"<docker-config-path>\")); print(\"<registry-host>\" in d.get(\"auths\",{}))"'
-```
-
-**Action**: §7.1 输出 > 0 OR §7.2 输出 > 0 ⇒ 项目有 forbidden pattern, 走 §8 migration。§7.3 OR §7.4 输出 false ⇒ 节点级 plugin SOT 缺, 不能简单删 task auth block (会全 fail)。
-
----
-
-## §8 Migration path
-
-从 forbidden pattern (§3) 迁移到 SOT (§4) 的标准步骤:
-
-### Phase 1 — Probe
-
-1. 用 §7 checklist audit 项目 Nomad HCL + 集群节点状态
-2. 决定:
-   - (a) 节点级 plugin **已 wire** + cred **已存在 + 有效** → 直接走 Phase 2 删 task auth block
-   - (b) 节点级 plugin **已 wire** 但 cred **缺/stale** → 先走 §5 atomic sync, 再 Phase 2
-   - (c) 节点级 plugin **未 wire** → 先改集群 `client.hcl` + restart Nomad + deploy `<docker-config-path>`, 再 Phase 2
-
-### Phase 2 — HCL edits
-
-1. 删 HCL 中 task-level `config.auth { ... }` block
-2. 加 comment 注明 "Auth: 节点级 plugin auth.config (per nomad-docker-registry-auth.md);DO NOT re-add task-level auth"
-3. 若 template stanza 唯一用途是注入 registry cred, **同步删 template stanza** (减少 attack surface)
-
-### Phase 3 — Verify
-
-1. cold-pull live test per node:
-   ```bash
-   ssh <node-N> "docker rmi -f <registry>/<image>@sha256:<digest>"
-   nomad job dispatch <job-name>
-   nomad alloc status <alloc-id> | grep 'Node Name'   # verify 落到 target node
-   nomad alloc logs <alloc-id> 2>&1 | grep -E 'Pulling from|Downloading'   # verify 真冷拉
-   ```
-2. 3 节点 (或 cluster 全节点子集) PASS ⇒ migration done
-
-### Scope clarifications
-
-- **envsubst 模式** (`__REGISTRY_TOKEN__` placeholder, CI substitute) **不需要** migrate (不撞时序问题), 但建议同步 audit cred rotation 流程 + 走 `secret-hygiene.md §2.4` SOT
-- **Vault stanza 模式** 不在本 convention scope, 由 Aether #32 Workload Identity 治理
-
----
-
-**Last updated**: 2026-05-23
-**Source SOT**: Aria DEC-20260523-001 + M5 Phase C O3 实证
-**Cross-projects**: 适用 10CG/* 使用 Nomad docker driver + private registry 的项目 (Aria / Aether / SilkNode / Kairos / Kino / psych-ai-supervision / truffle-hound)
+**Last updated**: 2026-07-12 (v2.0.0 — 禁令撤销, SOT 反转为 task-level auth + Nomad Variable)
+**Cross-projects**: 适用 10CG/* 使用 Nomad docker driver + private registry 的项目
