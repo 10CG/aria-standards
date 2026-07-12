@@ -53,15 +53,17 @@ TDD Phase: REFACTOR  # Optimize structure
 
 ## Nomad Docker Registry Auth
 
-**Forbidden**: HCL task-level `config.auth { password = "${TEMPLATE_VAR}" }` + template stanza env injection (时序错位:driver pull 在 template render 前 — Aria M5 v1.11.2 cold-pull 实证)
-**SOT**: 节点级 Nomad `plugin "docker" { config { auth { config = "<docker-config-path>" } } }` + per-node `<docker-config-path>` 文件 (推荐 `/root/.docker/config.json`)
-**Cred file schema**: `{"auths":{"<registry>":{"auth":"<base64(user:pass) via base64 -w0>"}}}` — 无 email 字段, 无 line-wrap
-**Reload**: Nomad driver per-alloc 读, 不需 `systemctl restart nomad`;仅 client.hcl 路径变更才需 restart
-**PAT rotation**: atomic 多节点 sync (staging file → scp → fingerprint verify → atomic mv → round-trip verify);docker login 安全 pattern 见 [secret-hygiene §2.4 + §3.6](../conventions/secret-hygiene.md)
-**Observed contradiction**: Aether 2026-04-23 spike GO (Nomad < v1.11.2) vs Aria 2026-05-23 M5 FAIL (Nomad v1.11.2) — 同 cluster 30 天前 GO/现在 FAIL, 当前取严格立场禁 task auth block
-**Scope**: 适用 task `template { env = true }` + HCL `config.auth.${VAR}` 模式;envsubst 模式 (e.g. `__REGISTRY_TOKEN__`) 不在本 convention scope (见 secret-hygiene)
-**Details**: [conventions/nomad-docker-registry-auth.md](../conventions/nomad-docker-registry-auth.md) + Aria DEC-20260523-001
+> ⚠️ **v2.0.0 (2026-07-12) 反转了 v1.0.0**: v1.0.0 曾**禁止** task-level auth (理由: "driver pull 早于 template render → `${VAR}` 未 resolve")。该时序断言 **2026-07-12 被判别式实测推翻** (同集群同 Nomad v1.11.2, 含 Aria 自己的 parameterized+meta 形态)。禁令**已撤销**。
+
+**SOT**: task-level `config.auth { username = "${DOCKER_AUTH_USER}" password = "${DOCKER_AUTH_PASSWORD}" }` + `template { env = true }` 从 Nomad Variable `nomad/jobs/<job>` 注入 (Aether #46 pattern)
+**为什么反转**: 节点级 `/root/.docker/config.json` 是无 IaC 的**单点凭据文件** — 2026-07-08 在 heavy-3 被清空 (docker logout 形态, 字节级取证), 依赖它的 job 集体 401 ([Aether #234](https://forgejo.10cg.pub/10CG/Aether/issues/234))
+**关键实证**: 给 job 级凭据注入**错误值** → 拉取 **401 硬失败**, 尽管节点凭据健康 ⇒ `config.auth` 是**权威**的, driver **不回退**节点文件 ⇒ 正确配置后节点漂移不再影响该 job
+**Key 名契约**: var key 必须 snake_case `docker_auth_user` / `docker_auth_password` (Aether 轮换工具 + `doctor pat_inventory_drift` 按此寻址; 用别的名字 → 轮换跳过 → 静默 401)
+**部署顺序 (硬约束)**: **先预置 Variable → 再部署 job** (var 缺失 → 空凭据 → 硬 401, 不会退回节点凭据)
+**节点级 auth.config**: 降级为 **fallback** — 仅宿主 build (docker CLI 直跑) + 未迁移 job 仍需; schema / base64 `-w0` / 多节点 atomic sync + fingerprint verify 轮换流程见详情文档 §6
+**验证纪律**: 节点凭据健康时"能拉到镜像"**不构成证据** — 必须 `force_pull` + **正反双向** (错凭据必须 401)
+**Details**: [conventions/nomad-docker-registry-auth.md](../conventions/nomad-docker-registry-auth.md) v2.0.0
 
 ---
 *For details: `standards/conventions/`*
-**Updated**: 2026-05-23 (v1.2.0 — added Nomad Docker Registry Auth)
+**Updated**: 2026-07-12 (v1.3.0 — Nomad Docker Registry Auth v2.0.0: 禁令撤销, SOT 反转为 task-level auth)
