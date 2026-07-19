@@ -202,6 +202,7 @@ standards/
 | Git 提交规范 | [conventions/git-commit.md](conventions/git-commit.md) |
 | 命名规范 | [conventions/naming-conventions.md](conventions/naming-conventions.md) |
 | 文档分类 | [conventions/document-classification.md](conventions/document-classification.md) |
+| **已配置闸门的权限归属** | [conventions/configured-gate-authority.md](conventions/configured-gate-authority.md) |
 
 ### 模块扩展
 

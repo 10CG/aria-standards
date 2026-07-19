@@ -203,6 +203,7 @@ standards/
 | Naming Conventions | [conventions/naming-conventions.md](conventions/naming-conventions.md) |
 | Document Classification | [conventions/document-classification.md](conventions/document-classification.md) |
 | Nomad Docker Registry Auth | [conventions/nomad-docker-registry-auth.md](conventions/nomad-docker-registry-auth.md) |
+| **Configured Gate Authority** | [conventions/configured-gate-authority.md](conventions/configured-gate-authority.md) |
 
 ### Module Extensions
 
