@@ -62,7 +62,8 @@ TDD Phase: REFACTOR  # Optimize structure
 **部署顺序 (硬约束)**: **先预置 Variable → 再部署 job** (var 缺失 → 空凭据 → 硬 401, 不会退回节点凭据)
 **节点级 auth.config**: 降级为 **fallback** — 仅宿主 build (docker CLI 直跑) + 未迁移 job 仍需; schema / base64 `-w0` / 多节点 atomic sync + fingerprint verify 轮换流程见详情文档 §6
 **验证纪律**: 节点凭据健康时"能拉到镜像"**不构成证据** — 必须 `force_pull` + **正反双向** (错凭据必须 401)
-**Details**: [conventions/nomad-docker-registry-auth.md](../conventions/nomad-docker-registry-auth.md) v2.0.0
+**⛔ 共享宿主禁 `docker logout` (v2.1.0 §3.1)**: 宿主 login 态是**节点常驻凭据**非 session 所有 — heavy-3 (07-08) / heavy-1 (07-16) 两起 wipe 同为 ssh 进宿主跑完 build/release 后"礼貌登出"所致 ([#234 评论 16316](https://forgejo.10cg.pub/10CG/Aether/issues/234#issuecomment-16316) transcript 归因)。要临时凭据用 `DOCKER_CONFIG=/tmp/iso` 隔离; 凭据丢了是**复制修复**不是登出。护栏: aria-plugin `hooks/host-docker-logout-guard.sh` (v1.63.0+, speed-bump 非边界)
+**Details**: [conventions/nomad-docker-registry-auth.md](../conventions/nomad-docker-registry-auth.md) v2.1.0
 
 ---
 *For details: `standards/conventions/`*

@@ -1,7 +1,8 @@
 # Nomad Docker Registry Auth
 
-> **Version**: 2.0.0
+> **Version**: 2.1.0
 > **Created**: 2026-05-23
+> **Revised**: 2026-07-19 (v2.1.0 — §3.1 共享宿主 `docker logout` 禁令, 两起 wipe 归因后加)
 > **Revised**: 2026-07-12 (**v1.0.0 的禁令被实证推翻并撤销** — 见 §0)
 > **Status**: Active
 > **Source**: 2026-07-12 判别式实测 (Nomad v1.11.2) + [Aether #234](https://forgejo.10cg.pub/10CG/Aether/issues/234) / [Aether #46](https://forgejo.10cg.pub/10CG/Aether/issues/46)
@@ -123,6 +124,42 @@ v1.0.0 §2 声称 template render 在 image pull **之后**。**这是错的** �
 
 **检测**: Aether 侧有 `aether doctor node_docker_auth_parity` (per-node 探测 forgejo auth 条目存在性, 区分 empty `{}` / missing entry / unreadable) 做 interim 早警。
 
+### §3.1 ⛔ 禁止在共享宿主上 `docker logout` (2026-07-19 加, 两起事件归因后)
+
+> **规则**: 任何 `ssh <共享宿主>` 场景下的 docker 操作, **不得** 对宿主默认 config 执行
+> `docker logout`。该 login 态是**节点常驻凭据**, 不归发起 ssh 的 session 所有。
+
+**为什么这条要单独立规**: §3 上面记的 heavy-3 事件不是孤例。2026-07-16 heavy-1 又发生一次,
+同样 16B 签名。两起归因 (Aether #234 评论 16316, 经 session transcript 取证) 是**同一个反模式**:
+
+| | 时刻 | 来源 |
+|---|---|---|
+| heavy-3 | 2026-07-08 13:46:04Z | 某项目 session 的 build 清理: `ssh root@<node> "rm -rf …; docker logout …"` |
+| heavy-1 | 2026-07-16 19:20:36Z | 另一项目 session 的 release retag: 脚本内 `login → tag → push → logout` |
+
+两次都**不是恶意, 也不是脚本 bug** —— 是"用完就该登出"的礼貌直觉。这个直觉在**个人机器**上
+正确, 在**共享宿主**上是破坏行为: 它删掉的是别人 (act_runner / build 工具链) 正在依赖的凭据,
+而破坏要等到下一次冷缓存拉取才显形 —— heavy-1 那次隔了 3 天才被一个 1 秒失败的 release build
+暴露。
+
+**正确做法 (按优先级)**:
+
+1. **什么都不做** —— 宿主通常已持有你要的凭据。直接 pull/push, 不 login 也不 logout。
+2. **需要不同凭据 → 隔离, 永不碰默认 config**:
+   ```bash
+   ssh root@<node> 'DOCKER_CONFIG=/tmp/iso docker login <registry> -u <user> --password-stdin; \
+                    DOCKER_CONFIG=/tmp/iso docker push <image>; rm -rf /tmp/iso'
+   ```
+3. **凭据真的丢了 → 修复, 不是登出**: 从健康节点复制 `config.json` + `chmod 600` + 指纹比对。
+
+**机械护栏**: aria-plugin `hooks/host-docker-logout-guard.sh` (v1.63.0+) 在 PreToolUse 拦截
+`docker logout` + ssh/scp 指向 heavy 宿主 + 未设 `DOCKER_CONFIG` 的命令。**它是 speed-bump 不是
+边界** —— 跨 tool-call 拆分的写法拦不住, 宿主侧动作也管不着。本条约定才是权威, hook 只是把
+最常见的形态挡在门外。有意移除凭据 (如节点下线) 用 `# guard:ack: <理由>` 显式放行。
+
+> **适用面**: 任何被多个消费方共享的 docker login 态 —— Nomad client 节点、CI runner 宿主、
+> build 机。个人 dev 机的 login 态是 session 自己的, 不在此列。
+
 ---
 
 ## §4 Forbidden pattern (v2.0.0)
@@ -233,10 +270,11 @@ printf '%s' '<username>:<pat>' | base64 -w0    # -w0 必须, 防 76-char line-wr
 - **2026-07-12 判别式实测 + 反转**: [Aether #234](https://forgejo.10cg.pub/10CG/Aether/issues/234) prong b · [Aria #161](https://forgejo.10cg.pub/10CG/Aria/issues/161)
 - **task-level auth pattern (canonical)**: Aether `docs/guides/nomad-variables-docker-auth.md` ([Aether #46](https://forgejo.10cg.pub/10CG/Aether/issues/46))
 - **节点凭据单点故障 (为什么反转)**: Aether #234 (heavy-3 `/root/.docker/config.json` 2026-07-08 被清空, 字节级取证)
+- **两起 wipe 归因 + §3.1 禁令依据**: [Aether #234 评论 16316](https://forgejo.10cg.pub/10CG/Aether/issues/234#issuecomment-16316) (41 仓 sweep + session transcript 取证: heavy-3 07-08 / heavy-1 07-16 同为 ssh 宿主后"礼貌 logout"); 机械护栏 aria-plugin `hooks/host-docker-logout-guard.sh` (v1.63.0+)
 - **v1.0.0 历史记录 (已推翻的时序归因)**: Aria `.aria/decisions/2026-05-23-layer2-docker-auth-cold-pull-fix.md` + `openspec/archive/2026-05-23-aria-layer2-docker-auth-cold-pull-fix/` (保留作历史; 其**结论**已撤销, 其**记录**不改写)
 - **Cross-ref**: [`secret-hygiene.md`](./secret-hygiene.md) (Rule #7 SOT; §2.4 + §3.6 docker login 安全 pattern)
 
 ---
 
-**Last updated**: 2026-07-12 (v2.0.0 — 禁令撤销, SOT 反转为 task-level auth + Nomad Variable)
+**Last updated**: 2026-07-19 (v2.1.0 — 加 §3.1 共享宿主 docker logout 禁令; Aether #234 两起 wipe 经 transcript 取证归因同一反模式)
 **Cross-projects**: 适用 10CG/* 使用 Nomad docker driver + private registry 的项目

@@ -193,6 +193,12 @@ nomad var put -force nomad/jobs/myapp KEY="$VAL" 2>&1 \
 echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin registry.example.com
 ```
 
+> ⛔ **共享宿主上不要 `docker logout`** (Nomad client / CI runner / build 机)。那个 login 态是
+> 节点常驻凭据, 不归你的 session 所有 —— 登出会打掉 act_runner 与 build 工具链, 且要到下一次
+> 冷缓存拉取才显形。需要临时凭据用 `DOCKER_CONFIG=/tmp/iso` 隔离。规则与两起真实事故见
+> [`nomad-docker-registry-auth.md` §3.1](./nomad-docker-registry-auth.md); 机械护栏 aria-plugin
+> `hooks/host-docker-logout-guard.sh` (v1.63.0+)。
+
 ### 3.7 Forgejo/GitHub token create
 
 ```bash
