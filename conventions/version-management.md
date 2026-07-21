@@ -115,6 +115,7 @@ v{version}-{rc|beta|alpha}.{number}
   - 每次提交
   - 临时工作状态
   - 仅文档草稿
+  - Meta-repo 的常规版本 bump (无 tag 消费方; VERSION 文件即 SOT, 见 §4.3)
 ```
 
 ---
@@ -157,6 +158,10 @@ v{version}
 
 ### 4.3 同步规则
 
+tag 要求按「**有没有下游按本仓 git tag 拉取**」分两类:
+
+**分发型组件 (如 aria 插件 — 市场/下游按 tag 拉取)**:
+
 ```
 VERSION 文件必须与 Git Tag 保持一致
 
@@ -165,6 +170,26 @@ VERSION 文件必须与 Git Tag 保持一致
   2. 提交变更
   3. 打对应的 Git Tag
 ```
+
+**Meta-repo (如 Aria 主项目 — 无 tag 消费方)**:
+
+```
+VERSION 文件即 SOT, 不要求 per-version git tag。
+
+原因:
+  - 主项目版本随插件 gitlink bump + 文档同步滚动, 非离散发布事件
+    (无「这个 commit = v1.7.0」的干净发布边界)
+  - 无下游按主项目 git tag 拉取 (市场拉的是 aria 插件子模块, 它自带独立 tag)
+  - 强行要求 per-version tag 会制造永久的「VERSION≠tag」假 drift
+    (实证: Aria 主仓 tag 停在 v1.5.0, 版本经 VERSION bump 走到 1.7.3+ 从未补 tag)
+
+更新顺序:
+  1. 更新 VERSION 文件 (版本 SOT)
+  2. 提交 + 双远程推送
+  (不打 tag; 需要历史锚点时按里程碑择要打, 见 §3.3)
+```
+
+> **判据**: 有下游按本仓 tag 拉取 → 分发型, 严格 VERSION=tag; 没有 → meta-repo, VERSION-file-only。
 
 ---
 
@@ -217,13 +242,16 @@ git commit -m "chore: 锁定 aria-skills 到 v1.1.0"
 
 ### 6.2 发布时
 
+> 下例为**分发型组件**流程 (含打 tag)。**Meta-repo** (如 Aria 主项目) 跳过步骤 3 的 tag,
+> 并按 §4.3 双远程推送 (见 §4.3 判据)。
+
 ```bash
 # 1. 更新 VERSION
 # 2. 提交变更
 git add VERSION CHANGELOG.md
 git commit -m "chore: 发布 v1.0.0"
 
-# 3. 创建 Tag
+# 3. 创建 Tag (仅分发型组件; meta-repo 跳过)
 git tag -a v1.0.0 -m "Release v1.0.0: 首个正式版本"
 
 # 4. 推送
