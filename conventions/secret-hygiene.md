@@ -1,6 +1,6 @@
 # Secret Hygiene 规范
 
-> **Version**: 1.1.1
+> **Version**: 1.1.2
 > **Status**: Active
 > **Source incidents**:
 > - 2026-05-02 (Aria US-022 T8) — `nomad job inspect` 全量 dump runtime env 泄露 4 keys
@@ -20,7 +20,7 @@
 |------|------|-------|----------|---------|---------|
 | **Path 1** | Prose convention (本文档) | **Layer 0** (doc-only) | `standards/conventions/secret-hygiene.md` | Onboarding / PR review / human discipline | 取决于人/AI 是否读 + 是否遵守 (soft) |
 | **Path 2** | Inline annotation | (无独立 layer,贯穿 Layer 0/2) | 命令前 `# secret-leak-ok-explicit` 三件套 (理由 + 隔离 + sign-off) | Per-command opt-out / 紧急豁免 | 注释缺失即视同未豁免;Layer 2 hook 同步识别 `# guard:ack:` |
-| **Path 3** | PreToolUse + PostToolUse hook | **Layer 2** (mechanical enforcement) | `aria/hooks/{secret-guard,secret-scan}.sh` (aria-plugin SOT, v1.24.0+) | Claude Code tool 调用前/后, 自动触发 | 失败模式由 hook 自身 audit 覆盖 (251 self-tests + cross-project dogfood) |
+| **Path 3** | PreToolUse + PostToolUse hook | **Layer 2** (mechanical enforcement) | `aria/hooks/{secret-guard,secret-scan}.sh` (aria-plugin SOT, v1.24.0+) | Claude Code tool 调用前/后, 自动触发 | 失败模式由 hook 自身 audit 覆盖 (366 self-tests + cross-project dogfood) |
 
 > **Path 1 vs Path 3 关系**: Path 1 (Layer 0) 是教育路径与 source-of-truth (§2 受限命令清单是 Path 3 regex matcher 的语义参照);Path 3 (Layer 2) 是机械执行 — 两者**并存且互补**,不互替代。
 
@@ -283,7 +283,7 @@ aria-plugin v1.24.0+ ship **`aria/hooks/secret-guard.sh` + `aria/hooks/secret-sc
 |------|------|-------------|
 | `aria/hooks/secret-guard.sh` | PreToolUse Bash + Read/Edit/Write/MultiEdit blocker | `Bash` + `Read\|Edit\|Write\|MultiEdit` |
 | `aria/hooks/secret-scan.sh` | PostToolUse output 扫描 + 告警 (detect-only, 非 redaction) | `Bash\|Read\|Edit\|Write\|MultiEdit` |
-| `aria/hooks/tests/secret-guard.test.sh` | 208 regression cases (含 `${CLAUDE_PLUGIN_ROOT}` substitution test) | n/a |
+| `aria/hooks/tests/secret-guard.test.sh` | 366 regression cases (含 `${CLAUDE_PLUGIN_ROOT}` substitution test + Nomad var 写向族) | n/a |
 | `aria/hooks/tests/secret-scan.test.sh` | 49 regression cases | n/a |
 
 > **NotebookEdit 不注册** (v1.24.0 决定): `.ipynb` cell 多用于实验代码,内联 secret 概率低 + ack 路径足够 — 后续 minor 可加。
@@ -315,7 +315,7 @@ aria-secret-guard-plugin-default Spec brainstorm 跑过 5-trial instrumented tes
 | Exit 2 是否短路后续 hook | **不短路** | 任一 hook exit 2 即整体 block;设计 block 策略不能依赖前置 short-circuit |
 | Block reporting | 仅 stderr 显示触发 block 的那个 hook 路径 | 用 `$CLAUDE_PROJECT_DIR/...` vs `${CLAUDE_PLUGIN_ROOT}/...` 区分 source |
 
-> **实证边界**: 该 5-trial 实验在 **Write event PreToolUse** 上跑(用 `handoff-location-guard.sh` 作 proxy)。**Bash + PostToolUse 推论**: hook orchestrator 是 Claude Code 框架同一组件,merge 语义 by spec 适用于所有 hook event;`secret-guard.sh` 自身行为由 251 self-tests + cross-project dogfood 覆盖。所以 Layer 2 设计可信赖 all-fire + non-short-circuit 在 Bash + PostToolUse 上同样成立,**但严格意义上只直接验证了 Write/PreToolUse**;若未来发现 Bash event merge 异常需 fall back to design,这是预先记录的 known-evidence-gap。memory: `feedback_claude_code_hook_merge_all_fire`。
+> **实证边界**: 该 5-trial 实验在 **Write event PreToolUse** 上跑(用 `handoff-location-guard.sh` 作 proxy)。**Bash + PostToolUse 推论**: hook orchestrator 是 Claude Code 框架同一组件,merge 语义 by spec 适用于所有 hook event;`secret-guard.sh` 自身行为由 366 self-tests + cross-project dogfood 覆盖。所以 Layer 2 设计可信赖 all-fire + non-short-circuit 在 Bash + PostToolUse 上同样成立,**但严格意义上只直接验证了 Write/PreToolUse**;若未来发现 Bash event merge 异常需 fall back to design,这是预先记录的 known-evidence-gap。memory: `feedback_claude_code_hook_merge_all_fire`。
 
 ### 5.5 Path 1 与 Layer 2 互补关系
 
@@ -398,5 +398,6 @@ aria-plugin `aria-doctor` skill 提供 `check_secret_guard_install()` function �
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-07 | 初版 (Path 1 doc-only). 含核心条款 + 9 类受限命令 scope + 7 正向 pattern + 4 反例 + Path 3 hook 关系 + 8 历史 incidents. 来源: Forgejo Issue #78 + Aria 自身 2 次 incident memory feedback. |
+| 1.1.2 | 2026-08-02 | **计数同步** (零语义变更): §0 Path↔Layer 表 / §5.1 测试清单 / §5.4 实证边界段 三处陈旧的 secret-guard 自测数 (208 / 251 ×2) 同步为实况 **366**。同批 co-land aria-plugin v1.65.5 (该测试文件头部注释同一问题)。来源: Aria #170 cycle post_spec R4 code-reviewer m-9。 |
 | 1.1.1 | 2026-08-02 | **订正 (事实性)**: 4 个推荐位教用的 `nomad var get -out=keys` 经 nomad v1.11.2 实机核验为**非法 flag 值** (`var get`/`var put` 合法枚举 = `go-template\|hcl\|json\|none\|table`; `var list` = `go-template\|json\|table\|terse`), 实跑报 `Invalid value for "-out"` — §1 Verification 定义行 / §3.3 python 例 / §3.4 bash 例 / §4.4「正确替代」句全部改为 `-out=json` 经 jq 投影 `.Items` 取 keys (secret-guard 认可的 REDACTING filter; 写成 `keys[]` 会破坏识别而被拦)。另新增两段警示: (a) `-out=keys` 不存在 + `… 2>/dev/null` 只挡 stderr 不构成有效 filter (原 §3.4 写法双重错误); (b) `>/dev/null` 单挡 stdout 不够 — nomad `-verbose` 与 curl `-v`/`--trace*` 的输出按设计走 stderr, **且 `2>&1` 必须写在 stdout 重定向之后** (`2>&1 >/dev/null` 是无效反例, 实测 secret-guard 仍放行)。来源: Aria #170 triage + Spec [secret-guard-nomad-var-put-echo](../../openspec/changes/secret-guard-nomad-var-put-echo/) post_spec R2-C-1。 |
 | 1.1.0 | 2026-05-23 | **Additive** (Layer 2 ship): 新增 §0 Path↔Layer mapping table (Path 1↔Layer 0 / Path 2↔inline / Path 3↔Layer 2) + §5 重写为 Layer 2 enforcement (含 plugin SOT 路径 / exit semantics / Path 2 inline ack 与 §1.2 三件套互补关系 / Q1 hook orchestrator merge 实证 + 边界声明 / Path 1 与 Layer 2 互补关系含 known-limitation 全集) + 新 §6 local copy + plugin coexist 模式 (5-state aria-doctor pointer + cleanup 策略 + backwards-compat guarantee) + 2026-05-20 incident 追加 + Forgejo issue refs (#84, #107)。零 breaking change,Path 1 教育规范 + §2 scope + §3 正向 pattern + §4 反例全保留。来源: Spec [aria-secret-guard-plugin-default](../../openspec/archive/2026-05-23-aria-secret-guard-plugin-default/) + memory `feedback_claude_code_hook_merge_all_fire` (Q1 实证) + memory `feedback_deterministic_structural_skill_rule6_substitute` (atomicity guard)。 |
