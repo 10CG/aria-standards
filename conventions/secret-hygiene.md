@@ -1,6 +1,6 @@
 # Secret Hygiene 规范
 
-> **Version**: 1.1.0
+> **Version**: 1.1.1
 > **Status**: Active
 > **Source incidents**:
 > - 2026-05-02 (Aria US-022 T8) — `nomad job inspect` 全量 dump runtime env 泄露 4 keys
@@ -36,7 +36,7 @@
 
 - **Bash**: `cmd >/dev/null 2>&1` 或 `cmd 2>&1 | grep -v '<secret-pattern>'`
 - **Python `subprocess`**: `capture_output=True` (且不 print stdout) 或 `stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL`
-- **Verification**: 通过 metadata 验证 (HTTP status code / exit code / 字段长度 / `nomad var get -out=keys` 仅取 key 名), 不读 secret value 字面
+- **Verification**: 通过 metadata 验证 (HTTP status code / exit code / 字段长度 / `nomad var get -out=json … | jq '.Items | keys'` 仅取 key 名), 不读 secret value 字面
 
 ### 1.1 Forbidden patterns
 
@@ -158,12 +158,16 @@ subprocess.run(
 ### 3.3 Python — Validation via metadata only
 
 ```python
-# ✅ 验证 secret 已写入: 用 nomad var get -out=keys 仅取 key 列表 (无 value)
+# ✅ 验证 secret 已写入: 取 key 名列表, 不读 value
+#    注意 `-out` 合法枚举 = go-template|hcl|json|none|table (**无 keys 档**,
+#    nomad v1.11.2 实机核验; 旧版本文档误写 -out=keys 会报 Invalid value)。
+import json, subprocess
 result = subprocess.run(
-    ['nomad', 'var', 'get', '-out=keys', 'nomad/jobs/myapp'],
-    capture_output=True, check=True, text=True,
+    ['nomad', 'var', 'get', '-out=json', 'nomad/jobs/myapp'],
+    capture_output=True, check=True, text=True,   # 不 print result.stdout
 )
-assert 'KEY' in result.stdout.split()  # 仅检查 key 名存在, 不读 value
+keys = list(json.loads(result.stdout).get('Items', {}))  # 仅 key 名进变量
+assert 'KEY' in keys  # 仅检查 key 名存在, 不读 value
 ```
 
 ### 3.4 Bash — 全部 redirect (推荐)
@@ -172,10 +176,30 @@ assert 'KEY' in result.stdout.split()  # 仅检查 key 名存在, 不读 value
 # ✅ secret 写入: 全 redirect
 nomad var put -force nomad/jobs/myapp KEY="$VAL" >/dev/null 2>&1
 
-# ✅ 验证 (取 key 名仅): -out=keys 不输出 value
-keys=$(nomad var get -out=keys nomad/jobs/myapp 2>/dev/null)
-echo "$keys" | grep -q '^KEY$' && echo "OK"
+# ✅ 验证 (仅取 key 名): -out=json 经 jq 只投影 key 列表, value 不出现
+#    `jq '.Items | keys'` 是 secret-guard 认可的 REDACTING filter (放行);
+#    写成 `keys[]`(带方括号) 会破坏该识别并被拦 — 保持无方括号形式。
+nomad var get -out=json nomad/jobs/myapp | jq '.Items | keys'
+
+# ✅ 或只验存在性 (连 key 名都不需要时): 看 exit code
+nomad var get -out=json nomad/jobs/myapp >/dev/null 2>&1 && echo "OK"
 ```
+
+> ⚠️ **不要用 `-out=keys`** — 该取值在 nomad **不存在** (`var get`/`var put` 合法枚举 =
+> `go-template|hcl|json|none|table`; `var list` = `go-template|json|table|terse`), 实跑报
+> `Invalid value for "-out"`。且 `nomad var get … 2>/dev/null` 这类**只挡 stderr**的写法
+> 不被 secret-guard 视为有效 filter (stdout 仍会流出), 会被拦。两个坑常一起出现。
+>
+> ⚠️ **`>/dev/null` 单挡 stdout 不够 —— 务必 `>/dev/null 2>&1`** (§3.4 写法即是)。两个
+> 常见的 stderr 泄漏面: (a) `nomad var put -verbose …` 的额外信息**按设计走 stderr**
+> (`--help`: "Provides additional information via standard error"); (b) `curl -v` /
+> `--trace-ascii` 把含 secret 的请求体打到 stderr。两者与纯 `>/dev/null` 组合都会漏,
+> 且 secret-guard **当前放行**该组合 (已知缺口, 见 aria-plugin issue)。
+>
+> ⚠️ **顺序敏感 —— 写反了等于没写**: 必须 `>/dev/null 2>&1` (先挪 stdout, 再让 stderr
+> 跟过去)。反过来的 `2>&1 >/dev/null` **无效** —— `2>&1` 先把 stderr 复制到**当时的**
+> stdout (仍是 chat-visible 管道), 之后才把 stdout 挪走, stderr 根本没挡住; 而
+> secret-guard 对该形态实测**放行** (零警告)。两个 token 记成一组时极易写反。
 
 ### 3.5 Bash — Pipe filter (备选, 较脆弱)
 
@@ -245,7 +269,7 @@ GOT=$(nomad var get nomad/jobs/myapp | jq -r '.Items.KEY')
 # 上行 "$GOT" 已经持有 secret value, 任何后续 echo / log 都泄露
 ```
 
-正确替代: 用 `nomad var get -out=keys` 检查 key 存在, 不读 value (见 §3.3)。
+正确替代: 用 `nomad var get -out=json … | jq '.Items | keys'` 检查 key 存在, 不读 value (见 §3.3/§3.4)。
 
 ---
 
@@ -374,4 +398,5 @@ aria-plugin `aria-doctor` skill 提供 `check_secret_guard_install()` function �
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | 2026-05-07 | 初版 (Path 1 doc-only). 含核心条款 + 9 类受限命令 scope + 7 正向 pattern + 4 反例 + Path 3 hook 关系 + 8 历史 incidents. 来源: Forgejo Issue #78 + Aria 自身 2 次 incident memory feedback. |
+| 1.1.1 | 2026-08-02 | **订正 (事实性)**: 4 个推荐位教用的 `nomad var get -out=keys` 经 nomad v1.11.2 实机核验为**非法 flag 值** (`var get`/`var put` 合法枚举 = `go-template\|hcl\|json\|none\|table`; `var list` = `go-template\|json\|table\|terse`), 实跑报 `Invalid value for "-out"` — §1 Verification 定义行 / §3.3 python 例 / §3.4 bash 例 / §4.4「正确替代」句全部改为 `-out=json` 经 jq 投影 `.Items` 取 keys (secret-guard 认可的 REDACTING filter; 写成 `keys[]` 会破坏识别而被拦)。另新增两段警示: (a) `-out=keys` 不存在 + `… 2>/dev/null` 只挡 stderr 不构成有效 filter (原 §3.4 写法双重错误); (b) `>/dev/null` 单挡 stdout 不够 — nomad `-verbose` 与 curl `-v`/`--trace*` 的输出按设计走 stderr, **且 `2>&1` 必须写在 stdout 重定向之后** (`2>&1 >/dev/null` 是无效反例, 实测 secret-guard 仍放行)。来源: Aria #170 triage + Spec [secret-guard-nomad-var-put-echo](../../openspec/changes/secret-guard-nomad-var-put-echo/) post_spec R2-C-1。 |
 | 1.1.0 | 2026-05-23 | **Additive** (Layer 2 ship): 新增 §0 Path↔Layer mapping table (Path 1↔Layer 0 / Path 2↔inline / Path 3↔Layer 2) + §5 重写为 Layer 2 enforcement (含 plugin SOT 路径 / exit semantics / Path 2 inline ack 与 §1.2 三件套互补关系 / Q1 hook orchestrator merge 实证 + 边界声明 / Path 1 与 Layer 2 互补关系含 known-limitation 全集) + 新 §6 local copy + plugin coexist 模式 (5-state aria-doctor pointer + cleanup 策略 + backwards-compat guarantee) + 2026-05-20 incident 追加 + Forgejo issue refs (#84, #107)。零 breaking change,Path 1 教育规范 + §2 scope + §3 正向 pattern + §4 反例全保留。来源: Spec [aria-secret-guard-plugin-default](../../openspec/archive/2026-05-23-aria-secret-guard-plugin-default/) + memory `feedback_claude_code_hook_merge_all_fire` (Q1 实证) + memory `feedback_deterministic_structural_skill_rule6_substitute` (atomicity guard)。 |
