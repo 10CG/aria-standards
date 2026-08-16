@@ -1,9 +1,9 @@
 # CLAUDE.md 卫生规范 (CLAUDE.md Hygiene)
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Purpose**: 约束 CLAUDE.md 只承载稳定的「AI 如何理解项目」内容, 禁止时效性 changelog / session 流水在其中累积
-> **决策**: Option A 彻底移交 (owner sign-off 2026-07-03)
+> **决策**: Option A 彻底移交 (owner sign-off 2026-07-03); 1.1.0 双预算 + §2.4 写入时刻纪律 (owner 指示 2026-07-22, 二次瘦身后堵进货口)
 
 ---
 
@@ -45,14 +45,26 @@ footer **不保留** `> 前次 ...` / `**更新**: ...` 滚动条目。footer �
 - 版本明细指向 CHANGELOG; session 明细指向 handoff; 细节一律**指针化**
 - 查询当前状态用 `/state-scanner` (读 live 项目文件), 不靠 CLAUDE.md 历史
 
+### 2.4 写入时刻纪律 (堵进货口, 2026-07-22)
+
+臃肿是复发病, 不是一次性事故 (2026-07-03 首次瘦身 69K 字符; 2026-07-22 二次瘦身 639→149 行 —— 期间 640 行宽松预算下, 两条 3000+ 字符巨行长期全绿)。存量清理只治标; 约束必须落在**写入时刻**。任何 closeout / release / handoff 流程里「更新 CLAUDE.md 项目状态」这一步, 其定义**是且仅是**:
+
+1. 在 §2.3 预算内**覆写**状态段 (当前 phase / 活跃阻塞 / 版本一行 / 指针);
+2. 新事实**先落 canonical 家** (CHANGELOG / `docs/handoff/` / proposal.md / conventions SOT), CLAUDE.md 只放指针 —— 写入前自问「这条的家是哪?」, 答案几乎从不是 CLAUDE.md;
+3. **skill 设计内部术语不入内** —— skill 细节属 SKILL.md (按需加载, 渐进披露); 抄入 CLAUDE.md 既违官方内容边界, 又污染 AB benchmark 的 without_skill baseline (实证: aria-plugin #116, baseline 逐字搬运状态段术语);
+4. 已 ship 条目在下一次覆写时**删除** —— 它的家在 CHANGELOG / archive, 状态段不是荣誉墙。
+
+> 为什么塞 CLAUDE.md 有引力: 它是唯一 push 频道 (自动进 context, 保证送达), 其余家都是 pull。「想让下个 session 必看」的正确出口是 handoff §0 + `/state-scanner` surfacing (二者自 v1.57-v1.64 假绿治理后已可信), 不是 CLAUDE.md。
+
 ## 3. Enforcement
 
 `.aria/state-checks.yaml` 的 `claude-md-changelog-free` check (state-scanner Phase 1.11 每次扫描执行):
 - 检出 footer 滚动 changelog 条目 (`^> 前次` / `^**更新**:`) 数 > 0 → FAIL
-- 检出 CLAUDE.md 行数超预算 (疑似 changelog 回涨) → FAIL
+- 检出 CLAUDE.md 行数 > **200** (对齐 CC 官方 memory 指南目标; 2026-07-22 自 640 收紧 —— 旧值是描述性锚点, 给臃肿盖章) → FAIL
+- 检出 CLAUDE.md 字节数 > **24000** (双预算之二, 堵「行数不超但单行爆表」的长行钻空 —— 2026-07-22 实证该空子真被钻过) → FAIL
 - severity: warning (advisory-over-hardlock; 提示而非阻断)
 
-这是根因兜底: 防"砍完又长回来"。
+这是根因兜底: 防"砍完又长回来"。进货侧纪律见 §2.4 (兜底 + 上游, 双层)。
 
 ## 4. 与其他规范的关系
 - **Rule #9 `session-handoff.md`**: session 进展的 canonical 家; 本规范把 CLAUDE.md 的 session 流水导向它。
