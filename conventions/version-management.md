@@ -1,6 +1,6 @@
 # 版本管理规范
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Based on**: Semantic Versioning (semver.org)
 
@@ -115,7 +115,7 @@ v{version}-{rc|beta|alpha}.{number}
   - 每次提交
   - 临时工作状态
   - 仅文档草稿
-  - Meta-repo 的常规版本 bump (无 tag 消费方; VERSION 文件即 SOT, 见 §4.3)
+  - Meta-repo / 按需锚点型的常规版本 bump (无 tag 消费方; VERSION 文件即 SOT, 见 §4.3 三分判据)
 ```
 
 ---
@@ -158,9 +158,9 @@ v{version}
 
 ### 4.3 同步规则
 
-tag 要求按「**有没有下游按本仓 git tag 拉取**」分两类:
+tag 要求按「**有没有下游按本仓 git tag 拉取**」+「**要不要历史锚点**」分三类 (判据表见本节末):
 
-**分发型组件 (如 aria 插件 — 市场/下游按 tag 拉取)**:
+**分发型组件 (下游确实按 tag 拉取)**:
 
 ```
 VERSION 文件必须与 Git Tag 保持一致
@@ -171,6 +171,23 @@ VERSION 文件必须与 Git Tag 保持一致
   3. 打对应的 Git Tag
 ```
 
+> 🔴 **2026-08-16 更正: aria 插件不属于本类** (owner 裁定, 选项 C)。
+>
+> **上一版把 aria 插件举为本类的例子, 理由写作「市场/下游按 tag 拉取」—— 该理由经实测为假**:
+>
+> | 实测项 | 结果 |
+> |---|---|
+> | `marketplace.json` 的插件 `source` | `{"source": "url", "url": ".../aria-plugin.git"}` —— **裸 git 地址, 无 tag / 无 ref / 无版本 pin** |
+> | 本机 marketplace 克隆的 HEAD | 在 **`master` 分支**上; `git describe --tags --exact-match` = **不在任何 tag 上** |
+> | 安装路径 | 克隆 master → 读 `plugin.json` 的版本 → 按该号存进缓存目录, **全程不读 git tag** |
+> | 后果 | tag 停在 **v1.21.3** 而 VERSION 走到 1.66.0 ⇒ **44 个版本 / 248 个 commit 未打 tag** |
+>
+> ⇒ 按本节自己的判据 (「有没有下游按本仓 tag 拉取」), aria 插件的答案是**没有** ——
+> 归入分发型是**分类错误**, 不是执行不力。**一条永远不会被遵守的要求 = 恒亮的假告警。**
+>
+> **处置 (选项 C, 非 A 也非 B)**: 分类改对 (见下方「按需锚点型」), **且自 v1.66.0 起恢复打 tag**,
+> 但**用途改为历史锚点**而非下游拉取依据; **历史断层不补**, 就地写明 —— 不假装历史是干净的。
+
 **Meta-repo (如 Aria 主项目 — 无 tag 消费方)**:
 
 ```
@@ -179,7 +196,10 @@ VERSION 文件即 SOT, 不要求 per-version git tag。
 原因:
   - 主项目版本随插件 gitlink bump + 文档同步滚动, 非离散发布事件
     (无「这个 commit = v1.7.0」的干净发布边界)
-  - 无下游按主项目 git tag 拉取 (市场拉的是 aria 插件子模块, 它自带独立 tag)
+  - 无下游按主项目 git tag 拉取
+    (⚠️ 2026-08-16 更正: 上一版此处写「市场拉的是 aria 插件子模块, **它自带独立 tag**」
+     —— 后半句经实测为假, 市场拉的是插件仓的 master 分支, 不读 tag。结论不受影响:
+     主项目本身确实无 tag 消费方; 但那个理由不成立, 已换掉)
   - 强行要求 per-version tag 会制造永久的「VERSION≠tag」假 drift
     (实证: Aria 主仓 tag 停在 v1.5.0, 版本经 VERSION bump 走到 1.7.3+ 从未补 tag)
 
@@ -189,7 +209,40 @@ VERSION 文件即 SOT, 不要求 per-version git tag。
   (不打 tag; 需要历史锚点时按里程碑择要打, 见 §3.3)
 ```
 
-> **判据**: 有下游按本仓 tag 拉取 → 分发型, 严格 VERSION=tag; 没有 → meta-repo, VERSION-file-only。
+**按需锚点型 (如 aria 插件 — 无 tag 消费方, 但需要历史锚点)**:
+
+```
+VERSION 文件即 SOT (与 meta-repo 同); tag 不是发布依据, 而是历史锚点。
+
+为什么仍然打 tag (与 meta-repo 的唯一区别):
+  - 事后追溯需要「v1.52.0 到底是哪个 commit」这种问题有答案;
+    没有 tag 时只能翻 CHANGELOG 猜, 而 CHANGELOG 不带 SHA
+  - `git describe` / 发布说明 / bisect 起点都依赖它
+  - 代价极低 (发版时一条命令), 而缺失时的补救成本随时间线性增长
+
+更新顺序:
+  1. 更新 VERSION 文件 (版本 SOT)
+  2. 提交 + 双远程推送 (含 tag: git push <remote> vX.Y.Z)
+  3. 逐 remote 独立核验 tag 对象 SHA (硬约束 2 同款, 不信 push 回执)
+
+⚠️ tag 缺失**不阻断发布** —— 它不是下游拉取依据。补打即可, 无需 revert。
+```
+
+> 🔴 **aria 插件的历史断层 (2026-08-16 就地留痕, 不补)**:
+> tag 自 **v1.21.3** 起中断, 至 **v1.66.0** 恢复, 中间 **44 个版本 / 248 个 commit 无 tag**。
+> **不追溯补打** —— 补齐需要为每个版本考古出对应 commit, 而该区间的价值低于成本;
+> 且**假装历史干净比承认断层更坏**。需要该区间的锚点时, 按 `aria/CHANGELOG.md` 的版本条目
+> 配合 `git log --grep` 定位, 并接受结果是近似的。
+
+> **判据 (三分)**:
+> | 下游按本仓 tag 拉取? | 需要历史锚点? | 类别 | tag 要求 |
+> |---|---|---|---|
+> | 是 | — | **分发型** | 严格 VERSION = tag, 缺 tag = 发布不完整 |
+> | 否 | 是 | **按需锚点型** | 打 tag 但仅作锚点, 缺失不阻断发布 |
+> | 否 | 否 | **meta-repo** | VERSION-file-only, 不打 tag |
+>
+> ⚠️ **归类前先实测「下游到底怎么拉」**, 不要按直觉 —— 上一版把 aria 插件归成分发型正是
+> 凭「它是个插件, 插件当然按 tag 分发」这种直觉, 而实测的分发路径里根本没有 tag。
 
 ---
 
@@ -242,8 +295,9 @@ git commit -m "chore: 锁定 aria-skills 到 v1.1.0"
 
 ### 6.2 发布时
 
-> 下例为**分发型组件**流程 (含打 tag)。**Meta-repo** (如 Aria 主项目) 跳过步骤 3 的 tag,
-> 并按 §4.3 双远程推送 (见 §4.3 判据)。
+> 下例含打 tag 的完整流程。按 §4.3 **三分判据**取舍步骤 3:
+> **分发型** 必做 (缺 tag = 发布不完整) · **按需锚点型** (如 aria 插件) 做, 但缺失不阻断发布 ·
+> **meta-repo** (如 Aria 主项目) 跳过。三类均按 §4.3 双远程推送并逐 remote 独立核验。
 
 ```bash
 # 1. 更新 VERSION
@@ -251,7 +305,7 @@ git commit -m "chore: 锁定 aria-skills 到 v1.1.0"
 git add VERSION CHANGELOG.md
 git commit -m "chore: 发布 v1.0.0"
 
-# 3. 创建 Tag (仅分发型组件; meta-repo 跳过)
+# 3. 创建 Tag (分发型必做 / 按需锚点型做但不阻断 / meta-repo 跳过 — 见 §4.3 三分判据)
 git tag -a v1.0.0 -m "Release v1.0.0: 首个正式版本"
 
 # 4. 推送
@@ -347,6 +401,7 @@ git diff v1.0.0..v1.1.0
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | 1.0.0 | 2026-01-23 | 初始版本 |
+| 1.1.0 | 2026-08-16 | §4.3 由二分改**三分** (新增「按需锚点型」)。触发: 实测发现 aria 插件被错归为「分发型」——其理由「市场按 tag 拉取」经实测为假 (marketplace.json 的 source 是裸 git 地址, 市场克隆跟的是 master 分支, `git describe --tags --exact-match` 不在任何 tag 上), 导致该要求 44 个版本 / 248 commit 从未被执行 = 恒亮假告警。owner 裁定选项 C: 分类改对 + 自 v1.66.0 起打 tag 作**历史锚点** + 历史断层就地留痕不补。同步修正 §4.3 meta-repo 段一处失实理由、§3.3 与 §6.2 的二分表述。 |
 
 ---
 
