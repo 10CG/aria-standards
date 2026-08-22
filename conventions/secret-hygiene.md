@@ -20,7 +20,7 @@
 |------|------|-------|----------|---------|---------|
 | **Path 1** | Prose convention (本文档) | **Layer 0** (doc-only) | `standards/conventions/secret-hygiene.md` | Onboarding / PR review / human discipline | 取决于人/AI 是否读 + 是否遵守 (soft) |
 | **Path 2** | Inline annotation | (无独立 layer,贯穿 Layer 0/2) | 命令前 `# secret-leak-ok-explicit` 三件套 (理由 + 隔离 + sign-off) | Per-command opt-out / 紧急豁免 | 注释缺失即视同未豁免;Layer 2 hook 同步识别 `# guard:ack:` |
-| **Path 3** | PreToolUse + PostToolUse hook | **Layer 2** (mechanical enforcement) | `aria/hooks/{secret-guard,secret-scan}.sh` (aria-plugin SOT, v1.24.0+) | Claude Code tool 调用前/后, 自动触发 | 失败模式由 hook 自身 audit 覆盖 (558 self-tests [552 无 zsh] + cross-project dogfood) |
+| **Path 3** | PreToolUse + PostToolUse hook | **Layer 2** (mechanical enforcement) | `aria/hooks/{secret-guard,secret-scan}.sh` (aria-plugin SOT, v1.24.0+) | Claude Code tool 调用前/后, 自动触发 | 失败模式由 hook 自身 audit 覆盖 (599 self-tests [593 无 zsh] + cross-project dogfood) |
 
 > **Path 1 vs Path 3 关系**: Path 1 (Layer 0) 是教育路径与 source-of-truth (§2 受限命令清单是 Path 3 regex matcher 的语义参照);Path 3 (Layer 2) 是机械执行 — 两者**并存且互补**,不互替代。
 
@@ -94,6 +94,7 @@ print(result.stdout)
 | Read priv key | `cat <key-file>.{key,pem,priv,p12}`, `head/tail <key-file>` |
 | Write priv key | `ssh-keygen` (生成后 `cat` 私钥), `openssl genrsa/ecparam ... -out <key>` |
 | Show env | `env`, `printenv`, `set` (含 secret env vars 时) |
+| Read Claude Code 配置 | `cat`/`jq`/`grep` 等读 `~/.claude/settings.json`, `~/.claude/settings.local.json`, `~/.claude.json` (`env` 节点存 API token, legacy 全局配置含 MCP token; Aria #179 补入 secret-guard Bash + Read/Edit 双平面清单) |
 
 ### 2.3 Database password commands
 
@@ -283,7 +284,7 @@ aria-plugin v1.24.0+ ship **`aria/hooks/secret-guard.sh` + `aria/hooks/secret-sc
 |------|------|-------------|
 | `aria/hooks/secret-guard.sh` | PreToolUse Bash + Read/Edit/Write/MultiEdit blocker | `Bash` + `Read\|Edit\|Write\|MultiEdit` |
 | `aria/hooks/secret-scan.sh` | PostToolUse output 扫描 + 告警 (detect-only, 非 redaction) | `Bash\|Read\|Edit\|Write\|MultiEdit` |
-| `aria/hooks/tests/secret-guard.test.sh` | 558 regression cases, 552 无 zsh (含 `${CLAUDE_PLUGIN_ROOT}` substitution test + Nomad var 写向族 + #128 逐段判定/SC-1..22 族; SC-22 = #145 BLOCKED 回显脱敏; #153 Forgejo 凭据响应端点族) | n/a |
+| `aria/hooks/tests/secret-guard.test.sh` | 599 regression cases, 593 无 zsh (含 `${CLAUDE_PLUGIN_ROOT}` substitution test + Nomad var 写向族 + #128 逐段判定/SC-1..22 族; SC-22 = #145 BLOCKED 回显脱敏; #153 Forgejo 凭据响应端点族; #179 claude-config 双平面清单 + credit 收紧 + 前置字符白名单) | n/a |
 | `aria/hooks/tests/secret-scan.test.sh` | 49 regression cases | n/a |
 
 > **NotebookEdit 不注册** (v1.24.0 决定): `.ipynb` cell 多用于实验代码,内联 secret 概率低 + ack 路径足够 — 后续 minor 可加。
@@ -315,7 +316,7 @@ aria-secret-guard-plugin-default Spec brainstorm 跑过 5-trial instrumented tes
 | Exit 2 是否短路后续 hook | **不短路** | 任一 hook exit 2 即整体 block;设计 block 策略不能依赖前置 short-circuit |
 | Block reporting | 仅 stderr 显示触发 block 的那个 hook 路径 | 用 `$CLAUDE_PROJECT_DIR/...` vs `${CLAUDE_PLUGIN_ROOT}/...` 区分 source |
 
-> **实证边界**: 该 5-trial 实验在 **Write event PreToolUse** 上跑(用 `handoff-location-guard.sh` 作 proxy)。**Bash + PostToolUse 推论**: hook orchestrator 是 Claude Code 框架同一组件,merge 语义 by spec 适用于所有 hook event;`secret-guard.sh` 自身行为由 558 self-tests (552 无 zsh) + cross-project dogfood 覆盖。所以 Layer 2 设计可信赖 all-fire + non-short-circuit 在 Bash + PostToolUse 上同样成立,**但严格意义上只直接验证了 Write/PreToolUse**;若未来发现 Bash event merge 异常需 fall back to design,这是预先记录的 known-evidence-gap。memory: `feedback_claude_code_hook_merge_all_fire`。
+> **实证边界**: 该 5-trial 实验在 **Write event PreToolUse** 上跑(用 `handoff-location-guard.sh` 作 proxy)。**Bash + PostToolUse 推论**: hook orchestrator 是 Claude Code 框架同一组件,merge 语义 by spec 适用于所有 hook event;`secret-guard.sh` 自身行为由 599 self-tests (593 无 zsh) + cross-project dogfood 覆盖。所以 Layer 2 设计可信赖 all-fire + non-short-circuit 在 Bash + PostToolUse 上同样成立,**但严格意义上只直接验证了 Write/PreToolUse**;若未来发现 Bash event merge 异常需 fall back to design,这是预先记录的 known-evidence-gap。memory: `feedback_claude_code_hook_merge_all_fire`。
 
 ### 5.5 Path 1 与 Layer 2 互补关系
 
