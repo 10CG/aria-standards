@@ -3,6 +3,7 @@
 > **Level**: Minimal (Level 2 Spec)
 > **Status**: Draft
 > **Created**: {YYYY-MM-DD}
+> **Linked Issue**: `{<org>/<repo>#<n>}`
 
 ## Why
 
@@ -50,6 +51,11 @@
 - Cross-module changes
 - Breaking changes
 - Changes affecting > 10 files
+
+**Linked Issue header line (required for Level 2 / Level 3)**:
+- Value is an inline code span of the form `<org>/<repo>#<n>` (e.g. `10CG/Aria#174`); several issues go in the same code span separated by `, `
+- No related issue (verified): write exactly `none` — do not leave the value empty and do not delete the line (不留空、不删行: an empty value is indistinguishable from "forgot to fill it in"). `N/A` / `TBD` / `-` are **not** accepted sentinels
+- Extraction rules (E0–E6) and the mechanical check are defined in Aria Spec `linked-issue-field-availability` §3; the Chinese alias `关联 Issue` / `无` is accepted on the read side only — always write the English canonical form
 
 **Sections can be omitted if not applicable**:
 - Impact table can be simplified
