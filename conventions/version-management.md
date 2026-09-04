@@ -101,7 +101,9 @@ v{version}-{rc|beta|alpha}.{number}
 | 正式发布 | `v{version}` | `v1.0.0`, `v1.1.0` |
 | 候选版本 | `v{version}-rc.{n}` | `v1.1.0-rc.1` |
 | 测试版本 | `v{version}-beta.{n}` | `v2.0.0-beta.1` |
-| 子模块 | `{name}-v{version}` | `agents-v2.0.2` |
+| 子模块 | 见 §5.1 —— 本仓群里**只有 `aria/` 打 tag**, 且用与主仓同形的 `v{version}` | `v1.69.0` (aria-plugin) |
+
+> ⚠️ **2026-09-04 事实勘正**: 上一版此行的格式写作 `{name}-v{version}`, 示例 `agents-v2.0.2` —— 那个前缀式命名在本仓群从未被使用过, 示例里的 `agents` 仓也不存在 (同 §5.1 的三行 fiction 同源)。 实测: `aria/` 的 23 个 tag 全是 `v1.x.y` 形, `standards/` 与 `aria-orchestrator/` 各 0 个 tag。
 
 ### 3.3 何时打 Tag
 
@@ -248,27 +250,43 @@ VERSION 文件即 SOT (与 meta-repo 同); tag 不是发布依据, 而是历史�
 
 ## 5. 子模块版本管理
 
-### 5.1 子模块独立版本
+### 5.1 子模块的版本形态 (按 §4.3 三分判据, 逐个实测)
 
-```
-aria-standards/  → 独立版本 (standards-v2.1.0)
-aria-skills/     → 独立版本 (skills-v1.1.0)
-aria-agents/     → 独立版本 (agents-v2.0.2)
-```
+> ⚠️ **2026-09-04 事实勘正**: 上一版此处写的是
+> `aria-standards/ → 独立版本 (standards-v2.1.0)` / `aria-skills/ → skills-v1.1.0` /
+> `aria-agents/ → agents-v2.0.2` —— **三行全部不成立**: `standards` 仓 0 个 tag (更没有
+> `standards-v2.1.0`), 而 `aria-skills` / `aria-agents` **这两个仓不存在** (Skills 与
+> Agents 都住在 `aria-plugin` 里)。§4.3 自己写着「归类前先实测『下游到底怎么拉』, 不要
+> 按直觉」—— 这三行正是没实测的产物。下表逐格给实测值。
+
+| 子模块 (仓) | 下游怎么拉 | §4.3 类别 | tag 实测 | VERSION 文件 |
+|---|---|---|---|---|
+| `aria/` (aria-plugin) | Claude Code marketplace 克隆 **master 分支**, 读 `plugin.json` 的版本号, 全程不读 tag (§4.3 实测) | **按需锚点型** — 打 tag 但仅作历史锚点, 缺失不阻断发布 | 23 个 (v1.69.0 …) | 有, 且为派生 (SOT = `plugin.json`) |
+| `standards/` (aria-standards) | 消费方以 **git submodule (gitlink SHA)** 引用 —— 按 commit 定位, 无 tag 消费方 | **meta-repo 类** — VERSION-file-only, 不打 tag | **0 个** | **无** ← 见下方待裁项 |
+| `aria-orchestrator/` | 仅 10CG Lab 内部, 同样按 gitlink SHA | **meta-repo 类** | **0 个** | 无 |
+
+> 📌 **待裁 (2026-09-04 owner 选项 C: 本轮只修上面的事实错误, 版本号口径另开一轮)**:
+> `standards` 眼下没有 VERSION 文件, 却有两处互不相等的版本自称 ——
+> `standards/openspec/project.md` 头部写 `2.2.2`, 主仓 `VERSION` 的子模块表写 `v2.2.3`。
+> 两条路可选, 尚未裁: (A) 按本节 meta-repo 类补一个 `standards/VERSION` 作唯一 SOT,
+> 另两处改为指向它; (B) 宣告 standards 不做独立语义版本, 只按 gitlink SHA 引用, 删掉
+> 两处自称。**在裁定前, 不要拿这两个数字中的任何一个当权威**。
 
 ### 5.2 子模块版本更新
 
 ```bash
-# 更新子模块到最新
-git submodule update --remote
+# 更新某个子模块到其默认分支最新 (按 gitlink 引用的仓, 这是常规操作)
+git submodule update --remote standards
 
-# 锁定特定版本
-cd .claude/skills
-git checkout skills-v1.1.0
-cd ../..
-git add .claude/skills
-git commit -m "chore: 锁定 aria-skills 到 v1.1.0"
+# 把某个子模块钉到一个具体 commit (gitlink 就是 SHA, 与有没有 tag 无关)
+cd aria && git checkout <sha-or-tag> && cd ..
+git add aria
+git commit -m "chore(deps): 锁定 aria-plugin 到 <sha-or-tag>"
 ```
+
+> ⚠️ 上一版这段示例用的是 `cd .claude/skills` + `git checkout skills-v1.1.0` ——
+> 该路径与该 tag 都不存在 (同 §5.1 的三行 fiction 同源)。**能钉的一律是 gitlink SHA**;
+> tag 只在「按需锚点型」的 `aria/` 上存在, 且按 §4.3 它不是下游拉取依据。
 
 ### 5.3 主项目与子模块版本关系
 
