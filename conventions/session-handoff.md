@@ -232,7 +232,7 @@ advisory-over-hardlock (DEC-20260519-001): 两层均不硬阻断; legacy fallbac
 
 | 字段 | 类型 | 必含 | 语义 | 约定 |
 |------|------|------|------|------|
-| `id` | string | ✅ (新 carry-forward 条目) | 稳定 slug, 喂 Layer L 认领闸门的 `raw_track_id` | kebab-case, 约定前缀 `carry-<slug>` (如 `carry-m6-blocker3-spec`)。**禁止使用 `:`** —— `derive_track_id` 替换表 (`aria/skills/state-scanner/lib/track_id.py:28`) 只译 `/`、`.`、`_` → `-`, 不译 `:`, 冒号会被原样保留导致归一不彻底 |
+| `id` | string | ✅ (新 carry-forward 条目) | 稳定 slug, 喂 Layer L 认领闸门的 `raw_track_id` | kebab-case, 约定前缀 `carry-<slug>` (如 `carry-m6-blocker3-spec`)。**走过 A.1 入口认领的 cycle**: id = **A.1 认领时派生的那一串** `<spec-slug>-<container_uuid>` (`a1-entry-claim-duplicate-work-guard` §2.1) —— 与 §2.3.8.2 复用 frontmatter `track-id` 的例外并列, 同样不强制 `carry-` 前缀; 另起一串会让 A.1 认领与收尾 release 落在两条不相关的 track 上。**禁止使用 `:`** —— `derive_track_id` 替换表 (`aria/skills/state-scanner/lib/track_id.py:28`) 只译 `/`、`.`、`_` → `-`, 不译 `:`, 冒号会被原样保留导致归一不彻底 |
 | `desc` | string | ✅ | 人类可读描述 (即原自由文本内容) | 无格式约束 |
 
 #### 2.3.8.2 与 frontmatter `track-id` (§2.3.1) 的关系
