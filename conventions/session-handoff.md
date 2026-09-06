@@ -113,7 +113,7 @@ docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 | 字段 | 类型 | 必含 | 语义 | 取值范围 / 示例 |
 |------|------|------|------|----------------|
 | `track-id` | string | ✅ | 确定性派生的工作 ID,与该 handoff 所属的 OpenSpec change / carry-forward 条目 1:1 绑定 | **规范化**: 小写化 → `/._` 替换为 `-` → 最大长度 64 字符 → 超长或含非 ASCII 时 fallback `sha256(原 id)[:16]`。跨容器实现**必须共用**此函数。示例: `multi-terminal-coordination` / `aria-2-0-m5-carryover-layer2-redo-mode-aux` |
-| `owner-container` | string | ✅ | `<owner>/<container-id>` 复合标识,显示该 handoff 由谁在哪个容器写出 | `<owner>` = git `user.email` 的 local-part (`@` 之前部分);`<container-id>` = `~/.aria/container-id` 持久 short-UUID + 可选人类标签,缺省回退 hostname。示例: `creationhikari/devbox-A` / `simonfishgit/laptop` |
+| `owner-container` | string | ✅ | `<owner>/<container-id>` **两段式**复合标识,显示该 handoff 由哪个提交身份在哪台机器写出 | `<owner>` = **提交身份** = git `user.email` 的 local-part (`@` 之前部分); git 未配置 email 时取值为 `unknown` (判据中视为不可归属, 不计为独立 owner)。`<container-id>` **三态**: (1) `uuid` — `~/.aria/container-id` 的 **uuid 字段** (v1.22.x+ 有该文件的机器; label 不参与身份); (2) `主机名` — 无该文件的历史行; (3) `hostname` 兜底 — 只读 fs 写不出文件时。**`identity_key`** (协调身份键, §2.3.5 判据用): `<container-id>` 为 8 位小写 hex 形 ⇒ 该串本身 (同一机器多个提交身份 = 一个身份); 否则 ⇒ `<owner>/<container-id>` (主机名不唯一, 保留 owner 段)。**track-id 尾段族键**: 若 `track-id` 尾段为 `-<8 位小写 hex>` (a1-entry 风格 `<slug>-<container_uuid>`), 消费方在 §2.3.5 Layer H collision 分组时按纯形状剥去该尾段视为同一件事; 该剥离**仅用于** §2.3.5 Layer H collision 分组, 不改变 §2.3.8.2 carry-id 与 frontmatter `track-id` 同串的规则, 不用于 Layer L claim 匹配。示例: `simonfish/bfe8285d` (uuid 形) / `creationhikari/devbox-A` (主机名形, 历史行) |
 | `phase` | string | ✅ | 该 handoff 写出时该 track 所处的十步循环阶段 | enum: `A` / `A.1` / `A.2` / `A.3` / `B` / `B.1` / `B.2` / `B.3` / `C` / `C.1` / `C.2` / `D` / `D.1` / `D.2` / `D.3`。允许子阶段 progress 形式如 `B 7/9` |
 | `status` | string | ✅ | 该 handoff 写出时该 track 的工作状态 | enum: `active` (在飞,有 carry-forward) / `done` (全 cycle 完成,归档) / `abandoned` (放弃,carry-forward 转他人或废弃) |
 | `updated-at` | string | ✅ | 该 handoff 写出 / 最近修订的 UTC ISO 8601 时间戳 (秒精度) | 示例: `2026-05-19T22:31:13Z` |
@@ -177,14 +177,20 @@ frontmatter 段,确保所有 v1.21.x+ session-handoff 输出含完整 schema。
 
 ### 2.3.5 多 owner / 多 container 语义 (collision 类型)
 
-`owner-container` 字段在跨容器 / 多人协作场景下需区分两类 collision:
+> **Amended**: 2026-09-06 by OpenSpec `owner-container-identity-key-and-collision-parser` (Aria #193 / aria-plugin#135 缺口 3)。**实质变更** (对采用方是行为变更): 判据从「按 `<owner>` / `<container-id>` 字面计数」改为「按 §2.3.1 `identity_key` 计数 + 只数非空非 `unknown` 的 owner」, 并新增信息级 `same-identity-multi-owner`; 同一机器上的 git 身份漂移不再被判成 🟡/🔴。
+> **Status**: 三行判据表为规范; 旧两行表的读法自本修订起作废, 历史 handoff 不 rewrite。
 
-| Collision 类型 | 触发条件 | 看板渲染 | 含义 |
-|----------------|---------|---------|------|
-| **cross-owner** | 同一 track-id 出现 ≥2 个 distinct `<owner>` | 🔴 强提示,需 reconcile 协议确定性裁决 (per `multi-terminal-coordination` Layer L 早 `claimed_at` 胜) | 多人共抢同一工作,真冲突 |
-| **self-multi-container** | 同一 track-id 出现 ≥2 个 distinct `<container-id>` 但同 `<owner>` | 🟡 soft hint,可能是同一人多容器开了多 session,或容器迁移 | 同一人在多环境工作,通常无需 yield |
+`owner-container` 字段在跨容器 / 多人协作场景下按 `identity_key` (§2.3.1) 区分三类信号; 前两类是 collision, 第三类只是 advisory:
 
-详见 [Spec proposal.md §Impact "same-owner-multi-container 语义"](../../openspec/changes/multi-terminal-coordination/proposal.md)。
+| 信号类型 | 触发条件 | 看板渲染 | 含义 |
+|----------|---------|---------|------|
+| **cross-owner** | 同一 track-id 的 active 行出现 ≥2 个 `identity_key`, 且其中**非空、非 `unknown`** 的 `<owner>` 集合 ≥2 | 🔴 强提示,需 reconcile 协议确定性裁决 (per `multi-terminal-coordination` Layer L 早 `claimed_at` 胜) | 两个提交身份在两台机器上共抢同一工作, 真冲突 (不做「同一个人」推断) |
+| **self-multi-container** | 同一 track-id 的 active 行出现 ≥2 个 `identity_key`, 且非空非 `unknown` 的 `<owner>` 集合 ≤1 | 🟡 soft hint,可能是同一人多容器开了多 session,或容器迁移 | 同一可归属身份在多环境工作,通常无需 yield |
+| **same-identity-multi-owner** | 同一 uuid 形 `identity_key` 在采用方仓的 handoff **全集** (跨 track、跨分支, dedupe 前) 出现 ≥2 个非空非 `unknown` `<owner>` | ⚪ 信息级 advisory (列 owners / first_seen / last_seen), **不计入 collision** | 同一机器上 git 提交身份漂移 (如账号改名), 解释而非告警 |
+
+**新鲜度截止**: 参与前两类判定的 Layer H 行只取 `updated-at` 在最近 `LAYER_H_ACTIVE_WINDOW_DAYS` (aria 实现常量, 30 天) 内的; 更早的 `status: active` 历史行视为残留, 不再构成永久 collision。同一 `identity_key` 的多行 (同一机器多 session / 多身份) 先折叠为最新一行再判定。
+
+详见 [Spec proposal.md §Impact "same-owner-multi-container 语义"](../../openspec/changes/multi-terminal-coordination/proposal.md) 与 `owner-container-identity-key-and-collision-parser` proposal §What。
 
 ### 2.3.6 与 Layer L claim schema 的区别
 
@@ -256,6 +262,15 @@ carry-id **必须**以 markdown prose 形式留在 §6 body 内, **禁止**作�
 - 旧 (v1.3.0 前) §6 纯自由文本行**不受影响**, 不强制批量回填 id。
 - 未打标 (无 `id` 字段) 的 §6 行**不触发** Layer L 认领闸门消费——二选一明确: 未打标行 = 不喂 `run_gate`, 不把整行自由文本当隐式 carry-id (避免保留"无稳定 id"病根)。
 - §6 加 carry-id 后, frontmatter 解析仍只取 §2.3.1 的 5 个顶层字段, 文档不因 body 内出现 `{id, desc}` 结构而退化 legacy。
+
+### 2.3.9 AI runner 提交身份 (owner-container-identity-key-and-collision-parser D-2)
+
+> **Added**: 2026-09-06 by OpenSpec `owner-container-identity-key-and-collision-parser` (owner 裁定 D-2 选 (a))。
+
+- AI runner 会话 (无人值守容器、CI bot 等自动执行体) 的 git 提交身份**统一为机器身份**: `user.email` 的 local-part 与采用方为该机器身份分配的账号名一致, 不写成操作者个人身份。
+- 操作者可追溯性由 `<container-id>` (§2.3.1) + handoff 正文承担, 不靠 `<owner>` 段区分「谁在按键盘」。
+- 机器身份账号改名会在 §2.3.5 产生一次性的 `same-identity-multi-owner` ⚪ advisory (同一 uuid 机器出现新旧两个 local-part); 这是预期信号, 不是 collision, 不 rewrite 历史 handoff。
+- 采用方的人机账号治理与容器 `git config` 的供给方式不在本规范范围内。
 
 ## 3. Enforcement matrix (5-layer defense-in-depth)
 
