@@ -1,6 +1,6 @@
 # 内容真实性规则
 
-> **Version**: 2.0.0
+> **Version**: 2.1.0
 > **Status**: Active
 > **Purpose**: 确保所有文档和代码内容的真实性、准确性和一致性
 
@@ -156,6 +156,34 @@ YAML Frontmatter 示例:
 格式:
   - 文件:行号 → "src/auth.py:42"
   - 函数引用 → "AuthService.validateToken()"
+```
+
+### 4.4 Issue / PR 引用写法
+
+> 2026-09-13 起生效 (owner 裁定, 来源 `10CG/aria-plugin#196`)。
+
+```yaml
+规则 1 — 跨仓一律全限定:
+  - 引用 issue / PR 一律写 <org>/<repo>#<n>, 例: 10CG/Aria#195
+  - 原因: 同一个号在不同仓里常各有一条且互不相干
+    (实例: 10CG/Aria#195 与 10CG/aria-plugin#195 是两件事);
+    只写仓名、或只写 "#" 加数字, 读者无法确定指哪条
+
+规则 2 — "#" 只留给 issue / PR:
+  - 文内自己的编号 (待复议条目、表格行、清单项、步骤) 不用 "#", 直接写数字
+  ❌ "待 owner 复议 #N-#M"    ✅ "待 owner 复议条目 5–7"
+  ❌ 表格首列 "| #N |"        ✅ "| 18 |"
+  ❌ "触点表 #N"              ✅ "触点表第 18 项"
+  - 例外: 本项目规则编号 "Rule #N" / "规则 #N" 保持原写法
+  - 原因: 机械检查分不清「文内编号」和「漏写仓名的 issue 引用」;
+    让 "#" 只有一种含义, 检查才能保持从严而不误报
+
+执行口径:
+  - 新写或本次改动到的文字按上面两条写; 存量文档不做批量回改, 改到哪段顺手改哪段
+  - 自检工具: aria-plugin 的 skills/state-scanner/scripts/check_bare_issue_refs.py <文件>
+    (rc 0 = 无违规; 豁免仅三类: 全限定引用 / Rule #N / 调用仓 .aria/bare-issue-ref-allowlist.txt 所列字面)
+  - 它是手动自检工具, 不是已启用闸门 (owner 2026-09-13 裁定暂不注册进 .aria/state-checks.yaml);
+    在它成为闸门之前, Spec 不得把「整份文件 rc 0」写成验收门槛 —— 存量文字会让它恒红
 ```
 
 ---
@@ -329,6 +357,7 @@ AI 生成内容必须:
 | `doc-health-monitor.js` | 链接有效性 |
 | `check-doc-references.js` | 引用准确性 |
 | Pre-commit hooks | 格式规范 |
+| `check_bare_issue_refs.py` (aria-plugin state-scanner) | 跨仓 issue 引用全限定 (手动自检, 非闸门; 见 §4.4) |
 
 ### 10.2 手动检查
 
@@ -348,6 +377,7 @@ AI 生成内容必须:
 
 ---
 
-**Version**: 2.0.0
+**Version**: 2.1.0
 **Created**: 2025-12-13
+**Updated**: 2026-09-13 (§4.4 Issue / PR 引用写法, `10CG/aria-plugin#196`)
 **Maintainer**: AI-DDD Development Team
