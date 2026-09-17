@@ -1,6 +1,6 @@
 # Skill Benchmark Exemption 规范 — AB 豁免判据: 内容是否影响 AI 行为
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Active
 > **Source incidents**: 2026-07-20 两起同日发生的边界误判 —— (1) `state-scanner-stale-refs-false-parity` Phase 4 以「未改 SKILL.md 指令面」自我豁免, 而它改了 `references/rules/basic-rules.md` 的 dispatch 表 77 行; (2) `state-scanner-gate-yaml-datasource` (#113) 改了 `references/runtime-probe-declaration.md` 这份 **authoring 向导**, 按目录判据无法归类, 按规则 #10 纪律不自行裁定而提请 owner
 > **Owner 裁决**: 2026-07-20 (第三次) — 判据从「文件落在哪个目录」改为「**内容是否影响 AI 行为, 以及那个行为 AB 套件测不测得到**」
@@ -30,7 +30,7 @@
 | **处方性**, 但它治的行为在**固定测试集覆盖范围之外** (典型: authoring 向导 —— 给 spec 作者读的处方, 而套件测的是 skill 运行时行为) | **不能** | 见 §3 —— **不是简单豁免**, 是「AB 测不到 ⇒ 换定向 fixture + 记套件缺口」 |
 | 拿不准算不算处方性 / 算不算在范围内 | — | **照跑** (宁跑勿豁) |
 
-**SKILL.md 有变动时的附加约束** (承前): 仅当变动是**事实性同步** (溯源注释 / 行号勘正 / 术语修正) 且 frontmatter `description` 零变动, 才可能落进第一行; 须在 spec 里**逐行点名**该变动并声明非指令语义变更。`description` 或指令流程变动 ⇒ 一律第二行。
+**SKILL.md 有变动时的附加约束** (承前): 仅当变动是**事实性同步** (溯源注释 / 行号勘正 / 术语修正) 且 frontmatter `description` 零变动, 才可能落进第一行; 须在 spec 里**逐行点名**该变动并声明非指令语义变更。`description` 或指令流程变动 ⇒ 一律第二行, 照跑场景 1; `description` 变动另须跑场景 4b 地板守卫 (它只验证触发面没被改坏, 不验证 description 改得更好; 判据与前置见 Aria 主仓 `aria-plugin-benchmarks/AB_TEST_OPERATIONS.md` §场景 4b), 两者不互相替代。自主运行时 (`state_scanner.coordination.unattended == true`) 不做 description 改动 (含新增 skill): 任务需要改 description 时放弃整个任务, 撤销本任务已做的全部改动 (工作区不留未提交的改动, 分支不留新提交), 并在最终消息里写明是哪个 skill、为什么要改。本条只定「跑哪个场景」, 「场景 1 覆盖哪些套件」不在本条范围。
 
 ## 3. 第三行不是逃生舱 (关键设计)
 
@@ -44,6 +44,8 @@
 
 > **为什么这样设计**: AB 对一个它结构上测不到的行为跑一遍, 是**测量剧场** —— 无论结果如何都不构成证据, 还会让人误以为验过了。真正诚实的做法不是"跳过验证", 而是"换一个能验到的手段, 并把测不到这件事记下来"。
 
+**边界注**: description hunk 不走本节, 走 §2 第二行: 照跑场景 1, 另须跑场景 4b。
+
 ## 4. 与规则 #10 的关系
 
 规则 #10 (见姊妹规范) 说: **豁免只能来自已写明的机制, 不能来自 AI 临场判断**。本规范就是把 Rule #6 的豁免写成机制的那份文书。
@@ -53,6 +55,21 @@
 - AI **不可以**在决策表之外自创理由 (「这次改动小」「反正测不出来」);
 - 落进「拿不准」格时, **默认照跑**, 而不是默认豁免;
 - 无论走哪一行, 都要在 spec/tasks 留 `rule6_note` 引用本规范 (留痕保留, 复议豁免)。
+
+## 4.1 rule6_note 最小模板
+
+```yaml
+rule6_note:
+  decision_table_row: 1 | 2 | 3 | 4 | n/a   # SOT §2 决策表第几行 (4 = 拿不准照跑); n/a = 本 spec 不属 Skill 变更
+  description_changed: yes | no
+  scenario1: <结果目录> | not_required | n/a
+  scenario4b: <结果目录> pass | <结果目录> fail | <结果目录> void | not_required | n/a
+  negctrl: <被评命中>/10 vs <负控命中>/10 | n/a
+```
+
+- `scenario4b` 所用套件未经 owner 审阅 ⇒ 不合规 (该结果不能作门)。
+- `description_changed: yes` 而 `scenario1` 或 `scenario4b` 为空、`not_required` 或 `n/a` ⇒ 不合规 (见 §2: description 变动照跑场景 1, 另须跑场景 4b); `scenario4b` 为 `fail` 或 `void` ⇒ 义务未完成, 不得 ship (处置见 Aria 主仓 `aria-plugin-benchmarks/AB_TEST_OPERATIONS.md` §场景 4b)。
+- 两套编号不同轴: `decision_table_row` 取 SOT §2 决策表行号; `scenario1` / `scenario4b` 是手册的场景编号。
 
 ## 5. 已裁定的样例 (worked examples)
 
@@ -68,9 +85,10 @@
 
 ## 6. 已知局限
 
-本规范只解决「要不要跑 AB」。它**不解决** AB 本身的测量有效性问题 —— 后者另有两个已知缺陷记录在案:
+本规范只解决「要不要跑 AB」。它**不解决** AB 本身的测量有效性问题 —— 后者另有三个已知缺陷记录在案:
 
 - **baseline 臂在项目自己的仓库里结构上无法做干净**: 项目级指令文件 (如 `CLAUDE.md`) 会自动加载进每个 subagent, 其中往往写着被测 Skill 的设计术语与结论 ⇒ `without_skill` 臂读到的是「Skill 设计的摘要」而非「没有 Skill 的世界」。因此 **with/without 那一列不能用来回答「Skill 本身是否有价值」**; 能站住的是**新版 vs 旧版**(两臂看到同一份污染, 对称抵消)。
 - **该污染还会顺着「baseline 也过就删断言」的常见判据反向磨钝测试集** —— 被污染的 baseline 会通过那些对真实采用者确实有区分度的断言。三臂全过时应**先做语义分档** (完全没提 / 提到但描述为已知缺口 / 作为已接线机制给出), 再决定是拆条还是删除。
+- 场景 4b 只能当地板守卫: 对真实措辞改动在饱和套件上零区分力, 已验证判红的破坏类型是删领域词与显式强制过宽两类 (未穷举), 一次自然措辞扩张实测不判红 (基线: Aria 主仓 `aria-plugin-benchmarks/ab-results/2026-09-13-rule6-description-trigger-eval-baseline/RESULT.md` v9 @ 主仓提交 `9de3074`); rule6_note 五字段无机械 enforcement; 场景 4b 只在 Claude 模型上实测过 (`claude-fable-5-1` / `claude-opus-5`), Layer 2 所用的 GLM 未验证。。
 
 详见 aria-plugin issue #116。
