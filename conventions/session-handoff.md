@@ -94,7 +94,7 @@ docs/handoff/{YYYY-MM-DD}-{slug}.md
 docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 ```
 
-写入后**自动**更新 `docs/handoff/latest.md` pointer(单 track 场景)或 deprecation banner(多 track 场景,见 §2.3 latest.md 派生行为)。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
+写入后**自动**更新 `docs/handoff/latest.md` pointer(单 track 场景)或 deprecation banner(多 track 场景,见 §2.3 latest.md 派生行为);**经机械 `latest_md_writer` 写入时**另有第三态 —— 单 track 但指针目标不在 `docs/handoff/` 顶层时改写降级页,见同节。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
 
 ---
 
@@ -168,9 +168,12 @@ fallback 处理:
 这一 fallback 行为与现有 `docs/handoff/latest.md` pointer 语义授权一致 (`latest.md`
 仍为 prose-level navigation pointer;frontmatter 为 machine-level metadata)。
 
+> **Amended**: 2026-09-26 by OpenSpec `handoff-multibranch-subdir-path-fidelity` (`10CG/Aria#195`)。**additive**: 两态判据不变, 新增「目标不在顶层」第三态, 仅适用于经机械 `latest_md_writer` 写入的路径。
+
 **latest.md 派生行为** (per `multi-terminal-coordination` task 1.6):
 - **单 track 场景** (1 active track in 看板): `latest.md` 写当前 track 指针,向后兼容老 session 读
 - **多 track 场景** (≥2 active tracks): `latest.md` 不写真实指针,仅含 deprecation banner 指引读看板;L2 collector 语义权威仍以 frontmatter 为准
+- **目标不在顶层** (单 track,但该 track 的 handoff 文件位于 `docs/handoff/` 的子目录下): **经机械 `latest_md_writer` 写入时** `latest.md` 不写真实指针,改写降级页并注明原因 —— 相对指针无法指向它,因为读回 pointer 的一侧只扫顶层、不递归;机读面同批给出 `degraded_reason`。经 AI 手改路径 ([handoff-mechanics](../../aria/skills/phase-d-closer/references/handoff-mechanics.md)) 写入时尚未同步该态 (已知缺口, 尚未开跟踪 issue)。
 
 新写出的 handoff doc 由 `aria/templates/session-handoff.md` (L5 template) 硬编码
 frontmatter 段,确保所有 v1.21.x+ session-handoff 输出含完整 schema。
