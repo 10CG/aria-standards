@@ -1,6 +1,6 @@
 # Session Handoff 规范
 
-> **Version**: 1.3.0 (additive: §2.3.8 结构化 carry-id schema — §6 prose 层, `interactive-session-dedup-coordination` DEC-20260704-002; 1.2.0: §1.3 周期收尾 vs 会话收尾 消歧 + 消歧矩阵, session-closer-synthesis aria-plugin v1.50.0+; 1.1.0: §2.3 机读 frontmatter schema, multi-terminal-coordination v1.21.x+)
+> **Version**: 1.4.0 (1.3.0 之后三次增量一次补齐, 见 `10CG/aria-standards#20`: §2.3.1 `identity_key` + `<container-id>` 三态 + track-id 尾段族键, §2.3.5 三行 collision 判据 (旧两行读法作废; 对采用方是行为变更, 按 aria-plugin v1.70.0 D5 先例判 MINOR), §2.3.9 AI runner 提交身份 — `owner-container-identity-key-and-collision-parser` / `10CG/Aria#193` (`d217ed0`); §2.3.8.1 A.1 入口认领口径 — `a1-entry-claim-duplicate-work-guard` (`21748d4`); §2.3 latest.md 派生行为「目标不在顶层」第三态, 仅适用于经机械 `latest_md_writer` 写入的路径 — `handoff-multibranch-subdir-path-fidelity` / `10CG/Aria#195` (`11b0a14` + `d86fc91`); 1.3.0: §2.3.8 结构化 carry-id schema — §6 prose 层, `interactive-session-dedup-coordination` DEC-20260704-002; 1.2.0: §1.3 周期收尾 vs 会话收尾 消歧 + 消歧矩阵, session-closer-synthesis aria-plugin v1.50.0+; 1.1.0: §2.3 机读 frontmatter schema, multi-terminal-coordination v1.21.x+)
 > **Status**: Active
 > **Source incidents**: 见 §5 (4 dogfood, SilkNode 1 + Aria self 3) + §2.3 (1 跨容器 race incident 2026-05-19) + §2.3.8 (双子星重复劳动, 2026-07-03/04, [DEC-20260704-002](../../docs/decisions/DEC-20260704-002-interactive-session-duplicate-prevention.md))
 > **Forgejo Issue**: [10CG/Aria#92](https://forgejo.10cg.pub/10CG/Aria/issues/92) (triage [#6170](https://forgejo.10cg.pub/10CG/Aria/issues/92#issuecomment-6170)) / [10CG/aria-plugin#94](https://forgejo.10cg.pub/10CG/aria-plugin/issues/94) (双子星防重复, §2.3.8)
@@ -94,7 +94,7 @@ docs/handoff/{YYYY-MM-DD}-{slug}.md
 docs/handoff/{YYYY-MM-DD}-{HHMM}-{slug}.md
 ```
 
-写入后**自动**更新 `docs/handoff/latest.md` pointer(单 track 场景)或 deprecation banner(多 track 场景,见 §2.3 latest.md 派生行为)。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
+写入后**自动**更新 `docs/handoff/latest.md` pointer(单 track 场景)或 deprecation banner(多 track 场景,见 §2.3 latest.md 派生行为);**经机械 `latest_md_writer` 写入时**另有第三态 —— 单 track 但指针目标不在 `docs/handoff/` 顶层时改写降级页,见同节。文件名遵循项目 [naming-conventions](./naming-conventions.md) 规范 (kebab-case + ISO 日期前缀)。
 
 ---
 
@@ -168,9 +168,12 @@ fallback 处理:
 这一 fallback 行为与现有 `docs/handoff/latest.md` pointer 语义授权一致 (`latest.md`
 仍为 prose-level navigation pointer;frontmatter 为 machine-level metadata)。
 
+> **Amended**: 2026-09-26 by OpenSpec `handoff-multibranch-subdir-path-fidelity` (`10CG/Aria#195`)。**additive**: 两态判据不变, 新增「目标不在顶层」第三态, 仅适用于经机械 `latest_md_writer` 写入的路径。
+
 **latest.md 派生行为** (per `multi-terminal-coordination` task 1.6):
 - **单 track 场景** (1 active track in 看板): `latest.md` 写当前 track 指针,向后兼容老 session 读
 - **多 track 场景** (≥2 active tracks): `latest.md` 不写真实指针,仅含 deprecation banner 指引读看板;L2 collector 语义权威仍以 frontmatter 为准
+- **目标不在顶层** (单 track,但该 track 的 handoff 文件位于 `docs/handoff/` 的子目录下): **经机械 `latest_md_writer` 写入时** `latest.md` 不写真实指针,改写降级页并注明原因 —— 相对指针无法指向它,因为读回 pointer 的一侧只扫顶层、不递归;机读面同批给出 `degraded_reason`。经 AI 手改路径 ([handoff-mechanics](../../aria/skills/phase-d-closer/references/handoff-mechanics.md)) 写入时尚未同步该态, 跟踪见 `10CG/aria-plugin#204`。
 
 新写出的 handoff doc 由 `aria/templates/session-handoff.md` (L5 template) 硬编码
 frontmatter 段,确保所有 v1.21.x+ session-handoff 输出含完整 schema。
