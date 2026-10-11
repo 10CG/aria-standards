@@ -52,11 +52,6 @@ mv openspec/changes/archive/<archived-change> openspec/archive/
 rmdir openspec/changes/archive
 ```
 
-或使用验证脚本：
-```bash
-bash scripts/verify-openspec-archive.sh
-```
-
 **正确的目录结构**:
 ```
 openspec/
@@ -75,12 +70,11 @@ Before archiving, check:
 - [ ] **Consistency**: Aligned with existing standards?
 - [ ] **Enforceability**: Can be automatically checked?
 
-## Seven-Step Cycle Integration
+## Ten-Step Cycle Integration
 
-1-3. **State Recognition → Planning**: `/openspec:proposal`
-4. **Quality Gates**: `openspec validate` (or manual checklist)
-5. **Execution**: `/openspec:apply`
-6-7. **Update & Validation**: `openspec archive`
+- **A.1 Spec 管理**: `/openspec:proposal`, then `openspec validate` (or the Quality Gates checklist above)
+- **B.2 执行验证**: `/openspec:apply`
+- **D.2 Spec 归档**: `openspec archive`
 
 ## Delta Mechanism
 
@@ -120,22 +114,20 @@ When managing standards documentation, you MUST:
 
 ### For tech-lead agent:
 When reviewing architectural decisions:
-- Reference standards from `openspec/specs/architecture/`
 - Enforce Contract-First principle
 - Ensure changes have cross-repo impact assessment
 
 ### For qa-engineer agent:
 When reviewing quality gates:
-- Reference quality definitions from `openspec/specs/quality/`
 - Ensure all gates are measurable and enforceable
 - Validate that standards can be automated
 
-## Reference to .claude/agents
+## Relationship to the aria agents
 
-This AGENTS.md complements (not replaces) the specialized agents defined in `.claude/agents/`.
+This AGENTS.md complements (not replaces) the specialized agents the aria plugin provides (`aria:knowledge-manager`, `aria:tech-lead`, `aria:qa-engineer`, ...).
 
 **Relationship**:
-- `.claude/agents/` → Defines "WHO" (role expertise)
+- aria plugin agents → Define "WHO" (role expertise)
 - `openspec/AGENTS.md` → Defines "HOW" (project workflow rules)
 
 The specialized agents should read and follow the instructions in this file when working within the standards repository.
