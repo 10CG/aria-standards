@@ -36,6 +36,8 @@ When executing OpenSpec commands in this repository, you MUST:
 
 ### 归档目录位置 Bug
 
+> 该问题与「openspec CLI 是否应装、版本怎么钉」一并待定（10CG/Aria#212）；未安装 CLI 时本节不适用。
+
 **问题**: `openspec archive` CLI 有 bug，会将归档放入错误位置：
 - ❌ 错误: `openspec/changes/archive/`
 - ✅ 正确: `openspec/archive/`
