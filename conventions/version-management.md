@@ -1,6 +1,6 @@
 # 版本管理规范
 
-> **Version**: 1.1.0
+> **Version**: 1.2.0
 > **Status**: Active
 > **Based on**: Semantic Versioning (semver.org)
 
@@ -336,6 +336,34 @@ git push origin v1.0.0
 - [ ] 更新 Forgejo Release
 - [ ] 通知用户 (如有重大变更)
 - [ ] 更新插件 marketplace
+- [ ] 涉及子模块 bump 的 release: 发布收尾三步已全过 (§6.4)
+
+### 6.4 子模块 bump 发布收尾三步
+
+> 📌 **来源 (2026-10-21, Aria#232 收尾漏步事故, #246 固化)**: PR 合并时子模块指针停在分支中间 commit (d726be5d), 发布终态随后才推上 feature 分支而收尾漏做 — meta master gitlink 指向子模块仓远端无 ref 可达的孤儿 commit, `git clone --recurse-submodules` 对 master 直接失败。修复 (aria-orchestrator PR #34: master FF 到 merge tip + Aria PR #245: gitlink 重指向) 后固化为: 凡 release 涉及子模块 bump, 三步全过才算闭环。
+
+- [ ] **步骤 1 — 子模块仓 master 已前进到发布终态**: 本次 PR 已按 CLAUDE.md《多远程推送 — 两条硬约束》约束 1 合并进 master (本地 merge + 双推), 不只推 feature 分支。终态只留在 feature 分支时, 后续 gitlink 只能指向分支 commit / 中间 commit, 消费方无从拉取 (#165 三次复发同根因: master 之外产生合并点)。
+- [ ] **步骤 2 — meta gitlink 指向子模块仓 ref tip** (branch/merge tip, 非中间 commit): 指向中间 commit 时, 该 commit 在子模块仓远端可能无 ref 可达, upload-pack 拒绝 → recursive clone 直接失败 (#232 事故形态)。
+- [ ] **步骤 3 — recursive clone smoke 通过**: 「gitlink 可达」的唯一端到端证据; 步骤 1/2 的本地 SHA 比对替代不了 upload-pack 视角的验证 (#232 修复即以此收口)。
+
+```bash
+# 以 aria 为例 (standards / aria-orchestrator 同理); meta 仓根目录执行
+# 步骤 1: 子模块双远程 master tip 一致 (ls-remote 直查远端, 不依赖本地 ref 新鲜度)
+tip=$(git -C aria ls-remote origin refs/heads/master | cut -f1)
+test "$tip" = "$(git -C aria ls-remote github refs/heads/master | cut -f1)"
+git -C aria log --oneline -1 "$tip"    # 人工确认 tip 即本次发布 merge commit
+
+# 步骤 2: meta gitlink == 该 tip (rev-parse <rev>:<path> 返回 gitlink SHA; meta 本地 master 须为已推送终态)
+test "$(git rev-parse master:aria)" = "$tip"
+
+# 步骤 3: 全新 recursive clone 端到端 smoke (origin / github 任一皆可; 子模块按 .gitmodules 走 forgejo.10cg.pub SSH, 需拉取凭据)
+tmp=$(mktemp -d)
+git clone --recurse-submodules --shallow-submodules --depth=1 git@github.com:10CG/Aria.git "$tmp/Aria"
+git -C "$tmp/Aria" submodule status    # 期望每行前缀为空格: '-' (未初始化) / '+' (偏离 gitlink) = FAIL; aria 行尾显示发布 tag 即终态
+rm -rf "$tmp"
+```
+
+> 机械层已有 submodule pre-merge gate (phase-c-integrator §C.2.4.5) 与 weekly tripwire 拦回归向 bump (见 `submodule-pointer-hygiene.md` Rule 4); 本三步是发布收尾**终验**, 覆盖 #232 这类逃逸形态 (gitlink 指向非 tip 的孤儿 commit)。长期候选: gitlink 可达性检查挂 CI (#246)。
 
 ---
 
@@ -411,6 +439,8 @@ git diff v1.0.0..v1.1.0
 | Git 提交规范 | `standards/conventions/git-commit.md` |
 | CHANGELOG 格式 | `standards/conventions/changelog-format.md` |
 | Semantic Versioning | https://semver.org/lang/zh-CN/ |
+| Submodule Pointer Hygiene | `standards/conventions/submodule-pointer-hygiene.md` |
+| Git Submodule 工作流 | `standards/workflow/git-submodule-workflow.md` |
 
 ---
 
@@ -419,6 +449,7 @@ git diff v1.0.0..v1.1.0
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | 1.0.0 | 2026-01-23 | 初始版本 |
+| 1.2.0 | 2026-10-22 | §6.4 新增子模块 bump 发布收尾三步 (Aria#232 收尾漏步事故固化, #246): 子模块仓 master 前进到发布终态 / meta gitlink 指向 ref tip / recursive clone smoke。 |
 | 1.1.0 | 2026-08-16 | §4.3 由二分改**三分** (新增「按需锚点型」)。触发: 实测发现 aria 插件被错归为「分发型」——其理由「市场按 tag 拉取」经实测为假 (marketplace.json 的 source 是裸 git 地址, 市场克隆跟的是 master 分支, `git describe --tags --exact-match` 不在任何 tag 上), 导致该要求 44 个版本 / 248 commit 从未被执行 = 恒亮假告警。owner 裁定选项 C: 分类改对 + 自 v1.66.0 起打 tag 作**历史锚点** + 历史断层就地留痕不补。同步修正 §4.3 meta-repo 段一处失实理由、§3.3 与 §6.2 的二分表述。 |
 
 ---
