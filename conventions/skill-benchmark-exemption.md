@@ -89,6 +89,6 @@ rule6_note:
 
 - **baseline 臂在项目自己的仓库里结构上无法做干净**: 项目级指令文件 (如 `CLAUDE.md`) 会自动加载进每个 subagent, 其中往往写着被测 Skill 的设计术语与结论 ⇒ `without_skill` 臂读到的是「Skill 设计的摘要」而非「没有 Skill 的世界」。因此 **with/without 那一列不能用来回答「Skill 本身是否有价值」**; 能站住的是**新版 vs 旧版**(两臂看到同一份污染, 对称抵消)。
 - **该污染还会顺着「baseline 也过就删断言」的常见判据反向磨钝测试集** —— 被污染的 baseline 会通过那些对真实采用者确实有区分度的断言。三臂全过时应**先做语义分档** (完全没提 / 提到但描述为已知缺口 / 作为已接线机制给出), 再决定是拆条还是删除。
-- 场景 4b 只能当地板守卫: 对真实措辞改动在饱和套件上零区分力, 已验证判红的破坏类型是删领域词与显式强制过宽两类 (未穷举), 一次自然措辞扩张实测不判红 (基线: Aria 主仓 `aria-plugin-benchmarks/ab-results/2026-09-13-rule6-description-trigger-eval-baseline/RESULT.md` v9 @ 主仓提交 `9de3074`); rule6_note 五字段无机械 enforcement; 场景 4b 只在 Claude 模型上实测过 (`claude-fable-5-1` / `claude-opus-5`), Layer 2 所用的 GLM 未验证。。
+- 场景 4b 只能当地板守卫: 对真实措辞改动在饱和套件上零区分力, 已验证判红的破坏类型是删领域词与显式强制过宽两类 (未穷举), 一次自然措辞扩张实测不判红 (基线: Aria 主仓 `aria-plugin-benchmarks/ab-results/2026-09-13-rule6-description-trigger-eval-baseline/RESULT.md` v9 @ 主仓提交 `9de3074`); rule6_note 五字段无机械 enforcement; 场景 4b 只在 Claude 模型上实测过 (`claude-fable-5-1` / `claude-opus-5`), Layer 2 所用的 GLM 未验证。**should-not 二分** (Aria#243, owner 2026-10-22 裁方向 C): 单技能沙箱 (项目根仅含被评技能、兄弟技能不在场) 对**路由类** should-not (语义 = 该让位给兄弟技能) 结构性不可评 —— 唯一在场的技能承接一切路由, description 路由边界无从生效, 误触是假阴性负载 (误触率虚高 ≠ description 差, = 沙箱缺位); 门判据只计**能力外类** (`type: capability`) should-not, **路由类** (`type: routing`) 转**观察面** (报告呈现, 不判 fail)。分类定义、套件 `type` 字段与判据细节见 Aria 主仓 `aria-plugin-benchmarks/AB_TEST_OPERATIONS.md` §场景 4b; 路由类恢复设门的 runner 增强 (`--sibling-placeholders`) 另立 P2 跟进轨。
 
 详见 aria-plugin issue #116。
